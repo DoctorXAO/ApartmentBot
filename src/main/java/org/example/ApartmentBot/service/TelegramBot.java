@@ -1,5 +1,6 @@
 package org.example.ApartmentBot.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.ApartmentBot.config.BotConfig;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -7,6 +8,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+@Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
 
@@ -21,7 +23,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         if(update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
-            String reply = "You send: " + messageText;
 
             switch (messageText) {
                 case "/start":
@@ -35,6 +36,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void startCommandReceived(long chatId, String name) {
         String answer = "Hi, " + name + ", nice to meet you!";
+        log.info("Received message from {}", name);
 
         sendMessage(chatId, answer);
     }
@@ -47,7 +49,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             execute(message);
         } catch (TelegramApiException ex) {
-
+            log.error("Error: {}", ex.getMessage());
         }
     }
 
