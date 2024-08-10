@@ -1,4 +1,4 @@
-package org.example.ApartmentBot.model;
+package xao.develop.ApartmentBot.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -7,7 +7,7 @@ import lombok.Data;
 import java.sql.Timestamp;
 
 @Data
-@Entity(name = "usersDataTable")
+@Entity(name = "users")
 public class User {
     @Id
     private Long chatId;

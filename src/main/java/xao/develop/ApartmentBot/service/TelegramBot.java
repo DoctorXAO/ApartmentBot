@@ -1,12 +1,12 @@
-package org.example.ApartmentBot.service;
+package xao.develop.ApartmentBot.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.ApartmentBot.config.BotConfig;
-import org.example.ApartmentBot.model.User;
-import org.example.ApartmentBot.model.UserRepository;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import xao.develop.ApartmentBot.config.BotConfig;
+import xao.develop.ApartmentBot.model.User;
+import xao.develop.ApartmentBot.model.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -25,7 +25,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Autowired
     private UserRepository userRepository;
-    final BotConfig config;
+    final private BotConfig config;
 
     static final String HELP_TEXT = """
                 This message is a helping-message!
@@ -71,7 +71,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (userRepository.findById(message.getChatId()).isEmpty()) {
             var chatId  = message.getChatId();
             var chat = message.getChat();
-
             User user = new User();
 
             user.setChatId(chatId);

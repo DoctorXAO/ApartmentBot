@@ -1,4 +1,4 @@
-package org.example.ApartmentBot.model;
+package xao.develop.ApartmentBot.model;
 
 import org.springframework.data.repository.CrudRepository;
 

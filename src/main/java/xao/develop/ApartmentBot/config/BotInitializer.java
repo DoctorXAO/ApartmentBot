@@ -1,7 +1,7 @@
-package org.example.ApartmentBot.config;
+package xao.develop.ApartmentBot.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.ApartmentBot.service.TelegramBot;
+import xao.develop.ApartmentBot.service.TelegramBot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;

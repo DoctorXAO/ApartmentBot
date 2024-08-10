@@ -1,12 +1,12 @@
 <configuration>
 
-<property name="HOME_LOG" value="/var/log/xao.developer/ApartmentBot/app.log"/>
+<property name="HOME_LOG" value="/home/doctorxao/var/log/xao.develop/ApartmentBot/app.log"/>
 
 <appender name="FILE-ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${HOME_LOG}</file>
 
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>/var/log/xao.developer/ApartmentBot/app.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+        <fileNamePattern>/home/doctorxao/var/log/xao.developer/ApartmentBot/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
         <!-- each archived file, size max 10MB -->
         <maxFileSize>10MB</maxFileSize>
         <!-- total size of all archive files, if total size > 20GB, it will delete old archived file -->
@@ -20,7 +20,7 @@
     </encoder>
 </appender>
 
-<logger name="xao.developer.ApartmentBot" level="debug" additivity="false">
+<logger name="xao.develop.ApartmentBot" level="debug" additivity="false">
     <appender-ref ref="FILE-ROLLING"/>
 </logger>
 

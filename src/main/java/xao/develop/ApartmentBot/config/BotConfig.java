@@ -1,4 +1,4 @@
-package org.example.ApartmentBot.config;
+package xao.develop.ApartmentBot.config;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
