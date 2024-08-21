@@ -1,13 +1,11 @@
-package xao.develop.ApartmentBot;
+package xao.develop;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class ApartmentBotApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(ApartmentBotApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(ApartmentBotApplication.class, args);
+    }
 }
