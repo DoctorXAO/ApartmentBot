@@ -1,4 +1,4 @@
-package xao.develop.view;
+package xao.develop.view.User;
 
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -10,9 +10,9 @@ public interface User {
     Message data_start(Update update) throws TelegramApiException;
     Message data_apartments(Update update) throws TelegramApiException;
     Message data_rent_an_apartment(Update update) throws TelegramApiException;
+    Message data_fill_out_an_application(Update update) throws TelegramApiException;
     Message data_house_information(Update update) throws TelegramApiException;
     Message data_contacts(Update update) throws TelegramApiException;
     Message data_rules(Update update) throws TelegramApiException;
     Message data_change_language(Update update) throws TelegramApiException;
-    Message dataIsNotRecognized();
 }

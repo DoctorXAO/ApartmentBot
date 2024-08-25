@@ -1,6 +1,7 @@
 package xao.develop.repository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import xao.develop.model.TempUserMessage;
 import xao.develop.model.TempUserMessagesRepository;
 import xao.develop.model.UserLanguage;
@@ -8,6 +9,7 @@ import xao.develop.model.UserLanguageRepository;
 
 import java.util.List;
 
+@Repository
 public class BotPersistence {
 
     @Autowired

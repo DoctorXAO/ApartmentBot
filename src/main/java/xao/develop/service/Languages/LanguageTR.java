@@ -1,4 +1,4 @@
-package xao.develop.service;
+package xao.develop.service.Languages;
 
 public class LanguageTR implements Language {
     @Override

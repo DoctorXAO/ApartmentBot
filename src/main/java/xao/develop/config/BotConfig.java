@@ -7,10 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.TelegramBotsLongPollingApplication;
-import xao.develop.repository.BotPersistence;
-import xao.develop.service.CommandService;
-import xao.develop.view.AdminView;
-import xao.develop.view.UserView;
 
 @Configuration
 @PropertySource("application.properties")
@@ -30,25 +26,5 @@ public class BotConfig {
     @Bean
     public TelegramBotsLongPollingApplication telegramBotsLongPollingApplication() {
         return new TelegramBotsLongPollingApplication();
-    }
-
-    @Bean
-    public UserView userView() {
-        return new UserView();
-    }
-
-    @Bean
-    public AdminView adminView() {
-        return new AdminView();
-    }
-
-    @Bean
-    public CommandService commandService() {
-        return new CommandService();
-    }
-
-    @Bean
-    public BotPersistence botPersistence() {
-        return new BotPersistence();
     }
 }

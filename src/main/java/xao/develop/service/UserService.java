@@ -2,18 +2,28 @@ package xao.develop.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.model.TempUserMessage;
 import xao.develop.model.UserLanguage;
 import xao.develop.repository.BotPersistence;
+import xao.develop.service.Languages.Language;
+import xao.develop.service.Languages.LanguageEN;
+import xao.develop.service.Languages.LanguageRU;
+import xao.develop.service.Languages.LanguageTR;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class CommandService implements CommandData {
+@Service
+public class UserService implements UserData {
 
     @Autowired
     private BotConfig botConfig;
@@ -108,8 +118,8 @@ public class CommandService implements CommandData {
                 switch (update.getCallbackQuery().getData()) {
                     case APARTMENTS -> text = language.getApartments();
                     case RENT_AN_APARTMENT -> text = language.getRentAnApartment();
-                    case HOUSE_INFORMATION,
-                         BACK_TO_HOUSE_INFORMATION -> text = language.getHouseInformation();
+                    case FILL_OUT_AN_APPLICATION -> text = null;
+                    case HOUSE_INFORMATION -> text = language.getHouseInformation();
                     case RULES -> text = language.getRules();
                     case CONTACTS -> text = language.getContacts(botConfig.getPhone(), botConfig.getEmail());
                     case CHANGE_LANGUAGE -> text = language.getChangeLanguage();
@@ -138,11 +148,12 @@ public class CommandService implements CommandData {
             switch (nameButton) {
                 case APARTMENTS -> text = language.getButtonApartments();
                 case RENT_AN_APARTMENT -> text = language.getButtonRentAnApartment();
+                case FILL_OUT_AN_APPLICATION -> text = language.getButtonFillOutAnApplication();
                 case HOUSE_INFORMATION -> text = language.getButtonHouseInformation();
                 case RULES -> text = language.getButtonRules();
                 case CONTACTS -> text = language.getButtonContacts();
                 case CHANGE_LANGUAGE -> text = language.getButtonChangeLanguage();
-                case "back" -> text = language.getButtonBack();
+                case BACK -> text = language.getButtonBack();
                 default -> throw new Exception("Ошибка загрузки названия кнопки");
             }
         } catch (Exception ex) {
@@ -152,5 +163,86 @@ public class CommandService implements CommandData {
         }
 
         return text;
+    }
+
+    public InlineKeyboardMarkup getMainIKMarkup(Update update) {
+        List<InlineKeyboardButton> buttons = new ArrayList<>();
+        buttons.add(buildIKButton(getLocalizationButton(update, APARTMENTS), APARTMENTS));
+        buttons.add(buildIKButton(getLocalizationButton(update, RENT_AN_APARTMENT), RENT_AN_APARTMENT));
+        InlineKeyboardRow row1 = buildIKRow(buttons);
+
+        buttons.clear();
+        buttons.add(buildIKButton(getLocalizationButton(update, HOUSE_INFORMATION), HOUSE_INFORMATION));
+        buttons.add(buildIKButton(getLocalizationButton(update, CONTACTS), CONTACTS));
+        InlineKeyboardRow row2 = buildIKRow(buttons);
+
+        buttons.clear();
+        buttons.add(buildIKButton(getLocalizationButton(update, CHANGE_LANGUAGE), CHANGE_LANGUAGE));
+        InlineKeyboardRow row3 = buildIKRow(buttons);
+
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(row1)
+                .keyboardRow(row2)
+                .keyboardRow(row3)
+                .build();
+    }
+
+    public InlineKeyboardMarkup getHouseInformationIKMarkup(Update update) {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(new InlineKeyboardRow(buildIKButton(
+                        getLocalizationButton(update, RULES), RULES)))
+                .keyboardRow(new InlineKeyboardRow(buildIKButton(
+                        getLocalizationButton(update, "back"), BACK_TO_START)))
+                .build();
+    }
+
+    public InlineKeyboardMarkup getRentAnApartmentIKMarkup(Update update) {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(new InlineKeyboardRow(buildIKButton(
+                        getLocalizationButton(update, "fill_out_an_application"), FILL_OUT_AN_APPLICATION)))
+                .keyboardRow(new InlineKeyboardRow(buildIKButton(
+                        getLocalizationButton(update, "back"), BACK_TO_START)))
+                .build();
+    }
+
+    public InlineKeyboardMarkup getBackIKMarkup(Update update, String direction) {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(new InlineKeyboardRow(buildIKButton(
+                        getLocalizationButton(update, "back"), direction)))
+                .build();
+    }
+
+    public InlineKeyboardRow buildIKRow(List<InlineKeyboardButton> buttons) {
+        return new InlineKeyboardRow(buttons);
+    }
+
+    public InlineKeyboardButton buildIKButton(String text, String callbackData) {
+        return InlineKeyboardButton
+                .builder()
+                .text(text)
+                .callbackData(callbackData)
+                .build();
+    }
+
+    public SendMessage buildSendMessage(Update update, String text, InlineKeyboardMarkup markup) {
+        long chatID;
+        if (update.hasMessage())
+            chatID = update.getMessage().getChatId();
+        else if (update.hasCallbackQuery())
+            chatID = update.getCallbackQuery().getMessage().getChatId();
+        else
+            chatID = 0;
+
+        return SendMessage
+                .builder()
+                .chatId(chatID)
+                .text(text)
+                .replyMarkup(markup)
+                .parseMode("HTML")
+                .build();
     }
 }

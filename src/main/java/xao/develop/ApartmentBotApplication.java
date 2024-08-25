@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import xao.develop.config.BotConfig;
-import xao.develop.view.AdminView;
-import xao.develop.view.UserView;
+import xao.develop.view.Admin.AdminView;
+import xao.develop.view.User.UserView;
 
 @SpringBootApplication
 public class ApartmentBotApplication implements LongPollingSingleThreadUpdateConsumer {
