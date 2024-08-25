@@ -8,7 +8,7 @@ public class LanguageTR implements Language {
             
             Botumuza hoş geldiniz! 🌴
             
-            Güneşli Alanya'da mükemmel bir konut mu arıyorsunuz? \s
+            Güneşli Alanya'da mükemmel bir konut mu arıyorsunuz? \
             Plaja sadece birkaç adım uzaklıktaki evimiz, Türkiye'nin en iyi \
             tatil yerlerinden birinde size konfor ve rahatlık sunuyor. Evimiz beş katlıdır \
             ve konforlu bir yaşam için ihtiyacınız olan her şeye sahiptir.

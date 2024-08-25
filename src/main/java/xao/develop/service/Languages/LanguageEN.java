@@ -7,11 +7,11 @@ public class LanguageEN implements Language {
         return """
             <b>Welcome!</b>
             
-            We are glad to welcome you to our bot!  🌴
+            We are glad to welcome you to our bot! 🌴
             
             Are you looking for the perfect accommodation in sunny Alanya? \
             Our house, located just a few steps from the beach, offers \
-            you comfort and convenience in one of the best resort destinations in Turkey.  \
+            you comfort and convenience in one of the best resort destinations in Turkey. \
             Our house has five floors and everything you need for a comfortable stay.
             
             Select the section you are interested in from the menu and we will \
