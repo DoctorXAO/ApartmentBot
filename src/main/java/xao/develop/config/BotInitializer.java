@@ -6,19 +6,19 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.TelegramBotsLongPollingApplication;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import xao.develop.service.UserService;
+import xao.develop.ApartmentBotApplication;
 
 @Component
 public class BotInitializer {
     @Autowired
     private BotConfig botConfig;
     @Autowired
-    private UserService userService;
+    private ApartmentBotApplication application;
     @Autowired
     private TelegramBotsLongPollingApplication bot;
 
     @EventListener(ContextRefreshedEvent.class)
     public void init() throws TelegramApiException {
-        bot.registerBot(botConfig.getToken(), userService);
+        bot.registerBot(botConfig.getToken(), application);
     }
 }
