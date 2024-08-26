@@ -157,7 +157,7 @@ public class UserView implements Account, User, UserData {
 
     @Override
     public List<Message> data_fill_out_an_application(Update update) throws TelegramApiException {
-        userService.changeUserIsFillingOut(update.getCallbackQuery().getMessage(), true);
+        userService.changeUserFillingOutStep(update.getCallbackQuery().getMessage(), (byte) 0);
 
         return Collections.singletonList(
                 botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
