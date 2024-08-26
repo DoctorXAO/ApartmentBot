@@ -127,6 +127,26 @@ public class LanguageEN implements Language {
     }
 
     @Override
+    public String getFillOutAnApplication1() {
+        return "In progress...";
+    }
+
+    @Override
+    public String getFillOutAnApplication2() {
+        return "In progress...";
+    }
+
+    @Override
+    public String getFillOutAnApplication3(String[] prices) {
+        return "In progress...";
+    }
+
+    @Override
+    public String getFillOutAnApplication4() {
+        return "In progress...";
+    }
+
+    @Override
     public String getChangeLanguage() {
         return """
             <b>Localization Selection</b>

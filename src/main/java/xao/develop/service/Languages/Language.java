@@ -7,6 +7,10 @@ public interface Language {
     String getRules();
     String getApartments();
     String getRentAnApartment();
+    String getFillOutAnApplication1();
+    String getFillOutAnApplication2();
+    String getFillOutAnApplication3(String[] prices);
+    String getFillOutAnApplication4();
     String getChangeLanguage();
 
     String getButtonBack();

@@ -6,11 +6,10 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
+import org.telegram.telegrambots.meta.api.objects.message.MaybeInaccessibleMessage;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -18,8 +17,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.model.TempUserMessage;
-import xao.develop.model.UserLanguage;
-import xao.develop.repository.BotPersistence;
+import xao.develop.model.UserStatus;
+import xao.develop.repository.UserPersistence;
 import xao.develop.service.Languages.Language;
 import xao.develop.service.Languages.LanguageEN;
 import xao.develop.service.Languages.LanguageRU;
@@ -37,10 +36,10 @@ public class UserService implements UserData {
     private BotConfig botConfig;
 
     @Autowired
-    private BotPersistence botPersistence;
+    private UserPersistence userPersistence;
 
     public void registerMessage(Long chatId, int messageId) {
-        botPersistence.insertUserMessage(chatId, messageId);
+        userPersistence.insertUserMessage(chatId, messageId);
     }
 
     public void deleteOldMessages(Update update) {
@@ -51,7 +50,7 @@ public class UserService implements UserData {
         else
             chatId = update.getCallbackQuery().getMessage().getChatId();
 
-        List<TempUserMessage> userMessages = botPersistence.selectUserMessages(chatId);
+        List<TempUserMessage> userMessages = userPersistence.selectUserMessages(chatId);
 
         for(TempUserMessage userMessage : userMessages) {
             try {
@@ -68,7 +67,7 @@ public class UserService implements UserData {
         }
 
         try {
-            botPersistence.deleteUserMessage(chatId);
+            userPersistence.deleteUserMessage(chatId);
         } catch (InvalidDataAccessApiUsageException ex) {
             System.out.println("No messages to delete");
         }
@@ -126,29 +125,32 @@ public class UserService implements UserData {
         return files;
     }
 
-    public void authorization(Update update) {
-        long chatId = update.hasMessage() ?
-                update.getMessage().getChatId() :
-                update.getCallbackQuery().getMessage().getChatId();
-        String language = update.hasMessage() ?
-                update.getMessage().getFrom().getLanguageCode() :
-                update.getCallbackQuery().getFrom().getLanguageCode();
+    public void authorization(Message message) {
+        Long chatId = message.getChatId();
+        String login = message.getFrom().getUserName();
+        String firstName = message.getFrom().getFirstName();
+        String lastName = message.getFrom().getLastName();
+        String language = message.getFrom().getLanguageCode();
 
-        botPersistence.insertUserLanguage(chatId, language);
+        userPersistence.insertUserStatus(chatId, login, firstName, lastName, language, false);
     }
 
-    public void authorization(Update update, String language) {
-        long chatId = update.hasMessage() ?
-                update.getMessage().getChatId() :
-                update.getCallbackQuery().getMessage().getChatId();
-
-        botPersistence.insertUserLanguage(chatId, language);
+    public void changeUserLanguage(MaybeInaccessibleMessage message, String language) {
+        userPersistence.updateUserLanguage(message.getChatId(), language);
     }
 
-    private UserLanguage getUserLanguage(Update update) {
+    public void changeUserIsFillingOut(MaybeInaccessibleMessage message, Boolean isFillingOut) {
+        userPersistence.updateUserIsFillingOut(message.getChatId(), isFillingOut);
+    }
+
+    public byte getFillingOutStep(MaybeInaccessibleMessage message) {
+        return userPersistence.selectUserStatus(message.getChatId()).getFillingOutStep();
+    }
+
+    private UserStatus getUserLanguage(Update update) {
         return update.hasMessage() ?
-                botPersistence.selectUserLanguage(update.getMessage().getChatId()) :
-                botPersistence.selectUserLanguage(update.getCallbackQuery().getMessage().getChatId());
+                userPersistence.selectUserStatus(update.getMessage().getChatId()) :
+                userPersistence.selectUserStatus(update.getCallbackQuery().getMessage().getChatId());
     }
 
     private Language getLanguage(Update update) {
@@ -178,7 +180,7 @@ public class UserService implements UserData {
                 switch (update.getCallbackQuery().getData()) {
                     case APARTMENTS -> text = language.getApartments();
                     case RENT_AN_APARTMENT -> text = language.getRentAnApartment();
-                    case FILL_OUT_AN_APPLICATION -> text = null;
+                    case FILL_OUT_AN_APPLICATION -> text = language.getFillOutAnApplication1();
                     case HOUSE_INFORMATION -> text = language.getHouseInformation();
                     case RULES -> text = language.getRules();
                     case CONTACTS -> text = language.getContacts(botConfig.getPhone(), botConfig.getEmail());
@@ -304,12 +306,11 @@ public class UserService implements UserData {
 
     public SendMessage buildSendMessage(Update update, String text, InlineKeyboardMarkup markup) {
         long chatID;
+
         if (update.hasMessage())
             chatID = update.getMessage().getChatId();
-        else if (update.hasCallbackQuery())
-            chatID = update.getCallbackQuery().getMessage().getChatId();
         else
-            chatID = 0;
+            chatID = update.getCallbackQuery().getMessage().getChatId();
 
         return SendMessage
                 .builder()

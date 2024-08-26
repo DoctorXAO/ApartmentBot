@@ -29,68 +29,97 @@ public class UserView implements Account, User, UserData {
         if ((update.hasMessage() && update.getMessage().hasText()) || update.hasCallbackQuery())
             userService.deleteOldMessages(update);
 
-        if (update.hasMessage() && update.getMessage().hasText())
-            processingTheMessage(update);
-        else if (update.hasCallbackQuery())
-            processingTheCallbackQuery(update);
-    }
-
-    // Обработка входящего сообщений
-    private void processingTheMessage(Update update) {
-        String msg = update.getMessage().getText();
+        byte fillingOutStep = update.hasMessage() ?
+                userService.getFillingOutStep(update.getMessage()) :
+                userService.getFillingOutStep(update.getCallbackQuery().getMessage());
 
         try {
-            userService.registerMessage(update.getMessage().getChatId(), update.getMessage().getMessageId());
-            userService.deleteOldMessages(update);
-
-            if (msg.equals(START)) {
-                Message message = cmd_start(update);
-                userService.registerMessage(message.getChatId(), message.getMessageId());
-            }
+            if (update.hasMessage() && fillingOutStep >= 1)
+                processingTheApplication(update);
+            else if (update.hasMessage() && fillingOutStep < 1)
+                processingTheMessage(update);
+            else if (update.hasCallbackQuery())
+                processingTheCallbackQuery(update);
         } catch (TelegramApiException ex) {
-            ex.printStackTrace(); // todo Добавь логи
+            ex.printStackTrace(); // todo Замени на логи
         }
     }
 
-    // Обработка входящего сигнала
-    private void processingTheCallbackQuery(Update update) {
+    /** Обработка заполнения заявления **/
+    private void processingTheApplication(Update update) throws TelegramApiException {
+        String msg = update.getMessage().getText();
+
+        deleteLastMessages(update);
+
+        List<String> messages = new ArrayList<>();
+        messages.add(msg);
+
+        app_nextStep(update, msg);
+    }
+
+    /** Обработка входящего сообщений **/
+    private void processingTheMessage(Update update) throws TelegramApiException {
+        String msg = update.getMessage().getText();
+
+        deleteLastMessages(update);
+
+        if (msg.equals(START)) {
+            Message message = cmd_start(update);
+            userService.registerMessage(message.getChatId(), message.getMessageId());
+        }
+    }
+
+    /** Удаление последних сообщений **/
+    private void deleteLastMessages(Update update) {
+        userService.registerMessage(update.getMessage().getChatId(), update.getMessage().getMessageId());
+        userService.deleteOldMessages(update);
+    }
+
+    /** Обработка входящего сигнала **/
+    private void processingTheCallbackQuery(Update update) throws TelegramApiException {
         String data = update.getCallbackQuery().getData();
         List<Message> messages;
 
-        try {
-            switch (data) {
-                case APARTMENTS -> messages = data_apartments(update);
-                case RENT_AN_APARTMENT -> messages= data_rent_an_apartment(update);
-                case HOUSE_INFORMATION -> messages = data_house_information(update);
-                case CONTACTS -> messages = data_contacts(update);
-                case RULES -> messages = data_rules(update);
-                case CHANGE_LANGUAGE -> messages = data_change_language(update);
-                case TR,
-                     EN,
-                     RU -> messages = changeLanguage(update, data);
-                default -> messages = data_start(update);
-            }
+        switch (data) {
+            case APARTMENTS -> messages = data_apartments(update);
+            case RENT_AN_APARTMENT -> messages = data_rent_an_apartment(update);
+            case FILL_OUT_AN_APPLICATION -> messages = data_fill_out_an_application(update);
+            case HOUSE_INFORMATION -> messages = data_house_information(update);
+            case CONTACTS -> messages = data_contacts(update);
+            case RULES -> messages = data_rules(update);
+            case CHANGE_LANGUAGE -> messages = data_change_language(update);
+            case TR,
+                 EN,
+                 RU -> messages = changeLanguage(update, data);
+            default -> messages = data_start(update);
+        }
 
-            for (Message message : messages) {
-                if (message == null)
-                    continue;
+        for (Message message : messages) {
+            if (message == null)
+                continue;
 
-                userService.registerMessage(message.getChatId(), message.getMessageId());
-            }
-        } catch (TelegramApiException ex) {
-            ex.printStackTrace(); // todo Добавь логи
+            userService.registerMessage(message.getChatId(), message.getMessageId());
         }
     }
 
-    // Смена языка интерфейса пользователя
+    /** Смена языка интерфейса пользователя **/
     private List<Message> changeLanguage(Update update, String language) throws TelegramApiException {
-        userService.authorization(update, language);
+        userService.changeUserLanguage(update.getCallbackQuery().getMessage(), language);
         return data_start(update);
     }
 
     @Override
+    public Message app_nextStep(Update update, String msg) throws TelegramApiException {
+
+
+        return botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
+                userService.getLocalizationText(update),
+                userService.getMainIKMarkup(update)));
+    }
+
+    @Override
     public Message cmd_start(Update update) throws TelegramApiException {
-        userService.authorization(update);
+        userService.authorization(update.getMessage());
 
         return botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
                 userService.getLocalizationText(update),
@@ -128,6 +157,8 @@ public class UserView implements Account, User, UserData {
 
     @Override
     public List<Message> data_fill_out_an_application(Update update) throws TelegramApiException {
+        userService.changeUserIsFillingOut(update.getCallbackQuery().getMessage(), true);
+
         return Collections.singletonList(
                 botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
                 userService.getLocalizationText(update),
