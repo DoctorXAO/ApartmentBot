@@ -7,10 +7,15 @@ public interface Language {
     String getRules();
     String getApartments();
     String getRentAnApartment();
-    String getFillOutAnApplication1();
-    String getFillOutAnApplication2();
-    String getFillOutAnApplication3(String[] prices);
-    String getFillOutAnApplication4();
+    String getFillOutName();
+    String getFillOutCountOfPerson();
+    String getFillOutRentTime(String onePerDay,
+                              String onePerMouth,
+                              String onePerYear,
+                              String twoPerDay,
+                              String twoPerMouth,
+                              String twoPerYear);
+    String getFillOutCommentary();
     String getChangeLanguage();
 
     String getButtonBack();

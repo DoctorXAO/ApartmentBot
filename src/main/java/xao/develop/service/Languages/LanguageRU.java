@@ -38,7 +38,7 @@ public class LanguageRU implements Language {
                         \uD83D\uDCDE <b>Телефон (telegram, whatsapp):</b>
                         %s
                         
-                        ✉\uFE0F <b>Email:</b> %s
+                        ✉️ <b>Email:</b> %s
                         
                         Вы можете связаться с нами по телефону или электронной почте. \
                         Мы всегда рады помочь Вам с любыми вопросами!
@@ -131,7 +131,7 @@ public class LanguageRU implements Language {
     }
 
     @Override
-    public String getFillOutAnApplication1() {
+    public String getFillOutName() {
         return """
             \uD83C\uDFA4 <b>Заполнение заявления (шаг 1/4)</b>
             
@@ -146,7 +146,7 @@ public class LanguageRU implements Language {
     }
 
     @Override
-    public String getFillOutAnApplication2() {
+    public String getFillOutCountOfPerson() {
         return """
                 \uD83C\uDFA4 <b>Заполнение заявления (шаг 2/4)</b>
                 
@@ -161,8 +161,13 @@ public class LanguageRU implements Language {
     }
 
     @Override
-    public String getFillOutAnApplication3(String[] prices) {
-        return String.format("""
+    public String getFillOutRentTime(String onePerDay,
+                                     String onePerMouth,
+                                     String onePerYear,
+                                     String twoPerDay,
+                                     String twoPerMouth,
+                                     String twoPerYear) {
+        return """
                 \uD83C\uDFA4 <b>Заполнение заявления (шаг 3/4)</b>
                 
                 ☑️ Заполнение фамилии и имени
@@ -179,20 +184,20 @@ public class LanguageRU implements Language {
                 1 человек   - %s евро/день
                 2+ человека - %s евро/день
                 
-                🔥 <b>ПОПУЛЯРНОЕ</b> По месяцу - ЭКОНОМИЯ 66%:
+                🔥 <b>ПОПУЛЯРНОЕ</b> По месяцу - <b>ЭКОНОМИЯ 66%</b>:
                 
                 1 человек - %s евро/месяц
                 2+ человек - %s евро/месяц
                 
-                Расценки (на год - ЭКОНОМИЯ 72%)
+                По году - <b>ЭКОНОМИЯ 72%</b>:
                 
                 1 человек - %s евро/год
                 2+ человека - %s евро/год
-                """, prices[0], prices[1], prices[2], prices[3], prices[4], prices[5]);
+                """;
     }
 
     @Override
-    public String getFillOutAnApplication4() {
+    public String getFillOutCommentary() {
         return """
                 \uD83C\uDFA4 <b>Заполнение заявления (шаг 4/4)</b>
                 

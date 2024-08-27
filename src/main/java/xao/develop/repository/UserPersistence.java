@@ -2,15 +2,12 @@ package xao.develop.repository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import xao.develop.model.TempUserMessage;
-import xao.develop.model.TempUserMessagesRepository;
-import xao.develop.model.UserStatus;
-import xao.develop.model.UserStatusRepository;
+import xao.develop.model.*;
 
 import java.util.List;
 
 @Repository
-public class UserPersistence {
+public class UserPersistence implements User {
 
     @Autowired
     private TempUserMessagesRepository tempUserMessagesRepository;
@@ -18,49 +15,97 @@ public class UserPersistence {
     @Autowired
     private UserStatusRepository userStatusRepository;
 
+    @Override
+    public boolean isUserStatusExists(Long chatId) {
+        return userStatusRepository.existsByChatId(chatId);
+    }
+
+    @Override
     public void insertUserStatus(Long chatId,
                                  String login,
                                  String firstName,
                                  String lastName,
                                  String language,
-                                 Byte fillingOutStep) {
+                                 Integer fillingOutStep) {
         UserStatus userStatus = new UserStatus();
+
         userStatus.setChatId(chatId);
         userStatus.setLogin(login);
         userStatus.setFirstName(firstName);
         userStatus.setLastName(lastName);
         userStatus.setLanguage(language);
-        userStatus.setFillingOutStep(fillingOutStep);
+        userStatus.setFillingOutStep(0);
 
         userStatusRepository.save(userStatus);
     }
 
+    @Override
+    public UserStatus selectUserStatus(Long chatId) {
+        return userStatusRepository.getByChatId(chatId);
+    }
+
     /** Обновить язык интерфейса пользователя **/
-    public void updateUserLanguage(Long chatId, String language) {
-        UserStatus userStatus = new UserStatus();
-        userStatus.setChatId(chatId);
+    @Override
+    public void updateUserStatusLanguage(Long chatId, String language) {
+        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
+
         userStatus.setLanguage(language);
 
         userStatusRepository.save(userStatus);
     }
 
-    /** Обновить режим заполнения заявки пользователем **/
-    public void updateUserIsFillingOut(Long chatId, Byte fillingOutStep) {
-        UserStatus userStatus = new UserStatus();
-        userStatus.setChatId(chatId);
-        userStatus.setFillingOutStep(fillingOutStep);
+    /** Обновление этапа заполнения заявки **/
+    @Override
+    public void updateUserStatusFillingOutStep(Long chatId, Integer step) {
+        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
+
+        userStatus.setFillingOutStep(step);
 
         userStatusRepository.save(userStatus);
     }
 
-    public UserStatus selectUserStatus(Long chatId) {
-        return userStatusRepository.getByChatId(chatId);
+    @Override
+    public void updateUserStatusName(Long chatId, String name) {
+        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
+
+        userStatus.setName(name);
+
+        userStatusRepository.save(userStatus);
     }
 
+    @Override
+    public void updateUserStatusCountOfPerson(Long chatId, String countOfPerson) {
+        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
+
+        userStatus.setCountOfPerson(countOfPerson);
+
+        userStatusRepository.save(userStatus);
+    }
+
+    @Override
+    public void updateUserStatusRentTime(Long chatId, String rentTime) {
+        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
+
+        userStatus.setRentTime(rentTime);
+
+        userStatusRepository.save(userStatus);
+    }
+
+    @Override
+    public void updateUserStatusCommentary(Long chatId, String comment) {
+        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
+
+        userStatus.setCommentary(comment);
+
+        userStatusRepository.save(userStatus);
+    }
+
+    @Override
     public List<TempUserMessage> selectUserMessages(Long chatID) {
         return tempUserMessagesRepository.findByChatId(chatID);
     }
 
+    @Override
     public void insertUserMessage(long chatId, int messageId) {
         TempUserMessage tempUserMessage = new TempUserMessage();
         tempUserMessage.setChatId(chatId);
@@ -69,6 +114,7 @@ public class UserPersistence {
         tempUserMessagesRepository.save(tempUserMessage);
     }
 
+    @Override
     public void deleteUserMessage(long chatId) {
         tempUserMessagesRepository.deleteByChatId(chatId);
     }

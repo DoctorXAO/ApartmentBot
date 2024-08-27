@@ -22,5 +22,13 @@ public class UserStatus {
         private String language;
 
         @Column(nullable = false)
-        private Byte fillingOutStep;
+        private Integer fillingOutStep;
+
+        private String name;
+
+        private String countOfPerson;
+
+        private String rentTime;
+
+        private String commentary;
 }

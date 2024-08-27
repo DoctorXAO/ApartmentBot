@@ -7,7 +7,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.List;
 
 public interface User {
-    Message app_nextStep(Update update, String msg) throws TelegramApiException;
+    Message app_nextStep(Update update, int step) throws TelegramApiException;
 
     Message cmd_start(Update update) throws TelegramApiException;
 

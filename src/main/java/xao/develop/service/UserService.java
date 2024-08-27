@@ -16,6 +16,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
+import xao.develop.config.UserCommand;
 import xao.develop.model.TempUserMessage;
 import xao.develop.model.UserStatus;
 import xao.develop.repository.UserPersistence;
@@ -30,7 +31,7 @@ import java.net.URL;
 import java.util.*;
 
 @Service
-public class UserService implements UserData {
+public class UserService implements User, UserCommand {
 
     @Autowired
     private BotConfig botConfig;
@@ -38,10 +39,12 @@ public class UserService implements UserData {
     @Autowired
     private UserPersistence userPersistence;
 
+    @Override
     public void registerMessage(Long chatId, int messageId) {
         userPersistence.insertUserMessage(chatId, messageId);
     }
 
+    @Override
     public void deleteOldMessages(Update update) {
         Long chatId;
 
@@ -72,7 +75,8 @@ public class UserService implements UserData {
             System.out.println("No messages to delete");
         }
     }
-
+    
+    @Override
     public SendMediaGroup sendPhotos(Update update, String patch) {
         try {
             ClassLoader classLoader = getClass().getClassLoader();
@@ -105,7 +109,7 @@ public class UserService implements UserData {
         }
     }
 
-    private @NotNull File [] getSortedFiles(URL resource) throws Exception {
+    private @NotNull File[] getSortedFiles(URL resource) throws Exception {
         File directory = new File(resource.getFile());
 
         FilenameFilter filter = (dir, name) ->
@@ -125,6 +129,7 @@ public class UserService implements UserData {
         return files;
     }
 
+    @Override
     public void authorization(Message message) {
         Long chatId = message.getChatId();
         String login = message.getFrom().getUserName();
@@ -132,19 +137,47 @@ public class UserService implements UserData {
         String lastName = message.getFrom().getLastName();
         String language = message.getFrom().getLanguageCode();
 
-        userPersistence.insertUserStatus(chatId, login, firstName, lastName, language, (byte) 0);
+        userPersistence.insertUserStatus(chatId, login, firstName, lastName, language, 0);
     }
 
+    @Override
+    public boolean isUserStatusExists(Long chatId) {
+        return userPersistence.isUserStatusExists(chatId);
+    }
+
+    @Override
     public void changeUserLanguage(MaybeInaccessibleMessage message, String language) {
-        userPersistence.updateUserLanguage(message.getChatId(), language);
+        userPersistence.updateUserStatusLanguage(message.getChatId(), language);
     }
 
-    public void changeUserFillingOutStep(MaybeInaccessibleMessage message, Byte fillingOutStep) {
-        userPersistence.updateUserIsFillingOut(message.getChatId(), fillingOutStep);
+    @Override
+    public void setUserFillingOutStep(Long chatId, Integer fillingOutStep) {
+        userPersistence.updateUserStatusFillingOutStep(chatId, fillingOutStep);
     }
 
-    public byte getFillingOutStep(MaybeInaccessibleMessage message) {
-        return userPersistence.selectUserStatus(message.getChatId()).getFillingOutStep();
+    @Override
+    public Integer getUserFillingOutStep(Long chatId) {
+        return userPersistence.selectUserStatus(chatId).getFillingOutStep();
+    }
+
+    @Override
+    public void setUserApplicationName(Message message) {
+        userPersistence.updateUserStatusName(message.getChatId(), message.getText());
+    }
+
+    @Override
+    public void setUserApplicationCountOfPerson(Message message) {
+        userPersistence.updateUserStatusCountOfPerson(message.getChatId(), message.getText());
+    }
+
+    @Override
+    public void setUserApplicationTimeRent(Message message) {
+        userPersistence.updateUserStatusRentTime(message.getChatId(), message.getText());
+    }
+
+    @Override
+    public void setUserApplicationCommentary(Message message) {
+        userPersistence.updateUserStatusCommentary(message.getChatId(), message.getText());
     }
 
     private UserStatus getUserLanguage(Update update) {
@@ -165,32 +198,55 @@ public class UserService implements UserData {
         return language;
     }
 
+    @Override
     public String getLocalizationText(Update update) {
         try {
             String text;
 
             Language language = getLanguage(update);
 
-            if (update.hasMessage()) {
-                switch (update.getMessage().getText()) {
-                    case START -> text = language.getStart();
-                    default -> throw new Exception("Ошибка загрузки сообщения");
-                }
-            } else {
-                switch (update.getCallbackQuery().getData()) {
-                    case APARTMENTS -> text = language.getApartments();
-                    case RENT_AN_APARTMENT -> text = language.getRentAnApartment();
-                    case FILL_OUT_AN_APPLICATION -> text = language.getFillOutAnApplication1();
-                    case HOUSE_INFORMATION -> text = language.getHouseInformation();
-                    case RULES -> text = language.getRules();
-                    case CONTACTS -> text = language.getContacts(botConfig.getPhone(), botConfig.getEmail());
-                    case CHANGE_LANGUAGE -> text = language.getChangeLanguage();
-                    case BACK_TO_START,
-                         TR,
-                         EN,
-                         RU -> text = language.getStart();
-                    default -> throw new Exception("Ошибка загрузки сообщения");
-                }
+            String signal = update.hasMessage() ?
+                    update.getMessage().getText() :
+                    update.getCallbackQuery().getData();
+
+            Long chatId = update.hasMessage() ?
+                    update.getMessage().getChatId() :
+                    update.getCallbackQuery().getMessage().getChatId();
+
+            Integer fillingOutStep = userPersistence.selectUserStatus(chatId).getFillingOutStep();
+
+            System.out.println("UserService: " + fillingOutStep);
+
+            if (fillingOutStep >= 1 && fillingOutStep < 5)
+                signal = fillingOutStep.toString();
+            else if (fillingOutStep >= 5) {
+                setUserFillingOutStep(chatId, 0);
+
+                signal = BACK_TO_START;
+            }
+
+            System.out.println("Signal: " + signal);
+
+            switch (signal) {
+                case START, BACK_TO_START, BACK, TR, EN, RU -> text = language.getStart();
+                case APARTMENTS -> text = language.getApartments();
+                case RENT_AN_APARTMENT -> text = language.getRentAnApartment();
+                case FILL_OUT_AN_APPLICATION, "1" -> text = language.getFillOutName();
+                case "2" -> text = language.getFillOutCountOfPerson();
+                case "3" -> text = language.getFillOutRentTime(
+                        botConfig.getOnePerDay(),
+                        botConfig.getOnePerMouth(),
+                        botConfig.getOnePerYear(),
+                        botConfig.getTwoPerDay(),
+                        botConfig.getTwoPerMouth(),
+                        botConfig.getTwoPerYear());
+                case "4" -> text = language.getFillOutCommentary();
+                case "5" -> text = "";
+                case HOUSE_INFORMATION -> text = language.getHouseInformation();
+                case RULES -> text = language.getRules();
+                case CONTACTS -> text = language.getContacts(botConfig.getPhone(), botConfig.getEmail());
+                case CHANGE_LANGUAGE -> text = language.getChangeLanguage();
+                default -> throw new Exception("Ошибка загрузки сообщения");
             }
 
             return text;
@@ -201,6 +257,7 @@ public class UserService implements UserData {
         }
     }
 
+    @Override
     public String getLocalizationButton(Update update, String nameButton) {
         String text;
 
@@ -227,6 +284,7 @@ public class UserService implements UserData {
         return text;
     }
 
+    @Override
     public InlineKeyboardMarkup getMainIKMarkup(Update update) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         buttons.add(buildIKButton(getLocalizationButton(update, APARTMENTS), APARTMENTS));
@@ -250,6 +308,7 @@ public class UserService implements UserData {
                 .build();
     }
 
+    @Override
     public InlineKeyboardMarkup getHouseInformationIKMarkup(Update update) {
         return InlineKeyboardMarkup
                 .builder()
@@ -260,16 +319,18 @@ public class UserService implements UserData {
                 .build();
     }
 
+    @Override
     public InlineKeyboardMarkup getRentAnApartmentIKMarkup(Update update) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(buildIKButton(
                         getLocalizationButton(update, "fill_out_an_application"), FILL_OUT_AN_APPLICATION)))
                 .keyboardRow(new InlineKeyboardRow(buildIKButton(
-                        getLocalizationButton(update, "back"), BACK_TO_START)))
+                        getLocalizationButton(update, BACK), BACK_TO_START)))
                 .build();
     }
 
+    @Override
     public InlineKeyboardMarkup getChangeLanguageIKMarkup(Update update) {
         return InlineKeyboardMarkup
                 .builder()
@@ -284,18 +345,21 @@ public class UserService implements UserData {
                 .build();
     }
 
-    public InlineKeyboardMarkup getBackIKMarkup(Update update, String direction) {
+    @Override
+    public InlineKeyboardMarkup getBackIKMarkup(Update update, String callbackData) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(buildIKButton(
-                        getLocalizationButton(update, "back"), direction)))
+                        getLocalizationButton(update, BACK), callbackData)))
                 .build();
     }
-
+    
+    @Override
     public InlineKeyboardRow buildIKRow(List<InlineKeyboardButton> buttons) {
         return new InlineKeyboardRow(buttons);
     }
 
+    @Override
     public InlineKeyboardButton buildIKButton(String text, String callbackData) {
         return InlineKeyboardButton
                 .builder()
@@ -304,6 +368,7 @@ public class UserService implements UserData {
                 .build();
     }
 
+    @Override
     public SendMessage buildSendMessage(Update update, String text, InlineKeyboardMarkup markup) {
         long chatID;
 

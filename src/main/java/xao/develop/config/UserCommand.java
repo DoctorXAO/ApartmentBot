@@ -1,6 +1,6 @@
-package xao.develop.service;
+package xao.develop.config;
 
-public interface UserData {
+public interface UserCommand {
     String START = "/start";
 
     String APARTMENTS = "apartments";

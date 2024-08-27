@@ -127,23 +127,83 @@ public class LanguageEN implements Language {
     }
 
     @Override
-    public String getFillOutAnApplication1() {
-        return "In progress...";
+    public String getFillOutName() {
+        return """
+                🎤 <b>Application Form (Step 1/4)</b>
+                
+                🔴 Enter Last Name and First Name
+                🔘 Specify the Number of People
+                🔘 Duration of Rental
+                🔘 Your Preferences (optional)
+                
+                Please enter your last name and first name \
+                and send it in this chat to proceed to the next step!
+                """;
     }
 
     @Override
-    public String getFillOutAnApplication2() {
-        return "In progress...";
+    public String getFillOutCountOfPerson() {
+        return """
+                🎤 <b>Application Form (Step 2/4)</b>
+                
+                ☑️ Last Name and First Name Entered \s
+                🔴 Specify the Number of People \s
+                🔘 Duration of Rental \s
+                🔘 Your Preferences (optional)
+                
+                Please specify how many people will be staying in the apartment and send it in this chat!
+                """;
     }
 
     @Override
-    public String getFillOutAnApplication3(String[] prices) {
-        return "In progress...";
+    public String getFillOutRentTime(String onePerDay,
+                                     String onePerMouth,
+                                     String onePerYear,
+                                     String twoPerDay,
+                                     String twoPerMouth,
+                                     String twoPerYear) {
+        return """
+                🎤 <b>Application Form (Step 3/4)<b>
+                
+                ☑️ Last Name and First Name Entered
+                ☑️ Number of People Specified
+                🔴 Duration of Rental
+                🔘 Your Preferences (optional)
+                
+                Please specify for how long you would like to rent the apartment and send it in this chat!
+                
+                Rates:
+                
+                Per day:
+                
+                1 person - %s EUR/day
+                2+ people - %s EUR/day
+                
+                🔥 <b>POPULAR</b> Per month - <b>SAVE 66%</b>:
+                
+                1 person - %s EUR/month
+                2+ people - %s EUR/month
+                
+                Per year - <b>SAVE 72%</b>:
+                
+                1 person - %s EUR/year
+                2+ people - %s EUR/year
+                """;
     }
 
     @Override
-    public String getFillOutAnApplication4() {
-        return "In progress...";
+    public String getFillOutCommentary() {
+        return """
+                🎤 <b>Application Form (Step 4/4)</b>
+                
+                ☑️ Last Name and First Name Entered
+                ☑️ Number of People Specified
+                ☑️ Duration of Rental
+                🔴 Your Preferences (optional)
+                
+                Please specify your preferences for the \
+                apartment so that we can take them into consideration!
+                """;
     }
 
     @Override

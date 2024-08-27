@@ -3,11 +3,13 @@ package xao.develop.view.User;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
-import xao.develop.service.UserData;
+import xao.develop.config.UserCommand;
+import xao.develop.service.UserParameter;
 import xao.develop.service.UserService;
 import xao.develop.view.Account;
 
@@ -16,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
-public class UserView implements Account, User, UserData {
+public class UserView implements Account, User, UserCommand {
 
     @Autowired
     private BotConfig botConfig;
@@ -24,22 +26,38 @@ public class UserView implements Account, User, UserData {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserParameter userParameter;
+
     @Override
     public void core(Update update) {
         if ((update.hasMessage() && update.getMessage().hasText()) || update.hasCallbackQuery())
             userService.deleteOldMessages(update);
 
-        byte fillingOutStep = update.hasMessage() ?
-                userService.getFillingOutStep(update.getMessage()) :
-                userService.getFillingOutStep(update.getCallbackQuery().getMessage());
+        int fillingOutStep = 0;
+
+        if (userService.isUserStatusExists(userParameter.getChatId(update)))
+            fillingOutStep = userService.getUserFillingOutStep(userParameter.getChatId(update));
+
+        System.out.println("Step: " + fillingOutStep);
 
         try {
-            if (update.hasMessage() && fillingOutStep >= 1)
+            if (update.hasMessage() && fillingOutStep >= 1) {
+                System.out.println("Direction: processingTheApplication");
                 processingTheApplication(update);
-            else if (update.hasMessage() && fillingOutStep < 1)
+            }
+            else if (update.hasCallbackQuery() && fillingOutStep >= 1) {
+                System.out.println("Direction: processingTheApplicationCallbackQuery");
+                processingTheApplicationCallbackQuery(update);
+            }
+            else if (update.hasMessage() && fillingOutStep < 1) {
+                System.out.println("Direction: processingTheMessage");
                 processingTheMessage(update);
-            else if (update.hasCallbackQuery())
+            }
+            else if (update.hasCallbackQuery()) {
+                System.out.println("Direction: processingTheCallbackQuery");
                 processingTheCallbackQuery(update);
+            }
         } catch (TelegramApiException ex) {
             ex.printStackTrace(); // todo Замени на логи
         }
@@ -47,14 +65,73 @@ public class UserView implements Account, User, UserData {
 
     /** Обработка заполнения заявления **/
     private void processingTheApplication(Update update) throws TelegramApiException {
-        String msg = update.getMessage().getText();
-
         deleteLastMessages(update);
 
-        List<String> messages = new ArrayList<>();
-        messages.add(msg);
+        int step = userService.getUserFillingOutStep(userParameter.getChatId(update));
+        userService.setUserFillingOutStep(userParameter.getChatId(update), step + 1);
 
-        app_nextStep(update, msg);
+        userService.registerMessage(
+                userParameter.getChatId(update),
+                app_nextStep(update, step).getMessageId());
+    }
+
+    private void processingTheApplicationCallbackQuery(Update update) throws TelegramApiException {
+        String data = update.getCallbackQuery().getData();
+
+        System.out.println("Data: " + data);
+
+        List<Message> messages = new ArrayList<>();
+
+        int step = userService.getUserFillingOutStep(userParameter.getChatId(update));
+        step--;
+        userService.setUserFillingOutStep(userParameter.getChatId(update), step);
+
+        System.out.println("ЗНАЧЕНИЕ РАВНО СТЕПА: " + step);
+
+        if (step == 0 && data.equals(BACK)) {
+            System.out.println("Check in");
+
+            update.getCallbackQuery().setData(RENT_AN_APARTMENT);
+
+            Integer msgId = botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
+                    userService.getLocalizationText(update),
+                    userService.getRentAnApartmentIKMarkup(update))).getMessageId();
+
+            userService.registerMessage(userParameter.getChatId(update), msgId);
+        }
+        else if (step != 0)
+            switch (data) {
+                case BACK -> {
+                    Integer msgId = botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
+                            userService.getLocalizationText(update),
+                            userService.getBackIKMarkup(update, BACK))).getMessageId();
+
+                    userService.registerMessage(userParameter.getChatId(update), msgId);
+                }
+                case RENT_AN_APARTMENT -> messages = data_rent_an_apartment(update);
+
+                default -> {
+                    userService.setUserFillingOutStep(userParameter.getChatId(update), 0);
+
+                    System.out.println("ВНИМАНИЕ: Не распознана команда в методе processingTheApplicationCallbackQuery");
+
+                    messages = data_start(update);
+                }
+            }
+        else {
+            Integer msgId = botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
+                    userService.getLocalizationText(update),
+                    userService.getRentAnApartmentIKMarkup(update))).getMessageId();
+
+            userService.registerMessage(userParameter.getChatId(update), msgId);
+        }
+
+        for (Message message : messages) {
+            if (message == null)
+                continue;
+
+            userService.registerMessage(message.getChatId(), message.getMessageId());
+        }
     }
 
     /** Обработка входящего сообщений **/
@@ -63,15 +140,13 @@ public class UserView implements Account, User, UserData {
 
         deleteLastMessages(update);
 
-        if (msg.equals(START)) {
-            Message message = cmd_start(update);
-            userService.registerMessage(message.getChatId(), message.getMessageId());
-        }
+        Message message = cmd_start(update);
+        userService.registerMessage(message.getChatId(), message.getMessageId());
     }
 
     /** Удаление последних сообщений **/
     private void deleteLastMessages(Update update) {
-        userService.registerMessage(update.getMessage().getChatId(), update.getMessage().getMessageId());
+        userService.registerMessage(userParameter.getChatId(update), userParameter.getMessage(update));
         userService.deleteOldMessages(update);
     }
 
@@ -79,6 +154,8 @@ public class UserView implements Account, User, UserData {
     private void processingTheCallbackQuery(Update update) throws TelegramApiException {
         String data = update.getCallbackQuery().getData();
         List<Message> messages;
+
+        System.out.println("processingTheCallBackQuery: " + data);
 
         switch (data) {
             case APARTMENTS -> messages = data_apartments(update);
@@ -109,12 +186,28 @@ public class UserView implements Account, User, UserData {
     }
 
     @Override
-    public Message app_nextStep(Update update, String msg) throws TelegramApiException {
+    public Message app_nextStep(Update update, int step) throws TelegramApiException {
+        switch (step) {
+            case 1 -> userService.setUserApplicationName(update.getMessage());
+            case 2 -> userService.setUserApplicationCountOfPerson(update.getMessage());
+            case 3 -> userService.setUserApplicationTimeRent(update.getMessage());
+            case 4 -> {
+                userService.setUserApplicationCommentary(update.getMessage());
 
+                return botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
+                        userService.getLocalizationText(update),
+                        userService.getMainIKMarkup(update)));
+            }
+            default -> {
+                return botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
+                        userService.getLocalizationText(update),
+                        userService.getMainIKMarkup(update)));
+            }
+        }
 
         return botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
                 userService.getLocalizationText(update),
-                userService.getMainIKMarkup(update)));
+                userService.getBackIKMarkup(update, BACK)));
     }
 
     @Override
@@ -157,7 +250,7 @@ public class UserView implements Account, User, UserData {
 
     @Override
     public List<Message> data_fill_out_an_application(Update update) throws TelegramApiException {
-        userService.changeUserFillingOutStep(update.getCallbackQuery().getMessage(), (byte) 0);
+        userService.setUserFillingOutStep(userParameter.getChatId(update), 1);
 
         return Collections.singletonList(
                 botConfig.getTelegramClient().execute(userService.buildSendMessage(update,

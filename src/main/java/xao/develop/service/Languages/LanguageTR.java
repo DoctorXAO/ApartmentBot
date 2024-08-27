@@ -128,23 +128,81 @@ public class LanguageTR implements Language {
     }
 
     @Override
-    public String getFillOutAnApplication1() {
-        return "In progress...";
+    public String getFillOutName() {
+        return """
+                🎤 <b>Başvuru Formu (Adım 1/4)</b>
+                
+                🔴 Soyadı ve Adınızı Giriniz
+                🔘 Kişi Sayısını Belirtiniz
+                🔘 Kiralama Süresi
+                🔘 Tercihleriniz (opsiyonel)
+                
+                Lütfen soyadı ve adınızı girip bu sohbete gönderin, bir sonraki adıma geçmek için!
+                """;
     }
 
     @Override
-    public String getFillOutAnApplication2() {
-        return "In progress...";
+    public String getFillOutCountOfPerson() {
+        return """
+                🎤 <b>Başvuru Formu (Adım 2/4)</b>
+                
+                ☑️ Soyadı ve Ad Girişi Yapıldı \s
+                🔴 Kişi Sayısını Belirtiniz \s
+                🔘 Kiralama Süresi \s
+                🔘 Tercihleriniz (opsiyonel)
+                
+                Lütfen kaç kişinin dairede kalacağını belirtip bu sohbete gönderin!
+                """;
     }
 
     @Override
-    public String getFillOutAnApplication3(String[] prices) {
-        return "In progress...";
+    public String getFillOutRentTime(String onePerDay,
+                                     String onePerMouth,
+                                     String onePerYear,
+                                     String twoPerDay,
+                                     String twoPerMouth,
+                                     String twoPerYear) {
+        return """
+                🎤 <b>Başvuru Formu (Adım 3/4)</b>
+                
+                ☑️ Soyadı ve Ad Girişi Yapıldı
+                ☑️ Kişi Sayısı Belirtildi
+                🔴 Kiralama Süresi
+                🔘 Tercihleriniz (opsiyonel)
+                
+                Lütfen daireyi ne kadar süreyle kiralamak istediğinizi belirtip bu sohbete gönderin!
+                
+                Fiyatlar:
+                
+                Günlük:
+                
+                1 kişi - %s EUR/gün
+                2+ kişi - %s EUR/gün
+                
+                🔥 <b>POPÜLER</b> Aylık - <b>%66 TASARRUF</b>:
+                
+                1 kişi - %s EUR/ay
+                2+ kişi - %s EUR/ay
+                
+                Yıllık - <b>%72 TASARRUF</b>:
+                
+                1 kişi - %s EUR/yıl
+                2+ kişi - %s EUR/yıl
+                """;
     }
 
     @Override
-    public String getFillOutAnApplication4() {
-        return "In progress...";
+    public String getFillOutCommentary() {
+        return """
+                🎤 <b>Başvuru Formu (Adım 4/4)</b>
+                
+                ☑️ Soyadı ve Ad Girişi Yapıldı
+                ☑️ Kişi Sayısı Belirtildi
+                ☑️ Kiralama Süresi
+                🔴 Tercihleriniz (opsiyonel)
+                
+                Daire için tercihlerinizi belirtin, böylece onları dikkate alabiliriz!
+                """;
     }
 
     @Override

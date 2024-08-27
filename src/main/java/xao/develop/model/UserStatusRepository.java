@@ -4,4 +4,6 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface UserStatusRepository extends CrudRepository<UserStatus, Long> {
     UserStatus getByChatId(Long chatId);
+
+    boolean existsByChatId(Long chatId);
 }
