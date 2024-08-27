@@ -1,6 +1,15 @@
 package xao.develop.service.Languages;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import xao.develop.config.BotConfig;
+
+@Component
 public class LanguageTR implements Language {
+
+    @Autowired
+    BotConfig botConfig;
+
     @Override
     public String getStart() {
         return """
@@ -156,12 +165,7 @@ public class LanguageTR implements Language {
     }
 
     @Override
-    public String getFillOutRentTime(String onePerDay,
-                                     String onePerMouth,
-                                     String onePerYear,
-                                     String twoPerDay,
-                                     String twoPerMouth,
-                                     String twoPerYear) {
+    public String getFillOutRentTime() {
         return """
                 🎤 <b>Başvuru Formu (Adım 3/4)</b>
                 
@@ -174,21 +178,29 @@ public class LanguageTR implements Language {
                 
                 Fiyatlar:
                 
-                Günlük:
+                Günlük (EUR/gün):
+                """ + String.format("""
+               
+                1 kişi - %s
+                2 kişi - %s
+                3 kişi - %s
                 
-                1 kişi - %s EUR/gün
-                2+ kişi - %s EUR/gün
+                """, botConfig.getOnePerDay(), botConfig.getTwoPerDay(), botConfig.getThreePerDay()) + """
+                🔥 <b>POPÜLER</b> Aylık (EUR/ay):
+                """ + String.format("""
                 
-                🔥 <b>POPÜLER</b> Aylık - <b>%66 TASARRUF</b>:
+                1 kişi - %s
+                2 kişi - %s
+                3 kişi - %s
                 
-                1 kişi - %s EUR/ay
-                2+ kişi - %s EUR/ay
+                """, botConfig.getOnePerMonth(), botConfig.getTwoPerMonth(), botConfig.getThreePerMonth()) + """
+                Yıllık (EUR/yıl):
+                """ + String.format("""
                 
-                Yıllık - <b>%72 TASARRUF</b>:
-                
-                1 kişi - %s EUR/yıl
-                2+ kişi - %s EUR/yıl
-                """;
+                1 kişi - %s
+                2 kişi - %s
+                3 kişi - %s
+                """, botConfig.getOnePerYear(), botConfig.getTwoPerYear(), botConfig.getThreePerYear());
     }
 
     @Override

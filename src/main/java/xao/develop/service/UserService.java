@@ -37,7 +37,19 @@ public class UserService implements User, UserCommand {
     private BotConfig botConfig;
 
     @Autowired
+    private UserParameter userParameter;
+
+    @Autowired
     private UserPersistence userPersistence;
+
+    @Autowired
+    private LanguageTR languageTR;
+
+    @Autowired
+    private LanguageEN languageEN;
+
+    @Autowired
+    private LanguageRU languageRU;
 
     @Override
     public void registerMessage(Long chatId, int messageId) {
@@ -150,6 +162,61 @@ public class UserService implements User, UserCommand {
         userPersistence.updateUserStatusLanguage(message.getChatId(), language);
     }
 
+    public void sendUserApplicationToAdmin(Update update) throws TelegramApiException {
+        UserStatus userStatus = userPersistence.selectUserStatus(userParameter.getChatId(update));
+
+        org.telegram.telegrambots.meta.api.objects.User user = update.hasMessage() ?
+                update.getMessage().getFrom() :
+                update.getCallbackQuery().getFrom();
+
+        String login = user.getUserName().isEmpty() ? "" : "@" + user.getUserName();
+        String language = user.getLanguageCode();
+        String id = user.getId().toString();
+
+        String name = userStatus.getName();
+        String countOfPerson = userStatus.getCountOfPerson();
+        String rentTime = userStatus.getRentTime();
+        String commentary = userStatus.getCommentary();
+
+        String forAdminMessage = String.format("""
+                        Новая заявка на аренду квартиры!
+                        
+                        <b>Системная форма:</b>
+                        
+                        Логин: %s
+                        
+                        Язык интерфейса: %s
+                        
+                        Идентификатор: %s
+                        
+                        <b>Персональная форма:</b>
+                        
+                        ФИО: %s
+                        
+                        Количество человек: %s
+                        
+                        Срок аренды: %s
+                        
+                        Комментарии: %s
+                        """,
+                login,
+                language,
+                id,
+                name,
+                countOfPerson,
+                rentTime,
+                commentary);
+
+        SendMessage sendMessage = SendMessage
+                .builder()
+                .chatId(botConfig.getAdminId())
+                .text(forAdminMessage)
+                .parseMode("HTML")
+                .build();
+
+        botConfig.getTelegramClient().execute(sendMessage);
+    }
+
     @Override
     public void setUserFillingOutStep(Long chatId, Integer fillingOutStep) {
         userPersistence.updateUserStatusFillingOutStep(chatId, fillingOutStep);
@@ -190,9 +257,9 @@ public class UserService implements User, UserCommand {
         Language language;
 
         switch (getUserLanguage(update).getLanguage()) {
-            case TR -> language = new LanguageTR();
-            case RU -> language = new LanguageRU();
-            default -> language = new LanguageEN();
+            case TR -> language = languageTR;
+            case RU -> language = languageRU;
+            default -> language = languageEN;
         }
 
         return language;
@@ -233,13 +300,7 @@ public class UserService implements User, UserCommand {
                 case RENT_AN_APARTMENT -> text = language.getRentAnApartment();
                 case FILL_OUT_AN_APPLICATION, "1" -> text = language.getFillOutName();
                 case "2" -> text = language.getFillOutCountOfPerson();
-                case "3" -> text = language.getFillOutRentTime(
-                        botConfig.getOnePerDay(),
-                        botConfig.getOnePerMouth(),
-                        botConfig.getOnePerYear(),
-                        botConfig.getTwoPerDay(),
-                        botConfig.getTwoPerMouth(),
-                        botConfig.getTwoPerYear());
+                case "3" -> text = language.getFillOutRentTime();
                 case "4" -> text = language.getFillOutCommentary();
                 case "5" -> text = "";
                 case HOUSE_INFORMATION -> text = language.getHouseInformation();

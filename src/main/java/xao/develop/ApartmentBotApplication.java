@@ -30,9 +30,11 @@ public class ApartmentBotApplication implements LongPollingSingleThreadUpdateCon
                 update.getMessage().getChatId() :
                 update.getCallbackQuery().getMessage().getChatId();
 
-        if (chatId == botConfig.getAdminId())
-            adminView.core(update);
-        else
-            userView.core(update);
+        userView.core(update);
+
+//        if (chatId == botConfig.getAdminId())
+//            adminView.core(update);
+//        else
+//            userView.core(update);
     }
 }

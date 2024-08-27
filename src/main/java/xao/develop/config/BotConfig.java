@@ -27,16 +27,22 @@ public class BotConfig {
 
     @Value("${rent.1.day}")
     private String onePerDay;
-    @Value("${rent.1.month}")
-    private String onePerMouth;
-    @Value("${rent.1.year}")
-    private String onePerYear;
     @Value("${rent.2.day}")
     private String twoPerDay;
+    @Value("${rent.3.day}")
+    private String threePerDay;
     @Value("${rent.1.month}")
-    private String twoPerMouth;
+    private String onePerMonth;
+    @Value("${rent.2.month}")
+    private String twoPerMonth;
+    @Value("${rent.3.month}")
+    private String threePerMonth;
+    @Value("${rent.1.year}")
+    private String onePerYear;
     @Value("${rent.2.year}")
     private String twoPerYear;
+    @Value("${rent.3.year}")
+    private String threePerYear;
 
     @Bean
     public TelegramBotsLongPollingApplication telegramBotsLongPollingApplication() {

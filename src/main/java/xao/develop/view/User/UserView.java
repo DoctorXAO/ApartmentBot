@@ -86,7 +86,7 @@ public class UserView implements Account, User, UserCommand {
         step--;
         userService.setUserFillingOutStep(userParameter.getChatId(update), step);
 
-        System.out.println("ЗНАЧЕНИЕ РАВНО СТЕПА: " + step);
+        System.out.println("pro Step: " + step);
 
         if (step == 0 && data.equals(BACK)) {
             System.out.println("Check in");
@@ -193,6 +193,8 @@ public class UserView implements Account, User, UserCommand {
             case 3 -> userService.setUserApplicationTimeRent(update.getMessage());
             case 4 -> {
                 userService.setUserApplicationCommentary(update.getMessage());
+
+                userService.sendUserApplicationToAdmin(update);
 
                 return botConfig.getTelegramClient().execute(userService.buildSendMessage(update,
                         userService.getLocalizationText(update),

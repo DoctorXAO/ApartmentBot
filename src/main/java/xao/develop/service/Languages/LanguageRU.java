@@ -1,6 +1,14 @@
 package xao.develop.service.Languages;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import xao.develop.config.BotConfig;
+
+@Component
 public class LanguageRU implements Language {
+
+    @Autowired
+    BotConfig botConfig;
 
     @Override
     public String getStart() {
@@ -161,12 +169,7 @@ public class LanguageRU implements Language {
     }
 
     @Override
-    public String getFillOutRentTime(String onePerDay,
-                                     String onePerMouth,
-                                     String onePerYear,
-                                     String twoPerDay,
-                                     String twoPerMouth,
-                                     String twoPerYear) {
+    public String getFillOutRentTime() {
         return """
                 \uD83C\uDFA4 <b>Заполнение заявления (шаг 3/4)</b>
                 
@@ -179,21 +182,29 @@ public class LanguageRU implements Language {
                 
                 Расценки:
                 
-                По дню:
+                По дню (евро/день):
+                """ + String.format("""
                 
-                1 человек   - %s евро/день
-                2+ человека - %s евро/день
+                1 человек - %s
+                2 человека - %s
+                3 человека - %s
                 
-                🔥 <b>ПОПУЛЯРНОЕ</b> По месяцу - <b>ЭКОНОМИЯ 66%</b>:
+                """, botConfig.getOnePerDay(), botConfig.getTwoPerDay(), botConfig.getThreePerDay()) + """
+                🔥 <b>ПОПУЛЯРНОЕ</b> По месяцу (евро/месяц):
+                """ + String.format("""
                 
-                1 человек - %s евро/месяц
-                2+ человек - %s евро/месяц
+                1 человек - %s
+                2 человека - %s
+                3 человека - %s
                 
-                По году - <b>ЭКОНОМИЯ 72%</b>:
+                """, botConfig.getOnePerMonth(), botConfig.getTwoPerMonth(), botConfig.getThreePerMonth()) + """
+                По году (евро/год):
+                """ + String.format("""
                 
-                1 человек - %s евро/год
-                2+ человека - %s евро/год
-                """;
+                1 человек - %s
+                2 человека - %s
+                3 человека - %s
+                """, botConfig.getOnePerYear(), botConfig.getTwoPerYear(), botConfig.getThreePerYear());
     }
 
     @Override

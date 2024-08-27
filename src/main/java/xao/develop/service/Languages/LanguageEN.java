@@ -1,6 +1,14 @@
 package xao.develop.service.Languages;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import xao.develop.config.BotConfig;
+
+@Component
 public class LanguageEN implements Language {
+
+    @Autowired
+    BotConfig botConfig;
 
     @Override
     public String getStart() {
@@ -156,14 +164,9 @@ public class LanguageEN implements Language {
     }
 
     @Override
-    public String getFillOutRentTime(String onePerDay,
-                                     String onePerMouth,
-                                     String onePerYear,
-                                     String twoPerDay,
-                                     String twoPerMouth,
-                                     String twoPerYear) {
+    public String getFillOutRentTime() {
         return """
-                🎤 <b>Application Form (Step 3/4)<b>
+                🎤 <b>Application Form (Step 3/4)</b>
                 
                 ☑️ Last Name and First Name Entered
                 ☑️ Number of People Specified
@@ -174,21 +177,29 @@ public class LanguageEN implements Language {
                 
                 Rates:
                 
-                Per day:
+                Per day (EUR/day):
+                """ + String.format("""
                 
-                1 person - %s EUR/day
-                2+ people - %s EUR/day
+                1 person - %s
+                2 people - %s
+                3 people - %s
                 
-                🔥 <b>POPULAR</b> Per month - <b>SAVE 66%</b>:
+                """, botConfig.getOnePerDay(), botConfig.getTwoPerDay(), botConfig.getThreePerDay()) + """
+                🔥 <b>POPULAR</b> Per month (EUR/month):
+                """ + String.format("""
                 
-                1 person - %s EUR/month
-                2+ people - %s EUR/month
+                1 person - %s
+                2 people - %s
+                3 people - %s
                 
-                Per year - <b>SAVE 72%</b>:
+                """, botConfig.getOnePerMonth(), botConfig.getTwoPerMonth(), botConfig.getThreePerMonth()) + """
+                Per year (EUR/year):
+                """ + String.format("""
                 
-                1 person - %s EUR/year
-                2+ people - %s EUR/year
-                """;
+                1 person - %s
+                2 people - %s
+                3 people - %s
+                """, botConfig.getOnePerYear(), botConfig.getTwoPerYear(), botConfig.getThreePerYear());
     }
 
     @Override

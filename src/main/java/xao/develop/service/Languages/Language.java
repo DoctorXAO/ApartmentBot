@@ -1,5 +1,7 @@
 package xao.develop.service.Languages;
 
+import xao.develop.config.BotConfig;
+
 public interface Language {
     String getStart();
     String getHouseInformation();
@@ -9,12 +11,7 @@ public interface Language {
     String getRentAnApartment();
     String getFillOutName();
     String getFillOutCountOfPerson();
-    String getFillOutRentTime(String onePerDay,
-                              String onePerMouth,
-                              String onePerYear,
-                              String twoPerDay,
-                              String twoPerMouth,
-                              String twoPerYear);
+    String getFillOutRentTime();
     String getFillOutCommentary();
     String getChangeLanguage();
 
