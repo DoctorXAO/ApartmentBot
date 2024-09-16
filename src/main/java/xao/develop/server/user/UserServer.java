@@ -2,24 +2,18 @@ package xao.develop.server.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.config.UserCommand;
 import xao.develop.model.TempUserMessage;
-import xao.develop.model.UserStatus;
 import xao.develop.repository.UserPersistence;
+import xao.develop.server.Server;
 
 import java.util.List;
-import java.util.Locale;
 
 @Slf4j
 @Service
@@ -32,110 +26,27 @@ public class UserServer implements UserCommand {
     UserPersistence userPersistence;
 
     @Autowired
-    private MessageSource messageSource;
+    UserMessageStart userMessageStart;
 
     @Autowired
-    UserMessageStart userMessageStart;
+    Server server;
 
     public void execute(Update update, String data) {
         Message message;
 
         try {
             switch (data) {
-                case START -> message = userMessageStart.sendMessage(update);
+                case START -> {
+                    authorization(update.getMessage());
+                    message = userMessageStart.sendMessage(update);
+                }
                 default -> throw new Exception("Unknown data: " + data);
             }
 
-            registerMessage(getChatId(update), message.getMessageId());
+            registerMessage(server.getChatId(update), message.getMessageId());
         } catch (Exception ex) {
             log.error("execute: {}", ex.getMessage());
         }
-    }
-
-    public Long getChatId(Update update) {
-        log.trace("Method 'getChatId' started");
-
-        Long chatId = update.hasMessage() ?
-                update.getMessage().getChatId() :
-                update.getCallbackQuery().getMessage().getChatId();
-
-        log.trace("Method 'getChatId' finished and it's returning the next value: {}", chatId);
-
-        return chatId;
-    }
-
-    public Integer getMessageId(Update update) {
-        log.trace("Method 'getMsgId' started");
-
-        Integer msgId = update.hasMessage() ?
-                update.getMessage().getMessageId() :
-                update.getCallbackQuery().getMessage().getMessageId();
-
-        log.trace("Method 'getMsgId' finished and it's returning the next value: {}", msgId);
-
-        return msgId;
-    }
-
-    private String getLocaleMessage(Update update, String code) {
-        UserStatus userStatus = update.hasMessage() ?
-                userPersistence.selectUserStatus(update.getMessage().getChatId()) :
-                userPersistence.selectUserStatus(update.getCallbackQuery().getMessage().getChatId());
-
-        Locale locale = new Locale(userStatus.getLanguage());
-
-        return messageSource.getMessage(code, null, locale);
-    }
-
-    public String getLocalizationText(Update update) {
-        log.trace("Method getLocalizationText(Update) started");
-
-        String signal = update.hasMessage() ?
-                update.getMessage().getText() :
-                update.getCallbackQuery().getData();
-
-        try {
-            String text;
-
-            switch (signal) {
-                case START -> text = getLocaleMessage(update, "user.msg.start");
-                default -> throw new Exception("Error download message");
-            }
-
-            log.debug("Method getLocalizationText(Update) is returning the next value: {}", signal);
-            log.trace("Method getLocalizationText(Update) finished");
-
-            return text;
-        } catch (Exception ex) {
-            log.error("Error loading message. Signal: {}. Error: {}", signal, ex.getMessage());
-
-            return "Error download message. Please, to message the system administrator.";
-        }
-    }
-
-    public String getLocalizationButton(Update update, String nameButton) {
-        log.trace("Method getLocalizationButton(Update, String) started");
-        log.debug("getLocalizationButton: nameButton = {}", nameButton);
-
-        String text;
-
-        try {
-            switch (nameButton) {
-                case APARTMENTS -> text = getLocaleMessage(update, "user.bt.apartments");
-                case RENT_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.rent-an-apartment");
-                case HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.bt.house-information");
-                case CONTACTS -> text = getLocaleMessage(update, "user.bt.contacts");
-                case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.bt.change-language");
-                default -> throw new Exception("Ошибка загрузки названия кнопки");
-            }
-        } catch (Exception ex) {
-            log.error("Unknown name button. Name button: {}", nameButton);
-
-            return "null";
-        }
-
-        log.trace("Method getLocalizationButton(Update, String) finished");
-
-        return text;
     }
 
     public void authorization(Message message) {
@@ -149,9 +60,9 @@ public class UserServer implements UserCommand {
     }
 
     public void deleteOldMessages(Update update) {
-        log.trace("Method 'deleteOldMessage' started for userID: {}", getChatId(update));
+        log.trace("Method 'deleteOldMessage' started for userID: {}", server.getChatId(update));
 
-        Long chatId = getChatId(update);
+        Long chatId = server.getChatId(update);
 
         List<TempUserMessage> userMessages = userPersistence.selectUserMessages(chatId);
 
@@ -176,35 +87,11 @@ public class UserServer implements UserCommand {
     }
 
     public void deleteLastMessages(Update update) {
-        registerMessage(getChatId(update), getMessageId(update));
+        registerMessage(server.getChatId(update), server.getMessageId(update));
         deleteOldMessages(update);
     }
 
     public void registerMessage(Long chatId, int messageId) {
         userPersistence.insertUserMessage(chatId, messageId);
-    }
-
-    // ------------ Builders ------------
-
-    public InlineKeyboardRow buildIKRow(List<InlineKeyboardButton> buttons) {
-        return new InlineKeyboardRow(buttons);
-    }
-
-    public InlineKeyboardButton buildIKButton(String text, String callbackData) {
-        return InlineKeyboardButton
-                .builder()
-                .text(text)
-                .callbackData(callbackData)
-                .build();
-    }
-
-    public SendMessage buildSendMessage(Update update, String text, InlineKeyboardMarkup markup) {
-        return SendMessage
-                .builder()
-                .chatId(getChatId(update))
-                .text(text)
-                .replyMarkup(markup)
-                .parseMode("HTML")
-                .build();
     }
 }

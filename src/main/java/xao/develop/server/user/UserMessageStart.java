@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.config.UserCommand;
+import xao.develop.server.MessageBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,18 +24,17 @@ public class UserMessageStart implements UserCommand {
     BotConfig botConfig;
 
     @Autowired
-    UserServer server;
+    MessageBuilder msgBuilder;
+
+    @Autowired
+    UserLocalization userLoc;
 
     /** Получена команда /start **/
     public Message sendMessage(Update update) throws TelegramApiException {
-        log.trace("Method cmd_start(Update) started");
+        log.trace("Method sendMessage(Update) started and finished");
 
-        server.authorization(update.getMessage());
-
-        log.trace("Method cmd_start(Update) finished");
-
-        return botConfig.getTelegramClient().execute(server.buildSendMessage(update,
-                server.getLocalizationText(update),
+        return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
+                userLoc.getLocalizationText(update),
                 getIKMarkup(update)));
     }
 
@@ -42,18 +42,18 @@ public class UserMessageStart implements UserCommand {
         log.trace("Method getMainIKMarkup(Update) started");
 
         List<InlineKeyboardButton> buttons = new ArrayList<>();
-        buttons.add(server.buildIKButton(server.getLocalizationButton(update, APARTMENTS), APARTMENTS));
-        buttons.add(server.buildIKButton(server.getLocalizationButton(update, RENT_AN_APARTMENT), RENT_AN_APARTMENT));
-        InlineKeyboardRow row1 = server.buildIKRow(buttons);
+        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, APARTMENTS), APARTMENTS));
+        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, RENT_AN_APARTMENT), RENT_AN_APARTMENT));
+        InlineKeyboardRow row1 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(server.buildIKButton(server.getLocalizationButton(update, HOUSE_INFORMATION), HOUSE_INFORMATION));
-        buttons.add(server.buildIKButton(server.getLocalizationButton(update, CONTACTS), CONTACTS));
-        InlineKeyboardRow row2 = server.buildIKRow(buttons);
+        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, HOUSE_INFORMATION), HOUSE_INFORMATION));
+        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, CONTACTS), CONTACTS));
+        InlineKeyboardRow row2 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(server.buildIKButton(server.getLocalizationButton(update, CHANGE_LANGUAGE), CHANGE_LANGUAGE));
-        InlineKeyboardRow row3 = server.buildIKRow(buttons);
+        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, CHANGE_LANGUAGE), CHANGE_LANGUAGE));
+        InlineKeyboardRow row3 = msgBuilder.buildIKRow(buttons);
 
         log.trace("Method getMainIKMarkup(Update) finished");
 
