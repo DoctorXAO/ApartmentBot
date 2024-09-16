@@ -1,4 +1,4 @@
-package xao.develop.service.user;
+package xao.develop.server.user;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;

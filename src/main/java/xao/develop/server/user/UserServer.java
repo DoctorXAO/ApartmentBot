@@ -1,4 +1,4 @@
-package xao.develop.service.user;
+package xao.develop.server.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ import java.util.Locale;
 
 @Slf4j
 @Service
-public class UserService implements UserCommand {
+public class UserServer implements UserCommand {
 
     @Autowired
     BotConfig botConfig;
@@ -33,6 +33,24 @@ public class UserService implements UserCommand {
 
     @Autowired
     private MessageSource messageSource;
+
+    @Autowired
+    UserMessageStart userMessageStart;
+
+    public void execute(Update update, String data) {
+        Message message;
+
+        try {
+            switch (data) {
+                case START -> message = userMessageStart.sendMessage(update);
+                default -> throw new Exception("Unknown data: " + data);
+            }
+
+            registerMessage(getChatId(update), message.getMessageId());
+        } catch (Exception ex) {
+            log.error("execute: {}", ex.getMessage());
+        }
+    }
 
     public Long getChatId(Update update) {
         log.trace("Method 'getChatId' started");
@@ -46,7 +64,7 @@ public class UserService implements UserCommand {
         return chatId;
     }
 
-    public Integer getMsgId(Update update) {
+    public Integer getMessageId(Update update) {
         log.trace("Method 'getMsgId' started");
 
         Integer msgId = update.hasMessage() ?
@@ -58,16 +76,12 @@ public class UserService implements UserCommand {
         return msgId;
     }
 
-    private UserStatus getUserLanguage(Update update) {
-        log.trace("Method getUserLanguage(Update) started and finished");
-
-        return update.hasMessage() ?
+    private String getLocaleMessage(Update update, String code) {
+        UserStatus userStatus = update.hasMessage() ?
                 userPersistence.selectUserStatus(update.getMessage().getChatId()) :
                 userPersistence.selectUserStatus(update.getCallbackQuery().getMessage().getChatId());
-    }
 
-    private String getLocale(Update update, String code) {
-        Locale locale = new Locale(getUserLanguage(update).getLanguage());
+        Locale locale = new Locale(userStatus.getLanguage());
 
         return messageSource.getMessage(code, null, locale);
     }
@@ -83,7 +97,7 @@ public class UserService implements UserCommand {
             String text;
 
             switch (signal) {
-                case START -> text = getLocale(update, "user.msg.start");
+                case START -> text = getLocaleMessage(update, "user.msg.start");
                 default -> throw new Exception("Error download message");
             }
 
@@ -106,11 +120,11 @@ public class UserService implements UserCommand {
 
         try {
             switch (nameButton) {
-                case APARTMENTS -> text = getLocale(update, "user.bt.apartments");
-                case RENT_AN_APARTMENT -> text = getLocale(update, "user.bt.rent-an-apartment");
-                case HOUSE_INFORMATION -> text = getLocale(update, "user.bt.house-information");
-                case CONTACTS -> text = getLocale(update, "user.bt.contacts");
-                case CHANGE_LANGUAGE -> text = getLocale(update, "user.bt.change-language");
+                case APARTMENTS -> text = getLocaleMessage(update, "user.bt.apartments");
+                case RENT_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.rent-an-apartment");
+                case HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.bt.house-information");
+                case CONTACTS -> text = getLocaleMessage(update, "user.bt.contacts");
+                case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.bt.change-language");
                 default -> throw new Exception("Ошибка загрузки названия кнопки");
             }
         } catch (Exception ex) {
@@ -162,7 +176,7 @@ public class UserService implements UserCommand {
     }
 
     public void deleteLastMessages(Update update) {
-        registerMessage(getChatId(update), getMsgId(update));
+        registerMessage(getChatId(update), getMessageId(update));
         deleteOldMessages(update);
     }
 

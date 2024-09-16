@@ -1,4 +1,4 @@
-package xao.develop.presentation.user;
+package xao.develop.client.user;
 
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;

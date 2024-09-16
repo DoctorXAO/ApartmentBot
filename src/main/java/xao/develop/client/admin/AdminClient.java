@@ -1,11 +1,11 @@
-package xao.develop.presentation.admin;
+package xao.develop.client.admin;
 
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import xao.develop.presentation.Account;
+import xao.develop.client.Account;
 
 @Component
-public class AdminPresentation implements Account, Admin {
+public class AdminClient implements Account, Admin {
     @Override
     public void core(Update update) {
 
