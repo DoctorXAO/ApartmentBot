@@ -10,10 +10,13 @@ import xao.develop.ApartmentBotApplication;
 
 @Component
 public class BotInitializer {
+
     @Autowired
     private BotConfig botConfig;
+
     @Autowired
     private ApartmentBotApplication application;
+
     @Autowired
     private TelegramBotsLongPollingApplication bot;
 

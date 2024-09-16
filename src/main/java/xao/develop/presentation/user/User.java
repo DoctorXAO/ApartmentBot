@@ -1,4 +1,4 @@
-package xao.develop.view.User;
+package xao.develop.presentation.user;
 
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -9,8 +9,10 @@ import java.util.List;
 public interface User {
     Message app_nextStep(Update update, int step) throws TelegramApiException;
 
+    /** Have gotten message "/start" **/
     Message cmd_start(Update update) throws TelegramApiException;
 
+    /** Have gotten signal start **/
     List<Message> data_start(Update update) throws TelegramApiException;
     List<Message> data_apartments(Update update) throws TelegramApiException;
     List<Message> data_rent_an_apartment(Update update) throws TelegramApiException;
