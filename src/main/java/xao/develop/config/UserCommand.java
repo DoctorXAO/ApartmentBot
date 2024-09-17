@@ -5,7 +5,7 @@ public interface UserCommand {
 
     String APARTMENTS = "apartments";
     String RENT_AN_APARTMENT = "rent_an_apartment";
-    String FILL_OUT_AN_APPLICATION = "fill_out_an_application";
+    String CHOOSE_AN_APARTMENT = "choose_an_apartment";
     String HOUSE_INFORMATION = "house_information";
     String CONTACTS = "contacts";
     String RULES = "rules";

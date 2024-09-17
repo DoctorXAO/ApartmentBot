@@ -27,10 +27,24 @@ public class UserServer implements UserCommand {
     UserPersistence userPersistence;
 
     @Autowired
-    UserMessageStart userMessageStart;
+    UserMsgStart userMsgStart;
 
     @Autowired
-    UserMessageApartment userMessageApartment;
+    UserMsgApartments userMsgApartments;
+
+    @Autowired
+    UserMsgRentAnApartment userMsgRentAnApartment;
+
+    @Autowired
+    UserMsgHouseInformation userMsgHouseInformation;
+    @Autowired
+    UserMsgRules userMsgRules;
+
+    @Autowired
+    UserMsgContacts userMsgContacts;
+
+    @Autowired
+    UserMsgChangeLanguage userMsgChangeLanguage;
 
     @Autowired
     Server server;
@@ -44,13 +58,27 @@ public class UserServer implements UserCommand {
             switch (data) {
                 case START -> {
                     authorization(update.getMessage());
-                    messages.add(userMessageStart.sendMessage(update));
+                    messages.add(userMsgStart.sendMessage(update));
                 }
                 case APARTMENTS -> {
-                    messages = userMessageApartment.testSendMessage(update);
-                    messages.add(userMessageApartment.sendMessage(update));
+                    messages = userMsgApartments.sendPhotos(update);
+                    messages.add(userMsgApartments.sendMessage(update));
                 }
-                default -> throw new Exception("Unknown data: " + data);
+                case RENT_AN_APARTMENT -> messages.add(userMsgRentAnApartment.sendMessage(update));
+                case HOUSE_INFORMATION -> messages.add(userMsgHouseInformation.sendMessage(update));
+                case RULES -> messages.add(userMsgRules.sendMessage(update));
+                case CONTACTS -> messages.add(userMsgContacts.sendMessage(update));
+                case CHANGE_LANGUAGE -> messages.add(userMsgChangeLanguage.sendMessage(update));
+                case BACK_TO_START -> {
+                    update.getCallbackQuery().setData("/start");
+                    messages.add(userMsgStart.sendMessage(update));
+                }
+                case EN, TR, RU -> {
+                    server.setLanguage(update, data);
+                    update.getCallbackQuery().setData("/start");
+                    messages.add(userMsgStart.sendMessage(update));
+                }
+                default -> throw new Exception("execute: Unknown data: " + data);
             }
 
             for (Message message : messages)
@@ -63,6 +91,8 @@ public class UserServer implements UserCommand {
     }
 
     public void authorization(Message message) {
+        log.trace("Method authorization(Message) started");
+
         Long chatId = message.getChatId();
         String login = message.getFrom().getUserName();
         String firstName = message.getFrom().getFirstName();
@@ -70,6 +100,17 @@ public class UserServer implements UserCommand {
         String language = message.getFrom().getLanguageCode();
 
         userPersistence.insertUserStatus(chatId, login, firstName, lastName, language, 0);
+
+        log.debug("""
+                Authorization: the following user parameters have been added to the database:
+                chatId = {}
+                login = {}
+                firstName = {}
+                lastName = {}
+                language = {}
+                """, chatId, login, firstName, lastName, language);
+
+        log.trace("Method authorization(Message) finished");
     }
 
     public void deleteOldMessages(Update update) {

@@ -28,7 +28,7 @@
         </encoder>
     </appender>
 
-    <logger name="xao.develop" level="trace" addivity="false">
+    <logger name="xao.develop" level="debug" addivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE-ROLLING"/>
     </logger>

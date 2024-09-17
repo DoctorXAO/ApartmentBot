@@ -2,7 +2,6 @@ package xao.develop.server.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -11,10 +10,6 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import xao.develop.config.BotConfig;
-import xao.develop.config.UserCommand;
-import xao.develop.server.BotMessage;
-import xao.develop.server.MessageBuilder;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -26,15 +21,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class UserMessageApartment implements BotMessage, UserCommand {
-    @Autowired
-    BotConfig botConfig;
-
-    @Autowired
-    MessageBuilder msgBuilder;
-
-    @Autowired
-    UserLocalization userLoc;
+public class UserMsgApartments extends UserMsg {
 
     @Override
     public Message sendMessage(Update update) throws TelegramApiException {
@@ -43,11 +30,11 @@ public class UserMessageApartment implements BotMessage, UserCommand {
                 getIKMarkup(update)));
     }
 
-    public List<Message> testSendMessage(Update update) throws TelegramApiException {
+    public List<Message> sendPhotos(Update update) throws TelegramApiException {
         return botConfig.getTelegramClient().execute(sendPhotos(update, "apartment"));
     }
 
-    public SendMediaGroup sendPhotos(Update update, String patch) {
+    private SendMediaGroup sendPhotos(Update update, String patch) {
         try {
             ClassLoader classLoader = getClass().getClassLoader();
             URL resource = classLoader.getResource(patch);

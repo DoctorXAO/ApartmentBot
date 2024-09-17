@@ -1,12 +1,22 @@
 package xao.develop.server;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import xao.develop.repository.UserPersistence;
 
 @Slf4j
 @Service
 public class Server {
+
+    @Autowired
+    UserPersistence userPersistence;
+
+    public void setLanguage(Update update, String language) {
+        userPersistence.updateUserStatusLanguage(getChatId(update), language);
+    }
+
     public Long getChatId(Update update) {
         log.trace("Method 'getChatId' started");
 

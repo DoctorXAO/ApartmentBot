@@ -43,6 +43,11 @@ public class UserLocalization implements UserCommand {
             switch (signal) {
                 case START -> text = getLocaleMessage(update, "user.msg.start");
                 case APARTMENTS -> text = getLocaleMessage(update, "user.msg.apartments");
+                case HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.msg.house-information");
+                case RULES -> text = getLocaleMessage(update, "user.msg.rules");
+                case CONTACTS -> text = getLocaleMessage(update, "user.msg.contacts");
+                case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.msg.change-language");
+                case RENT_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.rent-an-apartment");
                 default -> throw new Exception("Error download message");
             }
 
@@ -51,9 +56,9 @@ public class UserLocalization implements UserCommand {
 
             return text;
         } catch (Exception ex) {
-            log.error("Error loading message. Signal: {}. Error: {}", signal, ex.getMessage());
+            log.warn("Error loading message. Signal: {}. Error: {}", signal, ex.getMessage());
 
-            return "Error download message. Please, to message the system administrator.";
+            return "Error loading message. Please send a bug report to us.";
         }
     }
 
@@ -70,8 +75,10 @@ public class UserLocalization implements UserCommand {
                 case HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.bt.house-information");
                 case CONTACTS -> text = getLocaleMessage(update, "user.bt.contacts");
                 case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.bt.change-language");
+                case RULES -> text = getLocaleMessage(update, "user.bt.rules");
+                case CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.choose-an-apartment");
                 case BACK -> text = getLocaleMessage(update, "user.bt.back");
-                default -> throw new Exception("Ошибка загрузки названия кнопки");
+                default -> throw new Exception("Error loading button name");
             }
         } catch (Exception ex) {
             log.warn("Unknown name button. Name button: {}", nameButton);
