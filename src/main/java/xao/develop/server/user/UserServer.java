@@ -13,6 +13,7 @@ import xao.develop.model.TempUserMessage;
 import xao.develop.repository.UserPersistence;
 import xao.develop.server.Server;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -29,24 +30,36 @@ public class UserServer implements UserCommand {
     UserMessageStart userMessageStart;
 
     @Autowired
+    UserMessageApartment userMessageApartment;
+
+    @Autowired
     Server server;
 
     public void execute(Update update, String data) {
-        Message message;
+        log.trace("Method execute(Update, String) started");
+
+        List<Message> messages = new ArrayList<>();
 
         try {
             switch (data) {
                 case START -> {
                     authorization(update.getMessage());
-                    message = userMessageStart.sendMessage(update);
+                    messages.add(userMessageStart.sendMessage(update));
+                }
+                case APARTMENTS -> {
+                    messages = userMessageApartment.testSendMessage(update);
+                    messages.add(userMessageApartment.sendMessage(update));
                 }
                 default -> throw new Exception("Unknown data: " + data);
             }
 
-            registerMessage(server.getChatId(update), message.getMessageId());
+            for (Message message : messages)
+                registerMessage(server.getChatId(update), message.getMessageId());
         } catch (Exception ex) {
             log.error("execute: {}", ex.getMessage());
         }
+
+        log.trace("Method execute(Update, String) finished");
     }
 
     public void authorization(Message message) {

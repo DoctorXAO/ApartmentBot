@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.config.UserCommand;
+import xao.develop.server.BotMessage;
 import xao.develop.server.MessageBuilder;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class UserMessageStart implements UserCommand {
+public class UserMessageStart implements BotMessage, UserCommand {
 
     @Autowired
     BotConfig botConfig;
@@ -30,6 +31,7 @@ public class UserMessageStart implements UserCommand {
     UserLocalization userLoc;
 
     /** Получена команда /start **/
+    @Override
     public Message sendMessage(Update update) throws TelegramApiException {
         log.trace("Method sendMessage(Update) started and finished");
 
@@ -38,6 +40,7 @@ public class UserMessageStart implements UserCommand {
                 getIKMarkup(update)));
     }
 
+    @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         log.trace("Method getMainIKMarkup(Update) started");
 

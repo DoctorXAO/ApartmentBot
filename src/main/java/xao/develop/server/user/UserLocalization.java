@@ -42,6 +42,7 @@ public class UserLocalization implements UserCommand {
 
             switch (signal) {
                 case START -> text = getLocaleMessage(update, "user.msg.start");
+                case APARTMENTS -> text = getLocaleMessage(update, "user.msg.apartments");
                 default -> throw new Exception("Error download message");
             }
 
@@ -69,10 +70,11 @@ public class UserLocalization implements UserCommand {
                 case HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.bt.house-information");
                 case CONTACTS -> text = getLocaleMessage(update, "user.bt.contacts");
                 case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.bt.change-language");
+                case BACK -> text = getLocaleMessage(update, "user.bt.back");
                 default -> throw new Exception("Ошибка загрузки названия кнопки");
             }
         } catch (Exception ex) {
-            log.error("Unknown name button. Name button: {}", nameButton);
+            log.warn("Unknown name button. Name button: {}", nameButton);
 
             return "null";
         }
