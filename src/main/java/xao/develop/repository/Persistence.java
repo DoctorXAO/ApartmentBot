@@ -7,7 +7,7 @@ import xao.develop.model.*;
 import java.util.List;
 
 @Repository
-public class UserPersistence implements User {
+public class Persistence {
 
     @Autowired
     private TempUserMessagesRepository tempUserMessagesRepository;
@@ -15,12 +15,13 @@ public class UserPersistence implements User {
     @Autowired
     private UserStatusRepository userStatusRepository;
 
-    @Override
+    @Autowired
+    private ApartmentsRepository apartmentsRepository;
+
     public boolean isUserStatusExists(Long chatId) {
         return userStatusRepository.existsByChatId(chatId);
     }
 
-    @Override
     public void insertUserStatus(Long chatId,
                                  String login,
                                  String firstName,
@@ -34,18 +35,16 @@ public class UserPersistence implements User {
         userStatus.setFirstName(firstName);
         userStatus.setLastName(lastName);
         userStatus.setLanguage(language);
-        userStatus.setFillingOutStep(0);
+        userStatus.setFillingOutStep(fillingOutStep);
 
         userStatusRepository.save(userStatus);
     }
 
-    @Override
     public UserStatus selectUserStatus(Long chatId) {
         return userStatusRepository.getByChatId(chatId);
     }
 
     /** Обновить язык интерфейса пользователя **/
-    @Override
     public void updateUserStatusLanguage(Long chatId, String language) {
         UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
 
@@ -55,7 +54,6 @@ public class UserPersistence implements User {
     }
 
     /** Обновление этапа заполнения заявки **/
-    @Override
     public void updateUserStatusFillingOutStep(Long chatId, Integer step) {
         UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
 
@@ -64,7 +62,6 @@ public class UserPersistence implements User {
         userStatusRepository.save(userStatus);
     }
 
-    @Override
     public void updateUserStatusName(Long chatId, String name) {
         UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
 
@@ -73,7 +70,6 @@ public class UserPersistence implements User {
         userStatusRepository.save(userStatus);
     }
 
-    @Override
     public void updateUserStatusCountOfPerson(Long chatId, String countOfPerson) {
         UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
 
@@ -82,7 +78,6 @@ public class UserPersistence implements User {
         userStatusRepository.save(userStatus);
     }
 
-    @Override
     public void updateUserStatusRentTime(Long chatId, String rentTime) {
         UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
 
@@ -91,7 +86,6 @@ public class UserPersistence implements User {
         userStatusRepository.save(userStatus);
     }
 
-    @Override
     public void updateUserStatusCommentary(Long chatId, String comment) {
         UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
 
@@ -100,12 +94,10 @@ public class UserPersistence implements User {
         userStatusRepository.save(userStatus);
     }
 
-    @Override
     public List<TempUserMessage> selectUserMessages(Long chatID) {
         return tempUserMessagesRepository.findByChatId(chatID);
     }
 
-    @Override
     public void insertUserMessage(long chatId, int messageId) {
         TempUserMessage tempUserMessage = new TempUserMessage();
         tempUserMessage.setChatId(chatId);
@@ -114,8 +106,15 @@ public class UserPersistence implements User {
         tempUserMessagesRepository.save(tempUserMessage);
     }
 
-    @Override
     public void deleteUserMessage(long chatId) {
         tempUserMessagesRepository.deleteByChatId(chatId);
+    }
+
+    public void selectApartment(Long number) {
+        apartmentsRepository.getByNumber(number);
+    }
+
+    public List<Apartments> selectAllApartments() {
+        return apartmentsRepository.findAll();
     }
 }

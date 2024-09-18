@@ -19,38 +19,8 @@ public class UserClient implements Account, UserCommand {
     public void core(Update update) {
         log.trace("Method core(Update) started");
 
-        userServer.deleteOldMessages(update);
-
-        if (update.hasMessage() && update.getMessage().hasText())
-            processingTheMessage(update);
-        else if (update.hasCallbackQuery())
-            processingTheCallbackQuery(update);
+        userServer.execute(update);
 
         log.trace("Method core(Update) finished");
-    }
-
-    private void processingTheMessage(Update update) {
-        log.trace("Method processingTheMessage(Update) started");
-
-        String command = update.getMessage().getText();
-
-        log.debug("User wrote the next command: {}", command);
-
-        userServer.deleteLastMessages(update);
-        userServer.execute(update, command);
-
-        log.trace("Method processingTheMessage(Update) finished");
-    }
-
-    private void processingTheCallbackQuery(Update update) {
-        log.trace("Method processingTheCallbackQuery(Update) started");
-
-        String data = update.getCallbackQuery().getData();
-
-        log.debug("processingTheCallbackQuery: variable data = {}", data);
-
-        userServer.execute(update, data);
-
-        log.trace("Method processingTheCallbackQuery(Update) finished");
     }
 }

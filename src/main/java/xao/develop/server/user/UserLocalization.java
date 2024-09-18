@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import xao.develop.config.UserCommand;
 import xao.develop.model.UserStatus;
-import xao.develop.repository.UserPersistence;
+import xao.develop.repository.Persistence;
 
 import java.util.Locale;
 
@@ -15,15 +15,15 @@ import java.util.Locale;
 @Service
 public class UserLocalization implements UserCommand {
     @Autowired
-    UserPersistence userPersistence;
+    Persistence persistence;
 
     @Autowired
     MessageSource messageSource;
 
     private String getLocaleMessage(Update update, String code) {
         UserStatus userStatus = update.hasMessage() ?
-                userPersistence.selectUserStatus(update.getMessage().getChatId()) :
-                userPersistence.selectUserStatus(update.getCallbackQuery().getMessage().getChatId());
+                persistence.selectUserStatus(update.getMessage().getChatId()) :
+                persistence.selectUserStatus(update.getCallbackQuery().getMessage().getChatId());
 
         Locale locale = new Locale(userStatus.getLanguage());
 
@@ -43,11 +43,12 @@ public class UserLocalization implements UserCommand {
             switch (signal) {
                 case START -> text = getLocaleMessage(update, "user.msg.start");
                 case APARTMENTS -> text = getLocaleMessage(update, "user.msg.apartments");
+                case RENT_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.rent-an-apartment");
                 case HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.msg.house-information");
-                case RULES -> text = getLocaleMessage(update, "user.msg.rules");
                 case CONTACTS -> text = getLocaleMessage(update, "user.msg.contacts");
                 case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.msg.change-language");
-                case RENT_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.rent-an-apartment");
+                case RULES -> text = getLocaleMessage(update, "user.msg.rules");
+                case CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.choose-an-apartment");
                 default -> throw new Exception("Error download message");
             }
 
@@ -58,7 +59,7 @@ public class UserLocalization implements UserCommand {
         } catch (Exception ex) {
             log.warn("Error loading message. Signal: {}. Error: {}", signal, ex.getMessage());
 
-            return "Error loading message. Please send a bug report to us.";
+            return "Error loading message. Signal: " + signal + " Please send a bug report to us.";
         }
     }
 
@@ -77,6 +78,7 @@ public class UserLocalization implements UserCommand {
                 case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.bt.change-language");
                 case RULES -> text = getLocaleMessage(update, "user.bt.rules");
                 case CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.choose-an-apartment");
+                case BOOK -> text = getLocaleMessage(update, "user.bt.book");
                 case BACK -> text = getLocaleMessage(update, "user.bt.back");
                 default -> throw new Exception("Error loading button name");
             }

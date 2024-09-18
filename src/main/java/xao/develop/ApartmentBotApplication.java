@@ -17,10 +17,10 @@ public class ApartmentBotApplication implements LongPollingSingleThreadUpdateCon
     private BotConfig botConfig;
 
     @Autowired
-    private UserClient user;
+    private UserClient userClient;
 
     @Autowired
-    private AdminClient admin;
+    private AdminClient adminClient;
 
     public static void main(String[] args) {
         SpringApplication.run(ApartmentBotApplication.class, args);
@@ -33,8 +33,8 @@ public class ApartmentBotApplication implements LongPollingSingleThreadUpdateCon
                 update.getCallbackQuery().getMessage().getChatId();
 
         if (chatId == botConfig.getAdminId())
-            admin.core(update);
+            adminClient.core(update);
         else
-            user.core(update);
+            userClient.core(update);
     }
 }

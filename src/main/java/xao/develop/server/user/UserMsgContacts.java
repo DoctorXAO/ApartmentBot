@@ -12,6 +12,8 @@ public class UserMsgContacts extends UserMsg {
 
     @Override
     public Message sendMessage(Update update) throws TelegramApiException {
+        server.deleteOldMessages(update);
+
         return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
                 String.format(userLoc.getLocalizationText(update), botConfig.getPhone(), botConfig.getEmail()),
                 getIKMarkup(update)));
