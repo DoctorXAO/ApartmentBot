@@ -16,11 +16,11 @@ public class UserMsgStart extends UserMsg {
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, APARTMENTS), APARTMENTS));
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, RENT_AN_APARTMENT), RENT_AN_APARTMENT));
+        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, RAA_RENT_AN_APARTMENT), RAA_RENT_AN_APARTMENT));
         InlineKeyboardRow row1 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, HOUSE_INFORMATION), HOUSE_INFORMATION));
+        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, HI_HOUSE_INFORMATION), HI_HOUSE_INFORMATION));
         buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, CONTACTS), CONTACTS));
         InlineKeyboardRow row2 = msgBuilder.buildIKRow(buttons);
 

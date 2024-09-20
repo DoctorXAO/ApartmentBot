@@ -13,7 +13,7 @@ public class UserMsgRentAnApartment extends UserMsg {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        userLoc.getLocalizationButton(update, CHOOSE_AN_APARTMENT), CHOOSE_AN_APARTMENT)))
+                        userLoc.getLocalizationButton(update, RAA_CHOOSE_CHECK_IN_DATE), RAA_CHOOSE_CHECK_IN_DATE)))
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
                         userLoc.getLocalizationButton(update, BACK), BACK_TO_START)))
                 .build();

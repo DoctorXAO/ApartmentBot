@@ -99,23 +99,23 @@ public class UserMsgChooseAnApartment extends UserMsg {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         if (userSelector.get(server.getChatId(update)) > 0)
-            buttons.add(msgBuilder.buildIKButton("◀️", BACK_APARTMENT));
+            buttons.add(msgBuilder.buildIKButton("◀️", RAA_PREVIOUS_APARTMENT));
         else
-            buttons.add(msgBuilder.buildIKButton("\uD83D\uDED1", END));
+            buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
         if (userSelector.get(server.getChatId(update)) < persistence.selectAllApartments().size() - 1)
-            buttons.add(msgBuilder.buildIKButton("▶️", NEXT_APARTMENT));
+            buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_APARTMENT));
         else
-            buttons.add(msgBuilder.buildIKButton("\uD83D\uDED1", END));
+            buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
         InlineKeyboardRow row1 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BOOK), BOOK));
+        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, RAA_BOOK), RAA_BOOK));
         InlineKeyboardRow row2 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK), QUIT_FROM_CHOOSER));
+        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK), RAA_QUIT_FROM_CHOOSER_AN_APARTMENT));
         InlineKeyboardRow row3 = msgBuilder.buildIKRow(buttons);
 
         return InlineKeyboardMarkup

@@ -13,7 +13,7 @@ public class UserMsgRules extends UserMsg {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        userLoc.getLocalizationButton(update, BACK), HOUSE_INFORMATION)))
+                        userLoc.getLocalizationButton(update, BACK), HI_HOUSE_INFORMATION)))
                 .build();
     }
 }

@@ -43,12 +43,14 @@ public class UserLocalization implements UserCommand {
             switch (signal) {
                 case START -> text = getLocaleMessage(update, "user.msg.start");
                 case APARTMENTS -> text = getLocaleMessage(update, "user.msg.apartments");
-                case RENT_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.rent-an-apartment");
-                case HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.msg.house-information");
+                case RAA_RENT_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.rent-an-apartment");
+                case HI_HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.msg.house-information");
                 case CONTACTS -> text = getLocaleMessage(update, "user.msg.contacts");
                 case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.msg.change-language");
-                case RULES -> text = getLocaleMessage(update, "user.msg.rules");
-                case CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.choose-an-apartment");
+                case HI_RULES -> text = getLocaleMessage(update, "user.msg.rules");
+                case RAA_CHOOSE_CHECK_IN_DATE -> text = getLocaleMessage(update, "user.msg.choose-check-in-date");
+                case RAA_CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.choose-an-apartment");
+                case RAA_BOOK -> text = getLocaleMessage(update, "user.msg.book");
                 default -> throw new Exception("Error download message");
             }
 
@@ -72,13 +74,14 @@ public class UserLocalization implements UserCommand {
         try {
             switch (nameButton) {
                 case APARTMENTS -> text = getLocaleMessage(update, "user.bt.apartments");
-                case RENT_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.rent-an-apartment");
-                case HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.bt.house-information");
+                case RAA_RENT_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.rent-an-apartment");
+                case HI_HOUSE_INFORMATION -> text = getLocaleMessage(update, "user.bt.house-information");
                 case CONTACTS -> text = getLocaleMessage(update, "user.bt.contacts");
                 case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.bt.change-language");
-                case RULES -> text = getLocaleMessage(update, "user.bt.rules");
-                case CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.choose-an-apartment");
-                case BOOK -> text = getLocaleMessage(update, "user.bt.book");
+                case HI_RULES -> text = getLocaleMessage(update, "user.bt.rules");
+                case RAA_CHOOSE_CHECK_IN_DATE -> text = getLocaleMessage(update, "user.bt.choose-check-in-date");
+                case RAA_CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.choose-an-apartment");
+                case RAA_BOOK -> text = getLocaleMessage(update, "user.bt.book");
                 case BACK -> text = getLocaleMessage(update, "user.bt.back");
                 default -> throw new Exception("Error loading button name");
             }

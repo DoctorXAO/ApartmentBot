@@ -13,7 +13,7 @@ public class UserMsgHouseInformation extends UserMsg {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        userLoc.getLocalizationButton(update, RULES), RULES)))
+                        userLoc.getLocalizationButton(update, HI_RULES), HI_RULES)))
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
                         userLoc.getLocalizationButton(update, BACK), BACK_TO_START)))
                 .build();
