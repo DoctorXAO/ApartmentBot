@@ -1,7 +1,6 @@
 package xao.develop.server.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -30,7 +29,9 @@ public class UserServer implements UserCommand {
     @Autowired
     UserMsgChooseCheckInDate userMsgChooseCheckInDate;
     @Autowired
-    ObjectFactory<UserMsgChangeCheckInMonth> userMsgChangeCheckInMonth;
+    UserMsgChangeCheckInMonth userMsgChangeCheckInMonth;
+    @Autowired
+    UserMsgChangeCheckInYear userMsgChangeCheckInYear;
     @Autowired
     UserMsgChooseCheckOutDate userMsgChooseCheckOutDate;
 
@@ -101,11 +102,29 @@ public class UserServer implements UserCommand {
     }
 
     private void processingRAA(Update update, List<Message> messages, String data) throws TelegramApiException {
+        if (data.startsWith(RAA + SET))
+            processingRAA_SET(update, messages, data);
         switch (data) {
             case RAA_RENT_AN_APARTMENT -> messages.add(userMsgRentAnApartment.sendMessage(update));
 
             case RAA_CHOOSE_CHECK_IN_DATE -> {
-                userMsgChooseCheckInDate.addUserCalendar(update);
+                userMsgChooseCheckInDate.addNewUserToTempBookingData(update);
+                messages.add(userMsgChooseCheckInDate.sendMessage(update));
+            }
+            case RAA_CHANGE_CHECK_IN_YEAR -> messages.add(userMsgChangeCheckInYear.sendMessage(update));
+            case RAA_CHANGE_CHECK_IN_MONTH -> messages.add(userMsgChangeCheckInMonth.sendMessage(update));
+            case RAA_NEXT_CHECK_IN_YEAR_CM -> {
+                userMsgChooseCheckInDate.nextYear(update);
+                update.getCallbackQuery().setData(RAA_CHANGE_CHECK_IN_MONTH);
+                messages.add(userMsgChangeCheckInMonth.sendMessage(update));
+            }
+            case RAA_PREVIOUS_CHECK_IN_YEAR_CM -> {
+                userMsgChooseCheckInDate.previousYear(update);
+                update.getCallbackQuery().setData(RAA_CHANGE_CHECK_IN_MONTH);
+                messages.add(userMsgChangeCheckInMonth.sendMessage(update));
+            }
+            case RAA_QUIT_FROM_CHANGE_CHECK_IN_MONTH -> {
+                update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_IN_DATE);
                 messages.add(userMsgChooseCheckInDate.sendMessage(update));
             }
             case RAA_NEXT_CHECK_IN_YEAR -> {
@@ -129,7 +148,7 @@ public class UserServer implements UserCommand {
                 messages.add(userMsgChooseCheckInDate.sendMessage(update));
             }
             case RAA_QUIT_FROM_CHOOSER_CHECK_IN -> {
-                userMsgChooseCheckInDate.deleteUserCalendar(update);
+                server.deleteUserFromTempBookingData(update);
                 update.getCallbackQuery().setData(RAA_RENT_AN_APARTMENT);
                 messages.add(userMsgRentAnApartment.sendMessage(update));
             }
@@ -161,6 +180,27 @@ public class UserServer implements UserCommand {
             }
             default -> log.info("Unknown RAA data: {}", data);
         }
+    }
+
+    private void processingRAA_SET(Update update, List<Message> messages, String data) throws TelegramApiException {
+        switch (data) {
+            case RAA_SET_JANUARY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.JANUARY);
+            case RAA_SET_FEBRUARY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.FEBRUARY);
+            case RAA_SET_MARCH -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.MARCH);
+            case RAA_SET_APRIL -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.APRIL);
+            case RAA_SET_MAY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.MAY);
+            case RAA_SET_JUNE -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.JUNE);
+            case RAA_SET_JULY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.JULY);
+            case RAA_SET_AUGUST -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.AUGUST);
+            case RAA_SET_SEPTEMBER -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.SEPTEMBER);
+            case RAA_SET_OCTOBER -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.OCTOBER);
+            case RAA_SET_NOVEMBER -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.NOVEMBER);
+            case RAA_SET_DECEMBER -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.DECEMBER);
+            default -> log.warn("Unknown RAA_SET data: {}", data);
+        }
+
+        update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_IN_DATE);
+        messages.add(userMsgChooseCheckInDate.sendMessage(update));
     }
 
     private void processingHI(Update update, List<Message> messages, String data) throws TelegramApiException {

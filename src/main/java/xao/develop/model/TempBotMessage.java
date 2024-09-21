@@ -7,9 +7,9 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity(name = "TempUserMessages")
+@Entity(name = "TempBotMessages")
 @Setter @Getter
-public class TempUserMessage {
+public class TempBotMessage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

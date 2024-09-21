@@ -4,23 +4,30 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import xao.develop.config.BotConfig;
 import xao.develop.client.admin.AdminClient;
 import xao.develop.client.user.UserClient;
 
+/**
+ * Author: Machov Sergii
+ * Company: XAOTI
+ */
+
 @Slf4j
 @SpringBootApplication
+@EnableScheduling
 public class ApartmentBotApplication implements LongPollingSingleThreadUpdateConsumer {
     @Autowired
     private BotConfig botConfig;
 
     @Autowired
-    private UserClient userClient;
+    private AdminClient adminClient;
 
     @Autowired
-    private AdminClient adminClient;
+    UserClient userClient;
 
     public static void main(String[] args) {
         SpringApplication.run(ApartmentBotApplication.class, args);

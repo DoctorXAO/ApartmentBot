@@ -1,5 +1,6 @@
 package xao.develop.client.admin;
 
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import xao.develop.client.Account;

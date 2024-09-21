@@ -7,17 +7,19 @@ import lombok.Setter;
 
 @Entity(name = "Apartments")
 @Setter @Getter
-public class Apartments {
+public class Apartment {
     @Id
-    private Long number;
+    private Integer number;
 
     private String status;
+
+    private String bedroom;
 
     private Double area;
 
     private String amenities;
 
-    private String rent_from;
+    private String checkIn;
 
-    private String rent_until;
+    private String checkOut;
 }

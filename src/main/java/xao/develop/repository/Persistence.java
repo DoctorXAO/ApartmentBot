@@ -1,120 +1,151 @@
 package xao.develop.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 import xao.develop.model.*;
 
+import java.util.Calendar;
 import java.util.List;
 
+@Slf4j
 @Repository
 public class Persistence {
 
     @Autowired
-    private TempUserMessagesRepository tempUserMessagesRepository;
+    private ServerStatusRepository serverStatusRepository;
 
     @Autowired
-    private UserStatusRepository userStatusRepository;
+    private AccountStatusRepository accountStatusRepository;
 
     @Autowired
-    private ApartmentsRepository apartmentsRepository;
+    private ApartmentRepository apartmentRepository;
 
-    public boolean isUserStatusExists(Long chatId) {
-        return userStatusRepository.existsByChatId(chatId);
+    @Autowired
+    private BookingCardRepository bookingCardRepository;
+
+    @Autowired
+    private TempBotMessageRepository tempBotMessageRepository;
+
+    @Autowired
+    private TempBookingDataRepository tempBookingDataRepository;
+
+    public void insertAccountStatus(Long chatId,
+                                    String language) {
+        AccountStatus accountStatus = new AccountStatus();
+
+        accountStatus.setChatId(chatId);
+        accountStatus.setLanguage(language);
+
+        accountStatusRepository.save(accountStatus);
     }
 
-    public void insertUserStatus(Long chatId,
-                                 String login,
-                                 String firstName,
-                                 String lastName,
-                                 String language,
-                                 Integer fillingOutStep) {
-        UserStatus userStatus = new UserStatus();
-
-        userStatus.setChatId(chatId);
-        userStatus.setLogin(login);
-        userStatus.setFirstName(firstName);
-        userStatus.setLastName(lastName);
-        userStatus.setLanguage(language);
-        userStatus.setFillingOutStep(fillingOutStep);
-
-        userStatusRepository.save(userStatus);
+    public AccountStatus selectAccountStatus(Long chatId) {
+        return accountStatusRepository.getByChatId(chatId);
     }
 
-    public UserStatus selectUserStatus(Long chatId) {
-        return userStatusRepository.getByChatId(chatId);
+    /** Обновляет язык интерфейса пользователя **/
+    public void updateLanguageInAccountStatus(Long chatId, String language) {
+        AccountStatus accountStatus = accountStatusRepository.findById(chatId).orElseThrow();
+
+        accountStatus.setLanguage(language);
+
+        accountStatusRepository.save(accountStatus);
     }
 
-    /** Обновить язык интерфейса пользователя **/
-    public void updateUserStatusLanguage(Long chatId, String language) {
-        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
-
-        userStatus.setLanguage(language);
-
-        userStatusRepository.save(userStatus);
+    public List<TempBotMessage> selectTempBotMessages(Long chatID) {
+        return tempBotMessageRepository.findByChatId(chatID);
     }
 
-    /** Обновление этапа заполнения заявки **/
-    public void updateUserStatusFillingOutStep(Long chatId, Integer step) {
-        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
+    public void insertTempBotMessage(long chatId, int messageId) {
+        TempBotMessage tempBotMessage = new TempBotMessage();
+        tempBotMessage.setChatId(chatId);
+        tempBotMessage.setMsgId(messageId);
 
-        userStatus.setFillingOutStep(step);
-
-        userStatusRepository.save(userStatus);
+        tempBotMessageRepository.save(tempBotMessage);
     }
 
-    public void updateUserStatusName(Long chatId, String name) {
-        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
-
-        userStatus.setName(name);
-
-        userStatusRepository.save(userStatus);
-    }
-
-    public void updateUserStatusCountOfPerson(Long chatId, String countOfPerson) {
-        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
-
-        userStatus.setCountOfPerson(countOfPerson);
-
-        userStatusRepository.save(userStatus);
-    }
-
-    public void updateUserStatusRentTime(Long chatId, String rentTime) {
-        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
-
-        userStatus.setRentTime(rentTime);
-
-        userStatusRepository.save(userStatus);
-    }
-
-    public void updateUserStatusCommentary(Long chatId, String comment) {
-        UserStatus userStatus = userStatusRepository.findById(chatId).orElseThrow();
-
-        userStatus.setCommentary(comment);
-
-        userStatusRepository.save(userStatus);
-    }
-
-    public List<TempUserMessage> selectUserMessages(Long chatID) {
-        return tempUserMessagesRepository.findByChatId(chatID);
-    }
-
-    public void insertUserMessage(long chatId, int messageId) {
-        TempUserMessage tempUserMessage = new TempUserMessage();
-        tempUserMessage.setChatId(chatId);
-        tempUserMessage.setMsgId(messageId);
-
-        tempUserMessagesRepository.save(tempUserMessage);
-    }
-
-    public void deleteUserMessage(long chatId) {
-        tempUserMessagesRepository.deleteByChatId(chatId);
+    public void deleteTempBotMessages(long chatId) {
+        tempBotMessageRepository.deleteByChatId(chatId);
     }
 
     public void selectApartment(Long number) {
-        apartmentsRepository.getByNumber(number);
+        apartmentRepository.getByNumber(number);
     }
 
-    public List<Apartments> selectAllApartments() {
-        return apartmentsRepository.findAll();
+    public List<Apartment> selectAllApartments() {
+        return apartmentRepository.findAll();
+    }
+
+    public void insertTempBookingData(long chatId, long selectedTime) {
+        TempBookingData tempBookingData = new TempBookingData();
+
+        tempBookingData.setChatId(chatId);
+        tempBookingData.setSelectedTime(selectedTime);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.debug("Added new user to UserCalendar: {}", chatId);
+    }
+
+    public TempBookingData selectTempBookingData(long chatId) {
+        log.debug("Select user from TempBookingDataRepository: {}", chatId);
+
+        return tempBookingDataRepository.getByChatId(chatId);
+    }
+
+    public void updateTempBookingData(long chatId, long selectedTime) {
+        log.trace("Method updateTempBookingData(long, long) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        log.debug("TempBookingData is updating for user: {}. Old value of selectedTime: {}", chatId, tempBookingData.getSelectedTime());
+
+        tempBookingData.setSelectedTime(selectedTime);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.debug("TempBookingData updated for user: {}. New value of selectedTime: {}", chatId, tempBookingData.getSelectedTime());
+        log.trace("Method updateTempBookingData(long, long) finished");
+    }
+
+    public void deleteTempBookingData(long chatId) {
+        log.trace("Method deleteTempBookingData(long) started");
+
+        tempBookingDataRepository.deleteById(chatId);
+
+        log.debug("The next user deleted from TempBookingData: {}", chatId);
+        log.trace("Method deleteTempBookingData(long) finished");
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    @EventListener(ContextRefreshedEvent.class)
+    public void setPresentTime() {
+        Calendar presentDate = Calendar.getInstance();
+
+        presentDate.set(Calendar.HOUR_OF_DAY, 0);
+        presentDate.set(Calendar.MINUTE, 0);
+        presentDate.set(Calendar.SECOND, 0);
+        presentDate.set(Calendar.MILLISECOND, 0);
+
+        ServerStatus serverStatus = new ServerStatus();
+        serverStatus.setCode("MAIN");
+        serverStatus.setPresentTime(presentDate.getTimeInMillis());
+        serverStatusRepository.save(serverStatus);
+
+        log.info("The bot's present time was set with the following settings: {}", presentDate);
+        log.info("The bot's present time in milliseconds was set: {}", presentDate.getTimeInMillis());
+    }
+
+    public Calendar getServerPresentTime() {
+        ServerStatus serverStatus = serverStatusRepository.getByCode("MAIN");
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(serverStatus.getPresentTime());
+
+        return calendar;
     }
 }

@@ -1,18 +1,16 @@
 package xao.develop.server.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import xao.develop.server.Server;
+import xao.develop.repository.Persistence;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
@@ -20,137 +18,73 @@ import java.util.List;
 public class UserMsgChooseCheckInDate extends UserMsg {
 
     @Autowired
-    Server server;
+    Persistence persistence;
 
-    HashMap<Long, Calendar[]> userCalendar = new HashMap<>();
+    @Autowired
+    DateService dateS;
 
-    public void addUserCalendar(Update update) {
-        Calendar[] calendars = new Calendar[2];
-
-        calendars[0] = Calendar.getInstance();
-        calendars[1] = (Calendar) calendars[0].clone();
-
-        userCalendar.put(server.getChatId(update), calendars);
-
-        log.debug("Added new user to UserCalendar: {}", server.getChatId(update));
+    void addNewUserToTempBookingData(Update update) {
+        persistence.insertTempBookingData(server.getChatId(update), Calendar.getInstance().getTimeInMillis());
     }
 
-    public void deleteUserCalendar(Update update) {
-        userCalendar.remove(server.getChatId(update));
+    void nextMonth(Update update) {
+        Calendar selectedTime = Calendar.getInstance();
+        selectedTime.setTimeInMillis(persistence.selectTempBookingData(server.getChatId(update)).getSelectedTime());
 
-        log.debug("The next user from UserCalendar deleted: {}", server.getChatId(update));
+        selectedTime.set(Calendar.MONTH, selectedTime.get(Calendar.MONTH) + 1);
+
+        persistence.updateTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
     }
 
-    public void nextMonth(Update update) {
-        Calendar calendar = userCalendar.get(server.getChatId(update))[1];
+    void previousMonth(Update update) {
+        Calendar selectedTime = Calendar.getInstance();
+        selectedTime.setTimeInMillis(persistence.selectTempBookingData(server.getChatId(update)).getSelectedTime());
 
-        calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) + 1);
+        selectedTime.set(Calendar.MONTH, selectedTime.get(Calendar.MONTH) - 1);
+
+        persistence.updateTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
     }
 
-    public void previousMonth(Update update) {
-        Calendar calendar = userCalendar.get(server.getChatId(update))[1];
+    void nextYear(Update update) {
+        Calendar selectedTime = dateS.getSelectedTime(update);
 
-        calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1);
+        log.debug("Selected time before: {}", selectedTime);
+
+        selectedTime.set(Calendar.YEAR, selectedTime.get(Calendar.YEAR) + 1);
+
+        log.debug("Selected time after: {}", selectedTime);
+
+        persistence.updateTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
     }
 
-    public void nextYear(Update update) {
-        Calendar calendar = userCalendar.get(server.getChatId(update))[1];
+    void previousYear(Update update) {
+        Calendar selectedTime = dateS.getSelectedTime(update);
 
-        calendar.set(Calendar.YEAR, calendar.get(Calendar.YEAR) + 1);
+        selectedTime.set(Calendar.YEAR, selectedTime.get(Calendar.YEAR) - 1);
+
+        persistence.updateTempBookingData(server.getChatId(update),
+                Math.max(dateS.getPresentTime().getTimeInMillis(), selectedTime.getTimeInMillis()));
     }
 
-    public void previousYear(Update update) {
-        Calendar[] calendars = userCalendar.get(server.getChatId(update));
+    boolean checkEqualsDate(Update update) {
+        Calendar presentTime = dateS.getPresentTime();
+        Calendar selectedTime = dateS.getSelectedTime(update);
 
-        calendars[1].set(Calendar.YEAR, calendars[1].get(Calendar.YEAR) - 1);
-        if (calendars[1].before(calendars[0]))
-            calendars[1] = (Calendar) calendars[0].clone();
-    }
-
-    private Calendar getCurrentUserCalendar(Update update) {
-        return userCalendar.get(server.getChatId(update))[0];
-    }
-
-    private boolean checkEqualsDate(Update update) {
-        Calendar[] calendars = userCalendar.get(server.getChatId(update));
-
-        Calendar currentCalendar = calendars[0];
-        Calendar selectedCalendar = calendars[1];
-
-        boolean areMonthsEqual = currentCalendar.get(Calendar.MONTH) == selectedCalendar.get(Calendar.MONTH);
-        boolean areYearsEqual = currentCalendar.get(Calendar.YEAR) == selectedCalendar.get(Calendar.YEAR);
-
-        log.debug("""
-                areMonthsEquals = {}
-                currentCalendarMonth = {}
-                selectedCalendarMonth = {}""",
-                areMonthsEqual, currentCalendar.get(Calendar.MONTH), selectedCalendar.get(Calendar.MONTH));
-
-        log.debug("""
-                areYearsEquals = {}
-                currentCalendarYear = {}
-                selectedCalendarYear = {}""",
-                areMonthsEqual, currentCalendar.get(Calendar.YEAR), selectedCalendar.get(Calendar.YEAR));
+        boolean areMonthsEqual = presentTime.get(Calendar.MONTH) == selectedTime.get(Calendar.MONTH);
+        boolean areYearsEqual = presentTime.get(Calendar.YEAR) == selectedTime.get(Calendar.YEAR);
 
         return areMonthsEqual && areYearsEqual;
     }
 
-    private String getSelectedYear(Calendar calendar) {
-        return String.valueOf(calendar.get(Calendar.YEAR));
-    }
+    void setSelectedMonth(Update update, int month) {
+        log.debug("Selected number of month: {}", month);
 
-    private String getSelectedMonth(Calendar calendar) {
-        int numberOfMonth = calendar.get(Calendar.MONTH) + 1;
-        String nameOfMonth;
-
-        switch (numberOfMonth) { // todo Сделать локаль
-            case 1 -> nameOfMonth = "Январь";
-            case 2 -> nameOfMonth = "Февраль";
-            case 3 -> nameOfMonth = "Март";
-            case 4 -> nameOfMonth = "Апрель";
-            case 5 -> nameOfMonth = "Май";
-            case 6 -> nameOfMonth = "Июнь";
-            case 7 -> nameOfMonth = "Июль";
-            case 8 -> nameOfMonth = "Август";
-            case 9 -> nameOfMonth = "Сентябрь";
-            case 10 -> nameOfMonth = "Октябрь";
-            case 11 -> nameOfMonth = "Ноябрь";
-            case 12 -> nameOfMonth = "Декабрь";
-            default -> {
-                log.warn("Incorrect number of month: {}", numberOfMonth);
-                nameOfMonth = "null";
-            }
-        }
-
-        return nameOfMonth;
-    }
-
-    private Integer getMaxDaysOfMonth(Calendar calendar, int bias) {
-        Calendar c = (Calendar) calendar.clone();
-
-        c.set(Calendar.MONTH, c.get(Calendar.MONTH) + bias);
-
-        return c.getActualMaximum(Calendar.DAY_OF_MONTH);
-    }
-
-    private Integer getFirstDayOfWeekInMonth(Calendar calendar) {
-        Calendar c = (Calendar) calendar.clone();
-
-        c.set(Calendar.DAY_OF_MONTH, 1);
-
-        return c.get(Calendar.DAY_OF_WEEK) - 1 == 0 ? 7 : c.get(Calendar.DAY_OF_WEEK) - 1;
-    }
-
-    private Integer getDayOfWeekInMonth(Calendar calendar, int day) {
-        Calendar c = (Calendar) calendar.clone();
-
-        c.set(Calendar.DAY_OF_MONTH, day);
-
-        return c.get(Calendar.DAY_OF_WEEK) - 1 == 0 ? 7 : c.get(Calendar.DAY_OF_WEEK) - 1;
-    }
-
-    private Integer getCurrentDayOfMonth(Calendar calendar) {
-        return calendar.get(Calendar.DAY_OF_MONTH);
+        if (month >= 0 && month <= 11) {
+            Calendar selectedTime = dateS.getSelectedTime(update);
+            selectedTime.set(Calendar.MONTH, month);
+            persistence.updateTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
+        } else
+            log.warn("Unknown number of month: {}", month);
     }
 
     @Override
@@ -158,23 +92,14 @@ public class UserMsgChooseCheckInDate extends UserMsg {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        Calendar currentCalendar = userCalendar.get(server.getChatId(update))[0];
-        Calendar calendar = userCalendar.get(server.getChatId(update))[1];
+        Calendar presentTime = dateS.getPresentTime();
+        Calendar selectedTime = dateS.getSelectedTime(update);
 
-        int maxCurrentDaysOfMonth = getMaxDaysOfMonth(calendar, 0);
-        int maxPreviousDaysOfMonth = getMaxDaysOfMonth(calendar,-1);
-        int firstDayOfWeekInMonth = getFirstDayOfWeekInMonth(calendar);
-        int currentDayOfMonth = getCurrentDayOfMonth(currentCalendar);
+        int maxCurrentDaysOfMonth = dateS.getMaxDaysOfMonth(selectedTime, 0);
+        int firstDayOfWeekInMonth = dateS.getFirstDayOfWeekInMonth(selectedTime);
+        int currentDayOfMonth = dateS.getCurrentDayOfMonth(presentTime);
 
-        log.debug("""
-                Check-in parameters:
-                maxCurrentDaysOfMonth = {}
-                maxPreviousDaysOfMonth = {}
-                firstDayOfWeekInMonth = {}
-                currentDayOfMonth = {}""",
-                maxCurrentDaysOfMonth, maxPreviousDaysOfMonth, firstDayOfWeekInMonth, currentDayOfMonth);
-
-        initHeaderIKMarkup(keyboard, buttons, currentCalendar, calendar);
+        initHeaderIKMarkup(update, keyboard, buttons, presentTime, selectedTime);
 
         // Добавляет недостающие дни недели из последних дней предыдущего месяца
         if (firstDayOfWeekInMonth != 1)
@@ -196,8 +121,8 @@ public class UserMsgChooseCheckInDate extends UserMsg {
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
             // Добавляет все недостающие дни недели из первых дней следующего месяца
-            if (i == maxCurrentDaysOfMonth && getDayOfWeekInMonth(calendar, i) != 7) {
-                int difference = 7 - getDayOfWeekInMonth(calendar, i);
+            if (i == maxCurrentDaysOfMonth && dateS.getDayOfWeekInMonth(selectedTime, i) != 7) {
+                int difference = 7 - dateS.getDayOfWeekInMonth(selectedTime, i);
                 for (int j = 1; j <= difference; j++)
                     buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
                 keyboard.add(msgBuilder.buildIKRow(buttons));
@@ -206,7 +131,7 @@ public class UserMsgChooseCheckInDate extends UserMsg {
             }
 
             // Если последний день недели, то оборвать линию и начать новую
-            if (getDayOfWeekInMonth(calendar, i) == 7) {
+            if (dateS.getDayOfWeekInMonth(selectedTime, i) == 7) {
                 keyboard.add(msgBuilder.buildIKRow(buttons));
                 buttons.clear();
             }
@@ -221,8 +146,8 @@ public class UserMsgChooseCheckInDate extends UserMsg {
                 .build();
     }
 
-    // todo Сделать функционал Установка выбранного года и выбранного месяца
-    private void initHeaderIKMarkup(List<InlineKeyboardRow> keyboard,
+    private void initHeaderIKMarkup(Update update,
+                                    List<InlineKeyboardRow> keyboard,
                                     List<InlineKeyboardButton> buttons,
                                     Calendar today,
                                     Calendar calendar) {
@@ -232,7 +157,7 @@ public class UserMsgChooseCheckInDate extends UserMsg {
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        buttons.add(msgBuilder.buildIKButton(getSelectedYear(calendar), RAA_CHANGE_CHECK_IN_YEAR));
+        buttons.add(msgBuilder.buildIKButton(dateS.getSelectedYear(calendar), RAA_CHANGE_CHECK_IN_YEAR));
         buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_IN_YEAR));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
@@ -242,7 +167,9 @@ public class UserMsgChooseCheckInDate extends UserMsg {
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        buttons.add(msgBuilder.buildIKButton(getSelectedMonth(calendar), RAA_CHANGE_CHECK_IN_MONTH));
+        buttons.add(msgBuilder.buildIKButton(
+                userLoc.getLocalizationButton(update, "month_" + (calendar.get(Calendar.MONTH) + 1)),
+                RAA_CHANGE_CHECK_IN_MONTH));
         buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_IN_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();

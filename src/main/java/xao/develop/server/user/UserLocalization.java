@@ -6,7 +6,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import xao.develop.config.UserCommand;
-import xao.develop.model.UserStatus;
+import xao.develop.model.AccountStatus;
 import xao.develop.repository.Persistence;
 
 import java.util.Locale;
@@ -21,11 +21,11 @@ public class UserLocalization implements UserCommand {
     MessageSource messageSource;
 
     private String getLocaleMessage(Update update, String code) {
-        UserStatus userStatus = update.hasMessage() ?
-                persistence.selectUserStatus(update.getMessage().getChatId()) :
-                persistence.selectUserStatus(update.getCallbackQuery().getMessage().getChatId());
+        AccountStatus accountStatus = update.hasMessage() ?
+                persistence.selectAccountStatus(update.getMessage().getChatId()) :
+                persistence.selectAccountStatus(update.getCallbackQuery().getMessage().getChatId());
 
-        Locale locale = new Locale(userStatus.getLanguage());
+        Locale locale = new Locale(accountStatus.getLanguage());
 
         return messageSource.getMessage(code, null, locale);
     }
@@ -49,6 +49,7 @@ public class UserLocalization implements UserCommand {
                 case CHANGE_LANGUAGE -> text = getLocaleMessage(update, "user.msg.change-language");
                 case HI_RULES -> text = getLocaleMessage(update, "user.msg.rules");
                 case RAA_CHOOSE_CHECK_IN_DATE -> text = getLocaleMessage(update, "user.msg.choose-check-in-date");
+                case RAA_CHANGE_CHECK_IN_MONTH -> text = getLocaleMessage(update, "user.msg.change-check-in-month");
                 case RAA_CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.choose-an-apartment");
                 case RAA_BOOK -> text = getLocaleMessage(update, "user.msg.book");
                 default -> throw new Exception("Error download message");
@@ -83,6 +84,18 @@ public class UserLocalization implements UserCommand {
                 case RAA_CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.choose-an-apartment");
                 case RAA_BOOK -> text = getLocaleMessage(update, "user.bt.book");
                 case BACK -> text = getLocaleMessage(update, "user.bt.back");
+                case "month_1" -> text = getLocaleMessage(update, "user.bt.january");
+                case "month_2" -> text = getLocaleMessage(update, "user.bt.february");
+                case "month_3" -> text = getLocaleMessage(update, "user.bt.march");
+                case "month_4" -> text = getLocaleMessage(update, "user.bt.april");
+                case "month_5" -> text = getLocaleMessage(update, "user.bt.may");
+                case "month_6" -> text = getLocaleMessage(update, "user.bt.june");
+                case "month_7" -> text = getLocaleMessage(update, "user.bt.july");
+                case "month_8" -> text = getLocaleMessage(update, "user.bt.august");
+                case "month_9" -> text = getLocaleMessage(update, "user.bt.september");
+                case "month_10" -> text = getLocaleMessage(update, "user.bt.october");
+                case "month_11" -> text = getLocaleMessage(update, "user.bt.november");
+                case "month_12" -> text = getLocaleMessage(update, "user.bt.december");
                 default -> throw new Exception("Error loading button name");
             }
         } catch (Exception ex) {

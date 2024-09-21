@@ -9,7 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import xao.develop.model.Apartments;
+import xao.develop.model.Apartment;
 import xao.develop.repository.Persistence;
 import xao.develop.server.Server;
 
@@ -29,9 +29,9 @@ public class UserMsgChooseAnApartment extends UserMsg {
 
     HashMap<Long, Integer> userSelector = new HashMap<>();
 
-    public Long getCurrentApartment(Update update) {
+    public Integer getCurrentApartment(Update update) {
         int currentSelector = userSelector.get(server.getChatId(update));
-        List<Apartments> apartments = persistence.selectAllApartments();
+        List<Apartment> apartments = persistence.selectAllApartments();
 
         log.debug("Size of the list of apartment is {}", apartments.size());
         log.debug("Current selector is {}", currentSelector);
@@ -85,8 +85,8 @@ public class UserMsgChooseAnApartment extends UserMsg {
     public Message sendMessage(Update update) throws TelegramApiException {
         server.deleteOldMessages(update);
 
-        List<Apartments> apartments = persistence.selectAllApartments();
-        Apartments apartment = apartments.get(userSelector.get(server.getChatId(update)));
+        List<Apartment> apartments = persistence.selectAllApartments();
+        Apartment apartment = apartments.get(userSelector.get(server.getChatId(update)));
 
         return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
                 String.format(userLoc.getLocalizationText(update),

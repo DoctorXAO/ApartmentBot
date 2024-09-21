@@ -24,7 +24,6 @@ import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
-@Service
 public abstract class UserMsg implements BotMessage, UserCommand {
     @Autowired
     BotConfig botConfig;

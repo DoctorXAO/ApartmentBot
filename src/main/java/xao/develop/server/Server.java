@@ -8,7 +8,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
-import xao.develop.model.TempUserMessage;
+import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public class Server {
     Persistence persistence;
 
     public void setLanguage(Update update, String language) {
-        persistence.updateUserStatusLanguage(getChatId(update), language);
+        persistence.updateLanguageInAccountStatus(getChatId(update), language);
     }
 
     public Long getChatId(Update update) {
@@ -64,21 +64,15 @@ public class Server {
         log.trace("Method authorization(Message) started");
 
         Long chatId = message.getChatId();
-        String login = message.getFrom().getUserName();
-        String firstName = message.getFrom().getFirstName();
-        String lastName = message.getFrom().getLastName();
         String language = message.getFrom().getLanguageCode();
 
-        persistence.insertUserStatus(chatId, login, firstName, lastName, language, 0);
+        persistence.insertAccountStatus(chatId, language);
 
         log.debug("""
                 Authorization: the following user parameters have been added to the database:
                 chatId = {}
-                login = {}
-                firstName = {}
-                lastName = {}
                 language = {}
-                """, chatId, login, firstName, lastName, language);
+                """, chatId, language);
 
         log.trace("Method authorization(Message) finished");
     }
@@ -88,10 +82,10 @@ public class Server {
 
         Long chatId = getChatId(update);
 
-        List<TempUserMessage> userMessages = persistence.selectUserMessages(chatId);
+        List<TempBotMessage> userMessages = persistence.selectTempBotMessages(chatId);
 
         try {
-            for(TempUserMessage userMessage : userMessages) {
+            for(TempBotMessage userMessage : userMessages) {
                 DeleteMessage deleteMessage = DeleteMessage
                         .builder()
                         .chatId(userMessage.getChatId())
@@ -102,7 +96,7 @@ public class Server {
                 log.debug("MessageID {} deleted", userMessage.getMsgId());
             }
 
-            persistence.deleteUserMessage(chatId);
+            persistence.deleteTempBotMessages(chatId);
         } catch (TelegramApiException ex) {
             log.warn("""
                     Message to delete not found for userID: {}
@@ -134,7 +128,13 @@ public class Server {
         log.trace("Method deleteLastMessage(Update) finished for userID: {}", getChatId(update));
     }
 
+    public void deleteUserFromTempBookingData(Update update) {
+        persistence.deleteTempBookingData(getChatId(update));
+
+        log.debug("The next user from UserCalendar deleted: {}", getChatId(update));
+    }
+
     public void registerMessage(Long chatId, int messageId) {
-        persistence.insertUserMessage(chatId, messageId);
+        persistence.insertTempBotMessage(chatId, messageId);
     }
 }
