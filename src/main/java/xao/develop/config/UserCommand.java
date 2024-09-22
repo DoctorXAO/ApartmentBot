@@ -60,4 +60,5 @@ public interface UserCommand {
     String RAA_SET_OCTOBER = RAA_SET_MONTH + "10";
     String RAA_SET_NOVEMBER = RAA_SET_MONTH + "11";
     String RAA_SET_DECEMBER = RAA_SET_MONTH + "12";
+    String RAA_SET_YEAR = RAA + SET + "year_";
 }

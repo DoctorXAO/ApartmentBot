@@ -11,10 +11,13 @@ import xao.develop.server.Server;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
 public class UserMsgChangeCheckInYear extends UserMsg {
+
+    private final int MAX_YEAR = 10;
 
     @Autowired
     Persistence persistence;
@@ -25,11 +28,18 @@ public class UserMsgChangeCheckInYear extends UserMsg {
     @Autowired
     DateService dateS;
 
+    public void setYear(Update update, int year) {
+        Calendar selectedTime = dateS.getSelectedTime(update);
+
+        selectedTime.set(Calendar.YEAR, year);
+
+        persistence.updateTempBookingData(server.getChatId(update),
+                Math.max(persistence.getServerPresentTime().getTimeInMillis(), selectedTime.getTimeInMillis()));
+    }
+
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         Calendar presentTime = persistence.getServerPresentTime();
-        Calendar selectedTime = Calendar.getInstance();
-        selectedTime.setTimeInMillis(persistence.selectTempBookingData(server.getChatId(update)).getSelectedTime());
 
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
@@ -39,17 +49,9 @@ public class UserMsgChangeCheckInYear extends UserMsg {
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        for (int i = 1; i <= 12; i++) {
-            selectedTime.set(Calendar.MONTH, i - 1); // -1 - так как класс Calendar ведет счет месяца с 0
-
-            if (presentTime.get(Calendar.YEAR) < selectedTime.get(Calendar.YEAR))
-                buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, "month_" + i),
-                        RAA_SET_MONTH + i));
-            else if (presentTime.get(Calendar.MONTH) <= selectedTime.get(Calendar.MONTH))
-                buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, "month_" + i),
-                        RAA_SET_MONTH + i));
-            else
-                buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
+        for (int i = 0; i <= MAX_YEAR; i++) {
+            String year = String.valueOf(presentTime.get(Calendar.YEAR) + i);
+            buttons.add(msgBuilder.buildIKButton(year, RAA_SET_YEAR + year));
 
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();

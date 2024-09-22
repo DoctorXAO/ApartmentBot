@@ -183,21 +183,33 @@ public class UserServer implements UserCommand {
     }
 
     private void processingRAA_SET(Update update, List<Message> messages, String data) throws TelegramApiException {
-        switch (data) {
-            case RAA_SET_JANUARY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.JANUARY);
-            case RAA_SET_FEBRUARY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.FEBRUARY);
-            case RAA_SET_MARCH -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.MARCH);
-            case RAA_SET_APRIL -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.APRIL);
-            case RAA_SET_MAY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.MAY);
-            case RAA_SET_JUNE -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.JUNE);
-            case RAA_SET_JULY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.JULY);
-            case RAA_SET_AUGUST -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.AUGUST);
-            case RAA_SET_SEPTEMBER -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.SEPTEMBER);
-            case RAA_SET_OCTOBER -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.OCTOBER);
-            case RAA_SET_NOVEMBER -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.NOVEMBER);
-            case RAA_SET_DECEMBER -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.DECEMBER);
-            default -> log.warn("Unknown RAA_SET data: {}", data);
-        }
+        if (data.startsWith(RAA_SET_YEAR))
+            userMsgChangeCheckInYear.setYear(update, Integer.parseInt(data.replaceAll(RAA_SET_YEAR, "")));
+        else
+            switch (data) {
+                case RAA_SET_JANUARY ->
+                        userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.JANUARY);
+                case RAA_SET_FEBRUARY ->
+                        userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.FEBRUARY);
+                case RAA_SET_MARCH ->
+                        userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.MARCH);
+                case RAA_SET_APRIL ->
+                        userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.APRIL);
+                case RAA_SET_MAY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.MAY);
+                case RAA_SET_JUNE -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.JUNE);
+                case RAA_SET_JULY -> userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.JULY);
+                case RAA_SET_AUGUST ->
+                        userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.AUGUST);
+                case RAA_SET_SEPTEMBER ->
+                        userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.SEPTEMBER);
+                case RAA_SET_OCTOBER ->
+                        userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.OCTOBER);
+                case RAA_SET_NOVEMBER ->
+                        userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.NOVEMBER);
+                case RAA_SET_DECEMBER ->
+                        userMsgChooseCheckInDate.setSelectedMonth(update, UserMsgChangeCheckInMonth.DECEMBER);
+                default -> log.warn("Unknown RAA_SET data: {}", data);
+            }
 
         update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_IN_DATE);
         messages.add(userMsgChooseCheckInDate.sendMessage(update));

@@ -50,6 +50,7 @@ public class UserLocalization implements UserCommand {
                 case HI_RULES -> text = getLocaleMessage(update, "user.msg.rules");
                 case RAA_CHOOSE_CHECK_IN_DATE -> text = getLocaleMessage(update, "user.msg.choose-check-in-date");
                 case RAA_CHANGE_CHECK_IN_MONTH -> text = getLocaleMessage(update, "user.msg.change-check-in-month");
+                case RAA_CHANGE_CHECK_IN_YEAR -> text = getLocaleMessage(update, "user.msg.change-check-in-year");
                 case RAA_CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.choose-an-apartment");
                 case RAA_BOOK -> text = getLocaleMessage(update, "user.msg.book");
                 default -> throw new Exception("Error download message");
