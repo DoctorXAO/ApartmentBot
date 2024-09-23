@@ -3,24 +3,20 @@ package xao.develop.config;
 public interface UserCommand {
     String START = "/start";
 
-    String APARTMENTS = "apartments";
-
     String RAA = "raa_";
-    String RAA_RENT_AN_APARTMENT = RAA + "rent_an_apartment";
-
-    String RAA_CHOOSE_CHECK_IN_DATE = RAA + "choose_check_in_date";
+    String RAA_CHOOSE_CHECK_DATE = RAA + "choose_check_date";
     String RAA_CHANGE_CHECK_IN_MONTH = RAA + "change_check_in_month";
-    String RAA_NEXT_CHECK_IN_YEAR_CM = RAA + "next_check_in_year_cm";
-    String RAA_PREVIOUS_CHECK_IN_YEAR_CM = RAA + "previous_check_in_year_cm";
-    String RAA_QUIT_FROM_CHANGE_CHECK_IN_MONTH = RAA + "quit_from_change_check_in_month";
+    String RAA_NEXT_CHECK_YEAR_CM = RAA + "next_check_in_year_cm";
+    String RAA_PREVIOUS_CHECK_YEAR_CM = RAA + "previous_check_in_year_cm";
+    String RAA_QUIT_FROM_CHANGE_CHECK_MONTH = RAA + "quit_from_change_check_in_month";
     String RAA_CHANGE_CHECK_IN_YEAR = RAA + "change_check_in_year";
-    String RAA_NEXT_CHECK_IN_YEAR = RAA + "next_check_in_year";
-    String RAA_PREVIOUS_CHECK_IN_YEAR = RAA + "previous_check_in_year";
-    String RAA_NEXT_CHECK_IN_MONTH = RAA + "next_check_in_month";
-    String RAA_PREVIOUS_CHECK_IN_MONTH = RAA + "previous_check_in_month";
-    String RAA_QUIT_FROM_CHOOSER_CHECK_IN = RAA + "quit_from_chooser_check_in";
+    String RAA_NEXT_CHECK_YEAR = RAA + "next_check_in_year";
+    String RAA_PREVIOUS_CHECK_YEAR = RAA + "previous_check_in_year";
+    String RAA_NEXT_CHECK_MONTH = RAA + "next_check_in_month";
+    String RAA_PREVIOUS_CHECK_MONTH = RAA + "previous_check_in_month";
+    String RAA_QUIT_FROM_CHOOSER_CHECK = RAA + "quit_from_chooser_check_in";
 
-    String RAA_CHOOSE_CHECK_OUT_DATE = RAA + "choose_check_in_date";
+    String RAA_CHOOSE_CHECK_OUT_DATE = RAA + "choose_check_out_date";
 
     String RAA_CHOOSE_AN_APARTMENT = RAA + "choose_an_apartment";
     String RAA_NEXT_APARTMENT = RAA + "next_apartment";
@@ -29,9 +25,7 @@ public interface UserCommand {
 
     String RAA_BOOK = RAA + "book";
 
-    String HI = "hi_";
-    String HI_HOUSE_INFORMATION = HI + "house_information";
-    String HI_RULES = HI + "rules";
+    String ABOUT_US = "house_information";
 
     String CONTACTS = "contacts";
 
@@ -44,7 +38,6 @@ public interface UserCommand {
     String BACK_TO_START = "back_to_start";
 
     String EMPTY = "empty";
-    String DAYS = "day_";
 
     String SET = "set_";
     String RAA_SET_MONTH = RAA + SET + "month_";
@@ -61,4 +54,7 @@ public interface UserCommand {
     String RAA_SET_NOVEMBER = RAA_SET_MONTH + "11";
     String RAA_SET_DECEMBER = RAA_SET_MONTH + "12";
     String RAA_SET_YEAR = RAA + SET + "year_";
+    String RAA_SET_DAY = RAA + SET + "day_";
+
+    String NO_FREE_APARTMENTS = "no_free_apartments";
 }

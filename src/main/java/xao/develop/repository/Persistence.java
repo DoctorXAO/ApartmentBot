@@ -88,7 +88,7 @@ public class Persistence {
 
         tempBookingDataRepository.save(tempBookingData);
 
-        log.debug("Added new user to UserCalendar: {}", chatId);
+        log.debug("Added new user to TempBookingData: {}", chatId);
     }
 
     public TempBookingData selectTempBookingData(long chatId) {
@@ -97,8 +97,8 @@ public class Persistence {
         return tempBookingDataRepository.getByChatId(chatId);
     }
 
-    public void updateTempBookingData(long chatId, long selectedTime) {
-        log.trace("Method updateTempBookingData(long, long) started");
+    public void updateSelectedTimeInTempBookingData(long chatId, long selectedTime) {
+        log.trace("Method updateSelectedTimeInTempBookingData(long, long) started");
 
         TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
 
@@ -109,7 +109,31 @@ public class Persistence {
         tempBookingDataRepository.save(tempBookingData);
 
         log.debug("TempBookingData updated for user: {}. New value of selectedTime: {}", chatId, tempBookingData.getSelectedTime());
-        log.trace("Method updateTempBookingData(long, long) finished");
+        log.trace("Method updateSelectedTimeInTempBookingData(long, long) finished");
+    }
+
+    public void updateCheckInInTempBookingData(long chatId, long checkIn) {
+        log.trace("Method updateCheckInInTempBookingData(long, long) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setCheckIn(checkIn);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateCheckInInTempBookingData(long, long) finished");
+    }
+
+    public void updateCheckOutInTempBookingData(long chatId, long checkOut) {
+        log.trace("Method updateCheckOutInTempBookingData(long, long) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setCheckOut(checkOut);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateCheckOutInTempBookingData(long, long) finished");
     }
 
     public void deleteTempBookingData(long chatId) {
@@ -119,6 +143,30 @@ public class Persistence {
 
         log.debug("The next user deleted from TempBookingData: {}", chatId);
         log.trace("Method deleteTempBookingData(long) finished");
+    }
+
+    public void deleteCheckInInTempBookingData(long chatId) {
+        log.trace("Method deleteCheckInInTempBookingData(long) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setCheckIn(null);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method deleteCheckInInTempBookingData(long) finished");
+    }
+
+    public void deleteCheckOutInTempBookingData(long chatId) {
+        log.trace("Method deleteCheckOutInTempBookingData(long) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setCheckOut(null);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method deleteCheckOutInTempBookingData(long) finished");
     }
 
     @Scheduled(cron = "0 0 0 * * ?")

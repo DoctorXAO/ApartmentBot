@@ -40,6 +40,7 @@ public class UserMsgChooseAnApartment extends UserMsg {
     }
 
     public void addUserToSelector(Update update) {
+        log.trace("Method addUserToSelector(Update) started");
         userSelector.put(server.getChatId(update), 0);
 
         log.debug("""
@@ -47,6 +48,7 @@ public class UserMsgChooseAnApartment extends UserMsg {
                 chatId = {}
                 current selector = {}""",
                 server.getChatId(update), userSelector.get(server.getChatId(update)));
+        log.trace("Method addUserToSelector(Update) finished");
     }
 
     public void upSelector(Update update) {
@@ -86,12 +88,19 @@ public class UserMsgChooseAnApartment extends UserMsg {
         server.deleteOldMessages(update);
 
         List<Apartment> apartments = persistence.selectAllApartments();
-        Apartment apartment = apartments.get(userSelector.get(server.getChatId(update)));
+        if (!apartments.isEmpty()) {
+            Apartment apartment = apartments.get(userSelector.get(server.getChatId(update)));
 
-        return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
-                String.format(userLoc.getLocalizationText(update),
-                        apartment.getStatus(), apartment.getArea(), apartment.getAmenities()),
-                getIKMarkup(update)));
+            return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
+                    String.format(userLoc.getLocalizationText(update),
+                            apartment.getStatus(), apartment.getArea(), apartment.getAmenities()),
+                    getIKMarkup(update)));
+        } else {
+            update.getCallbackQuery().setData(NO_FREE_APARTMENTS);
+            return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
+                    userLoc.getLocalizationText(update),
+                    getBackIKMarkup(update)));
+        }
     }
 
     @Override
@@ -123,6 +132,15 @@ public class UserMsgChooseAnApartment extends UserMsg {
                 .keyboardRow(row1)
                 .keyboardRow(row2)
                 .keyboardRow(row3)
+                .build();
+    }
+
+    public InlineKeyboardMarkup getBackIKMarkup(Update update) {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK),
+                                RAA_QUIT_FROM_CHOOSER_AN_APARTMENT)))
                 .build();
     }
 }

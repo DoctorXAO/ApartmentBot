@@ -67,6 +67,7 @@ public class Server {
         String language = message.getFrom().getLanguageCode();
 
         persistence.insertAccountStatus(chatId, language);
+        persistence.deleteTempBookingData(chatId);
 
         log.debug("""
                 Authorization: the following user parameters have been added to the database:
@@ -84,8 +85,9 @@ public class Server {
 
         List<TempBotMessage> userMessages = persistence.selectTempBotMessages(chatId);
 
-        try {
-            for(TempBotMessage userMessage : userMessages) {
+        for(TempBotMessage userMessage : userMessages) {
+            try {
+                log.debug("Try to delete the next message: {}", userMessage.getMsgId());
                 DeleteMessage deleteMessage = DeleteMessage
                         .builder()
                         .chatId(userMessage.getChatId())
@@ -94,15 +96,14 @@ public class Server {
 
                 botConfig.getTelegramClient().execute(deleteMessage);
                 log.debug("MessageID {} deleted", userMessage.getMsgId());
-            }
-
-            persistence.deleteTempBotMessages(chatId);
-        } catch (TelegramApiException ex) {
-            log.warn("""
+            } catch (TelegramApiException ex) {
+                log.warn("""
                     Message to delete not found for userID: {}
-                    Exception: {}""",
-                    chatId, ex.getMessage());
+                    Exception: {}""", chatId, ex.getMessage());
+            }
         }
+
+        persistence.deleteTempBotMessages(chatId);
 
         log.trace("Method 'deleteOldMessage' finished for userID: {}", chatId);
     }
@@ -136,5 +137,6 @@ public class Server {
 
     public void registerMessage(Long chatId, int messageId) {
         persistence.insertTempBotMessage(chatId, messageId);
+        log.debug("The message {} registered", messageId);
     }
 }

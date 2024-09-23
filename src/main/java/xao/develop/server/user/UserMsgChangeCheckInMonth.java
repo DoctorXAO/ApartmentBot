@@ -1,7 +1,6 @@
 package xao.develop.server.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -14,10 +13,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class UserMsgChangeCheckInMonth extends UserMsg {
-
-    @Autowired
-    DateService dateS;
+public class UserMsgChangeCheckInMonth extends UserDate {
 
     static final int JANUARY = 0;
     static final int FEBRUARY = 1;
@@ -34,24 +30,24 @@ public class UserMsgChangeCheckInMonth extends UserMsg {
 
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
-        Calendar presentTime = dateS.getPresentTime();
-        Calendar selectedTime = dateS.getSelectedTime(update);
+        Calendar presentTime = getPresentTime(update);
+        Calendar selectedTime = getSelectedTime(update);
 
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK),
-                RAA_QUIT_FROM_CHANGE_CHECK_IN_MONTH));
+                RAA_QUIT_FROM_CHANGE_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
         if (presentTime.get(Calendar.YEAR) < selectedTime.get(Calendar.YEAR))
-            buttons.add(msgBuilder.buildIKButton("◀️", RAA_PREVIOUS_CHECK_IN_YEAR_CM));
+            buttons.add(msgBuilder.buildIKButton("◀️", RAA_PREVIOUS_CHECK_YEAR_CM));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        buttons.add(msgBuilder.buildIKButton(dateS.getSelectedYear(selectedTime), RAA_CHANGE_CHECK_IN_YEAR));
-        buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_IN_YEAR_CM));
+        buttons.add(msgBuilder.buildIKButton(getSelectedYear(selectedTime), RAA_CHANGE_CHECK_IN_YEAR));
+        buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_YEAR_CM));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

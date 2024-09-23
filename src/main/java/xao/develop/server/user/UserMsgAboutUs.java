@@ -6,14 +6,14 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 @Service
-public class UserMsgRules extends UserMsg {
+public class UserMsgAboutUs extends UserMsg {
 
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        userLoc.getLocalizationButton(update, BACK), HI_HOUSE_INFORMATION)))
+                        userLoc.getLocalizationButton(update, BACK), BACK_TO_START)))
                 .build();
     }
 }
