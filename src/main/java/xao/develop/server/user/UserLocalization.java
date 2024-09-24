@@ -20,7 +20,7 @@ public class UserLocalization implements UserCommand {
     @Autowired
     MessageSource messageSource;
 
-    private String getLocaleMessage(Update update, String code) {
+    public String getLocaleMessage(Update update, String code) {
         AccountStatus accountStatus = update.hasMessage() ?
                 persistence.selectAccountStatus(update.getMessage().getChatId()) :
                 persistence.selectAccountStatus(update.getCallbackQuery().getMessage().getChatId());

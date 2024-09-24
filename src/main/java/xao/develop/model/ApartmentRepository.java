@@ -7,5 +7,5 @@ import java.util.List;
 public interface ApartmentRepository extends CrudRepository<Apartment, Long> {
     List<Apartment> findAll();
 
-    Apartment getByNumber(Long number);
+    Apartment getByNumber(int number);
 }

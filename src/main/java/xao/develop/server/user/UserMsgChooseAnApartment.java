@@ -9,13 +9,13 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import xao.develop.model.Amenity;
 import xao.develop.model.Apartment;
+import xao.develop.model.TempBookingData;
 import xao.develop.repository.Persistence;
 import xao.develop.server.Server;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -88,19 +88,63 @@ public class UserMsgChooseAnApartment extends UserMsg {
         server.deleteOldMessages(update);
 
         List<Apartment> apartments = persistence.selectAllApartments();
-        if (!apartments.isEmpty()) {
-            Apartment apartment = apartments.get(userSelector.get(server.getChatId(update)));
 
-            return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
-                    String.format(userLoc.getLocalizationText(update),
-                            apartment.getStatus(), apartment.getArea(), apartment.getAmenities()),
-                    getIKMarkup(update)));
-        } else {
-            update.getCallbackQuery().setData(NO_FREE_APARTMENTS);
-            return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
-                    userLoc.getLocalizationText(update),
-                    getBackIKMarkup(update)));
-        }
+        return !apartments.isEmpty() ? showApartments(update, apartments) : showNoFreeApartments(update);
+    }
+
+    private Message showApartments(Update update, List<Apartment> apartments) throws TelegramApiException {
+        Apartment apartment = apartments.get(userSelector.get(server.getChatId(update)));
+
+        TempBookingData tempBookingData = persistence.selectTempBookingData(server.getChatId(update));
+
+        String checkIn = getCheckDate(tempBookingData.getCheckIn());
+        String checkOut = getCheckDate(tempBookingData.getCheckOut());
+        StringBuilder amenities = getAmenities(update, apartment);
+
+        return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
+                String.format(userLoc.getLocalizationText(update),
+                        checkIn,
+                        checkOut,
+                        apartment.getArea(),
+                        amenities),
+                getIKMarkup(update)));
+    }
+
+    private Message showNoFreeApartments(Update update) throws TelegramApiException {
+        update.getCallbackQuery().setData(NO_FREE_APARTMENTS);
+        return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
+                userLoc.getLocalizationText(update),
+                getBackIKMarkup(update)));
+    }
+
+    private String getCheckDate(Long checkTimeInMillis) {
+        Calendar calendar = persistence.getServerPresentTime();
+
+        calendar.setTimeInMillis(checkTimeInMillis);
+        String day = calendar.get(Calendar.DAY_OF_MONTH) < 10 ?
+                "0" + calendar.get(Calendar.DAY_OF_MONTH) : String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+        String month = calendar.get(Calendar.MONTH) + 1 < 10 ?
+                "0" + (calendar.get(Calendar.MONTH) + 1) : String.valueOf(calendar.get(Calendar.MONTH) + 1);
+
+        return String.format("%s/%s/%s", day, month, calendar.get(Calendar.YEAR));
+    }
+
+    private StringBuilder getAmenities(Update update, Apartment apartment) {
+        StringBuilder amenities = new StringBuilder();
+
+        if (apartment.getAmenities() != null) {
+            String[] amenitiesArray = apartment.getAmenities().split("\\$");
+            Arrays.sort(amenitiesArray);
+
+            for (String code : amenitiesArray) {
+                Amenity amenity = persistence.selectAmenity(Integer.parseInt(code));
+
+                amenities.append(userLoc.getLocaleMessage(update, amenity.getLink())).append("\n");
+            }
+        } else
+            amenities.append("nothing");
+
+        return amenities;
     }
 
     @Override

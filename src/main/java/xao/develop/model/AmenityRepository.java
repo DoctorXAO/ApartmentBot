@@ -1,4 +1,7 @@
 package xao.develop.model;
 
-public class AmenityRepository {
+import org.springframework.data.repository.CrudRepository;
+
+public interface AmenityRepository extends CrudRepository<Amenity, Integer> {
+    Amenity getByIdAmenity(int idAmenity);
 }

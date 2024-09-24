@@ -33,6 +33,9 @@ public class Persistence {
     @Autowired
     private TempBookingDataRepository tempBookingDataRepository;
 
+    @Autowired
+    private AmenityRepository amenityRepository;
+
     public void insertAccountStatus(Long chatId,
                                     String language) {
         AccountStatus accountStatus = new AccountStatus();
@@ -72,12 +75,20 @@ public class Persistence {
         tempBotMessageRepository.deleteByChatId(chatId);
     }
 
-    public void selectApartment(Long number) {
+    public void selectApartment(int number) {
         apartmentRepository.getByNumber(number);
     }
 
     public List<Apartment> selectAllApartments() {
         return apartmentRepository.findAll();
+    }
+
+    public void updateIsBookingApartment(int number, boolean isBooking) {
+        Apartment apartment = apartmentRepository.getByNumber(number);
+
+        apartment.setIsBooking(isBooking);
+
+        apartmentRepository.save(apartment);
     }
 
     public void insertTempBookingData(long chatId, long selectedTime) {
@@ -167,6 +178,10 @@ public class Persistence {
         tempBookingDataRepository.save(tempBookingData);
 
         log.trace("Method deleteCheckOutInTempBookingData(long) finished");
+    }
+
+    public Amenity selectAmenity(int idAmenity) {
+        return amenityRepository.getByIdAmenity(idAmenity);
     }
 
     @Scheduled(cron = "0 0 0 * * ?")

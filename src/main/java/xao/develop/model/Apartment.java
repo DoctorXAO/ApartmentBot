@@ -11,10 +11,6 @@ public class Apartment {
     @Id
     private Integer number;
 
-    private String status;
-
-    private String bedroom;
-
     private Double area;
 
     private String amenities;
@@ -22,4 +18,6 @@ public class Apartment {
     private String checkIn;
 
     private String checkOut;
+
+    private Boolean isBooking;
 }
