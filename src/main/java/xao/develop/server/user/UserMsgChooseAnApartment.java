@@ -27,60 +27,98 @@ public class UserMsgChooseAnApartment extends UserMsg {
     @Autowired
     Persistence persistence;
 
-    HashMap<Long, Integer> userSelector = new HashMap<>();
+    public void setIsBooking(Update update, boolean isBooking) {
+        log.debug("Method setIsBooking, update apartment №{}, set isBooking: {}",
+                persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment(), isBooking);
+
+        persistence.updateIsBookingApartment(
+                persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment(),
+                isBooking,
+                server.getChatId(update));
+    }
+
+    public boolean getIsBooking(Update update) {
+        return persistence.selectApartment(
+                persistence.selectTempApartmentSelector(
+                        server.getChatId(update)).getNumberOfApartment()).getIsBooking();
+    }
+
+    public Long getUserId(Update update) {
+        try {
+            return persistence.selectApartment(
+                    persistence.selectTempApartmentSelector(
+                            server.getChatId(update)).getNumberOfApartment()).getUserId();
+        } catch (NullPointerException ex) {
+            return 0L;
+        }
+    }
+
+    public int getSelectedApartment(Update update) {
+        return persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment();
+    };
 
     public Integer getCurrentApartment(Update update) {
-        int currentSelector = userSelector.get(server.getChatId(update));
+        int selector = persistence.selectTempApartmentSelector(server.getChatId(update)).getSelector();
         List<Apartment> apartments = persistence.selectAllApartments();
 
         log.debug("Size of the list of apartment is {}", apartments.size());
-        log.debug("Current selector is {}", currentSelector);
+        log.debug("Current selector is {}", selector);
+        log.debug("Current number of apartment is {}", apartments.get(selector).getNumber());
 
-        return apartments.get(currentSelector).getNumber();
+        return apartments.get(selector).getNumber();
     }
 
-    public void addUserToSelector(Update update) {
-        log.trace("Method addUserToSelector(Update) started");
-        userSelector.put(server.getChatId(update), 0);
+    public void addTempApartmentSelector(Update update) {
+        log.trace("Method addTempApartmentSelector(Update) started");
+        persistence.insertTempApartmentSelector(server.getChatId(update));
 
         log.debug("""
-                Method addUserToSelector(Update): added the next user with parameters:
+                Method addTempApartmentSelector(Update): added the next user with parameters:
                 chatId = {}
-                current selector = {}""",
-                server.getChatId(update), userSelector.get(server.getChatId(update)));
-        log.trace("Method addUserToSelector(Update) finished");
+                current number of apartment = {}""",
+                server.getChatId(update), persistence.selectTempApartmentSelector(server.getChatId(update)));
+        log.trace("Method addTempApartmentSelector(Update) finished");
     }
 
     public void upSelector(Update update) {
-        if (userSelector.get(server.getChatId(update)) + 1 < persistence.selectAllApartments().size()) {
-            userSelector.put(server.getChatId(update), userSelector.get(server.getChatId(update)) + 1);
+        int selector = persistence.selectTempApartmentSelector(server.getChatId(update)).getSelector() + 1;
+        if (selector < persistence.selectAllApartments().size()) {
+            persistence.updateTempApartmentSelector(
+                    server.getChatId(update),
+                    persistence.selectAllApartments().get(selector).getNumber(),
+                    selector);
 
             log.debug("""
                     Method upSelector(Update): user selector upped:
                     chatId = {}
-                    current selector = {}""",
-                    server.getChatId(update), userSelector.get(server.getChatId(update)));
+                    new selector = {}""",
+                    server.getChatId(update), selector);
         } else
-            log.debug("Method upSelector(Update): can't up selector because {} is max!", userSelector.get(server.getChatId(update)));
+            log.debug("Method upSelector(Update): can't up selector because {} is max!", selector - 1);
     }
 
     public void downSelector(Update update) {
-        if (userSelector.get(server.getChatId(update)) - 1 >= 0) {
-            userSelector.put(server.getChatId(update), userSelector.get(server.getChatId(update)) - 1);
+        int selector = persistence.selectTempApartmentSelector(server.getChatId(update)).getSelector() - 1;
+
+        if (selector >= 0) {
+            persistence.updateTempApartmentSelector(
+                    server.getChatId(update),
+                    persistence.selectAllApartments().get(selector).getNumber(),
+                    selector);
 
             log.debug("""
                     Method downSelector(Update): user selector downed:
                     chatId = {}
-                    current selector = {}""",
-                    server.getChatId(update), userSelector.get(server.getChatId(update)));
+                    new selector = {}""",
+                    server.getChatId(update), selector);
         } else
-            log.debug("Method downSelector(Update): can't down selector because {} is min!", userSelector.get(server.getChatId(update)));
+            log.debug("Method downSelector(Update): can't down selector because {} is min!", selector - 1);
     }
 
-    public void deleteUserFromSelector(Update update) {
-        userSelector.remove(server.getChatId(update));
+    public void deleteTempApartmentSelector(Update update) {
+        persistence.deleteTempApartmentSelector(server.getChatId(update));
 
-        log.debug("Method deleteUserFromSelector(Update): the next user deleted: {} ", server.getChatId(update));
+        log.debug("Method deleteTempApartmentSelector(Update): the next user deleted: {} ", server.getChatId(update));
     }
 
     @Override
@@ -89,11 +127,13 @@ public class UserMsgChooseAnApartment extends UserMsg {
 
         List<Apartment> apartments = persistence.selectAllApartments();
 
-        return !apartments.isEmpty() ? showApartments(update, apartments) : showNoFreeApartments(update);
+        return !apartments.isEmpty() ? showApartments(update) : showNoFreeApartments(update);
     }
 
-    private Message showApartments(Update update, List<Apartment> apartments) throws TelegramApiException {
-        Apartment apartment = apartments.get(userSelector.get(server.getChatId(update)));
+    private Message showApartments(Update update) throws TelegramApiException {
+        Apartment apartment = persistence.selectApartment(
+                persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment()
+        );
 
         TempBookingData tempBookingData = persistence.selectTempBookingData(server.getChatId(update));
 
@@ -150,13 +190,14 @@ public class UserMsgChooseAnApartment extends UserMsg {
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
+        int selector = persistence.selectTempApartmentSelector(server.getChatId(update)).getSelector();
 
-        if (userSelector.get(server.getChatId(update)) > 0)
+        if (selector > 0)
             buttons.add(msgBuilder.buildIKButton("◀️", RAA_PREVIOUS_APARTMENT));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        if (userSelector.get(server.getChatId(update)) < persistence.selectAllApartments().size() - 1)
+        if (selector < persistence.selectAllApartments().size() - 1)
             buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_APARTMENT));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));

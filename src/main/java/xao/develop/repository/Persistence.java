@@ -2,9 +2,7 @@ package xao.develop.repository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import xao.develop.model.*;
 
@@ -32,6 +30,9 @@ public class Persistence {
 
     @Autowired
     private TempBookingDataRepository tempBookingDataRepository;
+
+    @Autowired
+    private TempApartmentSelectorRepository tempApartmentSelectorRepository;
 
     @Autowired
     private AmenityRepository amenityRepository;
@@ -63,6 +64,14 @@ public class Persistence {
         return tempBotMessageRepository.findByChatId(chatID);
     }
 
+    public List<TempBotMessage> selectAllTempBotMessages() {
+        return tempBotMessageRepository.findAll();
+    }
+
+    public List<Long> selectDistinctChatIdsTempBotMessages() {
+        return tempBotMessageRepository.findDistinctChatIds();
+    }
+
     public void insertTempBotMessage(long chatId, int messageId) {
         TempBotMessage tempBotMessage = new TempBotMessage();
         tempBotMessage.setChatId(chatId);
@@ -75,18 +84,34 @@ public class Persistence {
         tempBotMessageRepository.deleteByChatId(chatId);
     }
 
-    public void selectApartment(int number) {
-        apartmentRepository.getByNumber(number);
+    public void deleteAllTempBotMessages() {
+        tempBotMessageRepository.deleteAll();
+    }
+
+    public Apartment selectApartment(int number) {
+        return apartmentRepository.getByNumber(number);
     }
 
     public List<Apartment> selectAllApartments() {
-        return apartmentRepository.findAll();
+        List<Apartment> apartments = apartmentRepository.findAll(Sort.by(Sort.Direction.ASC, "number"));
+
+        apartments.removeIf(Apartment::getIsBooking);
+
+        for (int i = 0; i < apartments.size(); i++)
+            log.debug("Apartment №{}: {} number of room", i, apartments.get(i).getNumber());
+
+        return apartments;
     }
 
-    public void updateIsBookingApartment(int number, boolean isBooking) {
-        Apartment apartment = apartmentRepository.getByNumber(number);
+    public void updateIsBookingApartment(int number, boolean isBooking, long userId) {
+        Apartment apartment = selectApartment(number);
 
         apartment.setIsBooking(isBooking);
+        
+        if (isBooking)
+            apartment.setUserId(userId);
+        else
+            apartment.setUserId(null);
 
         apartmentRepository.save(apartment);
     }
@@ -184,8 +209,39 @@ public class Persistence {
         return amenityRepository.getByIdAmenity(idAmenity);
     }
 
-    @Scheduled(cron = "0 0 0 * * ?")
-    @EventListener(ContextRefreshedEvent.class)
+    public void insertTempApartmentSelector(long chatId) {
+        List<Apartment> apartments = selectAllApartments();
+
+        if (!apartments.isEmpty()) {
+            TempApartmentSelector tempApartmentSelector = new TempApartmentSelector();
+
+            tempApartmentSelector.setChatId(chatId);
+            tempApartmentSelector.setNumberOfApartment(apartments.get(0).getNumber());
+            tempApartmentSelector.setSelector(0);
+
+            tempApartmentSelectorRepository.save(tempApartmentSelector);
+        } else {
+            log.warn("Array of apartments is empty");
+        }
+    }
+
+    public TempApartmentSelector selectTempApartmentSelector(long chatId) {
+        return tempApartmentSelectorRepository.findByChatId(chatId);
+    }
+
+    public void updateTempApartmentSelector(long chatId, int numberOfApartment, int selector) {
+        TempApartmentSelector tempApartmentSelector = tempApartmentSelectorRepository.findByChatId(chatId);
+
+        tempApartmentSelector.setNumberOfApartment(numberOfApartment);
+        tempApartmentSelector.setSelector(selector);
+
+        tempApartmentSelectorRepository.save(tempApartmentSelector);
+    }
+
+    public void deleteTempApartmentSelector(long chatId) {
+        tempApartmentSelectorRepository.deleteByChatId(chatId);
+    }
+
     public void setPresentTime() {
         Calendar presentDate = Calendar.getInstance();
 
@@ -201,6 +257,14 @@ public class Persistence {
 
         log.info("The bot's present time was set with the following settings: {}", presentDate);
         log.info("The bot's present time in milliseconds was set: {}", presentDate.getTimeInMillis());
+    }
+
+    public void clearTempDAO() {
+        tempBookingDataRepository.deleteAll();
+        tempApartmentSelectorRepository.deleteAll();
+        apartmentRepository.resetToDefault();
+
+        log.info("All tempDAO cleared");
     }
 
     public Calendar getServerPresentTime() {

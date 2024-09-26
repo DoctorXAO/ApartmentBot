@@ -2,6 +2,12 @@ package xao.develop.config;
 
 public interface UserCommand {
     String START = "/start";
+    String CARD_NAME = "/name";
+    String CARD_SURNAME = "/surname";
+    String CARD_GENDER = "/gender";
+    String CARD_AGE = "/age";
+    String CARD_COUNT = "/count";
+    String CARD_CONTACTS = "/contacts";
 
     String RAA = "raa_";
     String RAA_CHOOSE_CHECK_DATE = RAA + "choose_check_date";
@@ -25,6 +31,9 @@ public interface UserCommand {
 
     String RAA_BOOK = RAA + "book";
 
+    String RAA_QUIT_FROM_BOOKING_AN_APARTMENT = RAA + "quit_from_booking_an_apartment";
+    String RAA_QUIT_CAN_NOT_BOOK = RAA + "quit_can_not_book";
+
     String ABOUT_US = "house_information";
 
     String CONTACTS = "contacts";
@@ -36,6 +45,7 @@ public interface UserCommand {
 
     String BACK = "back";
     String BACK_TO_START = "back_to_start";
+    String NEXT = "next";
 
     String EMPTY = "empty";
 
@@ -57,4 +67,5 @@ public interface UserCommand {
     String RAA_SET_DAY = RAA + SET + "day_";
 
     String NO_FREE_APARTMENTS = "no_free_apartments";
+    String CAN_NOT_BOOK = "can_not_book";
 }

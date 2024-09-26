@@ -2,11 +2,16 @@ package xao.develop.server.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.UserCommand;
+import xao.develop.model.TempBotMessage;
 import xao.develop.server.Server;
 
 import java.util.ArrayList;
@@ -27,6 +32,8 @@ public class UserServer implements UserCommand {
     UserMsgChangeCheckInMonth userMsgChangeCheckInMonth;
     @Autowired
     UserMsgChangeCheckInYear userMsgChangeCheckInYear;
+    @Autowired
+    UserMsgBooking userMsgBooking;
 
     @Autowired
     UserMsgAboutUs userMsgAboutUs;
@@ -49,6 +56,9 @@ public class UserServer implements UserCommand {
 
         List<Message> messages = new ArrayList<>();
 
+        String[] parameters = data.split(" ");
+        data = parameters[0];
+
         try {
             if (data.startsWith(RAA)) {
                 processingRAA(update, messages, data);
@@ -57,6 +67,72 @@ public class UserServer implements UserCommand {
                     case START -> {
                         server.authorization(update.getMessage());
                         messages.add(userMsgStart.sendMessage(update));
+                    }
+                    case CARD_NAME -> {
+                        if (parameters.length == 2 &&
+                                server.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update) &&
+                                parameters[1].matches("[a-zA-Z]+")) {
+                            server.deleteLastMessage(update);
+                            userMsgBooking.setName(update, parameters[1]);
+                            update.getMessage().setText(RAA_BOOK);
+                            messages.add(userMsgBooking.sendMessage(update));
+                        } else
+                            server.deleteLastMessage(update);
+                    }
+                    case CARD_SURNAME -> {
+                        if (parameters.length == 2 &&
+                                server.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update) &&
+                                parameters[1].matches("[a-zA-Z]+")) {
+                            server.deleteLastMessage(update);
+                            userMsgBooking.setSurname(update, parameters[1]);
+                            update.getMessage().setText(RAA_BOOK);
+                            messages.add(userMsgBooking.sendMessage(update));
+                        } else
+                            server.deleteLastMessage(update);
+                    }
+                    case CARD_GENDER -> {
+                        if (parameters.length == 2 &&
+                                server.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update) &&
+                                parameters[1].matches("[MW]")) {
+                            server.deleteLastMessage(update);
+                            userMsgBooking.setGender(update, parameters[1]);
+                            update.getMessage().setText(RAA_BOOK);
+                            messages.add(userMsgBooking.sendMessage(update));
+                        } else
+                            server.deleteLastMessage(update);
+                    }
+                    case CARD_AGE -> {
+                        if (parameters.length == 2 &&
+                                server.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update) &&
+                                parameters[1].matches("[0-9]+") &&
+                                Integer.parseInt(parameters[1]) < 150) {
+                            server.deleteLastMessage(update);
+                            userMsgBooking.setAge(update, parameters[1]);
+                            update.getMessage().setText(RAA_BOOK);
+                            messages.add(userMsgBooking.sendMessage(update));
+                        } else
+                            server.deleteLastMessage(update);
+                    }
+                    case CARD_COUNT -> {
+                        if (parameters.length == 2 &&
+                                server.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update) &&
+                                parameters[1].matches("[0-9]+")) {
+                            server.deleteLastMessage(update);
+                            userMsgBooking.setCount(update, parameters[1]);
+                            update.getMessage().setText(RAA_BOOK);
+                            messages.add(userMsgBooking.sendMessage(update));
+                        } else
+                            server.deleteLastMessage(update);
+                    }
+                    case CARD_CONTACTS -> {
+                        if (parameters.length == 2 &&
+                                server.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update)) {
+                            server.deleteLastMessage(update);
+                            userMsgBooking.setContacts(update, parameters[1]);
+                            update.getMessage().setText(RAA_BOOK);
+                            messages.add(userMsgBooking.sendMessage(update));
+                        } else
+                            server.deleteLastMessage(update);
                     }
                     case ABOUT_US -> messages.add(userMsgAboutUs.sendMessage(update));
                     case CONTACTS -> messages.add(userMsgContacts.sendMessage(update));
@@ -70,11 +146,12 @@ public class UserServer implements UserCommand {
                         update.getCallbackQuery().setData(START);
                         messages.add(userMsgStart.sendMessage(update));
                     }
-                    default -> log.info("Unknown data: {}", data);
+                    default -> {
+                        if (update.hasMessage())
+                            server.deleteLastMessage(update);
+                        log.info("Unknown data: {}", data);
+                    }
                 }
-
-            if (update.hasMessage() && !update.getMessage().getText().startsWith("/"))
-                server.deleteLastMessage(update);
 
             log.debug("Is the list of messages empty? {}", messages.isEmpty());
 
@@ -145,26 +222,46 @@ public class UserServer implements UserCommand {
                 }
                 case RAA_NEXT_APARTMENT -> {
                     userMsgChooseAnApartment.upSelector(update);
-                    update.getCallbackQuery().setData(RAA_CHOOSE_AN_APARTMENT);
-                    messages.addAll(userMsgChooseAnApartment.sendPhotos(update,
-                            "img/apartments/" + userMsgChooseAnApartment.getCurrentApartment(update).toString()));
-                    messages.add(userMsgChooseAnApartment.sendMessage(update));
+                    sendApartment(update, messages);
                 }
                 case RAA_PREVIOUS_APARTMENT -> {
                     userMsgChooseAnApartment.downSelector(update);
-                    update.getCallbackQuery().setData(RAA_CHOOSE_AN_APARTMENT);
-                    messages.addAll(userMsgChooseAnApartment.sendPhotos(update,
-                            "img/apartments/" + userMsgChooseAnApartment.getCurrentApartment(update).toString()));
-                    messages.add(userMsgChooseAnApartment.sendMessage(update));
+                    sendApartment(update, messages);
                 }
                 case RAA_QUIT_FROM_CHOOSER_AN_APARTMENT -> {
-                    userMsgChooseAnApartment.deleteUserFromSelector(update);
+                    userMsgChooseAnApartment.deleteTempApartmentSelector(update);
                     userMsgChooseCheckDate.deleteCheckOut(update);
                     update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_OUT_DATE);
                     messages.add(userMsgChooseCheckDate.sendMessage(update));
                 }
+                case RAA_BOOK -> {
+                    if (!userMsgChooseAnApartment.getIsBooking(update)) {
+                        userMsgChooseAnApartment.setIsBooking(update, true);
+                        userMsgBooking.createNewUserCard(update);
+                        messages.add(userMsgBooking.sendMessage(update));
+                    } else
+                        messages.add(userMsgBooking.sendCanNotBook(update));
+                }
+                case RAA_QUIT_FROM_BOOKING_AN_APARTMENT -> {
+                    userMsgChooseAnApartment.setIsBooking(update, false);
+                    userMsgChooseAnApartment.deleteTempApartmentSelector(update);
+                    userMsgChooseAnApartment.addTempApartmentSelector(update);
+                    sendApartment(update, messages);
+                }
+                case RAA_QUIT_CAN_NOT_BOOK -> {
+                    userMsgChooseAnApartment.deleteTempApartmentSelector(update);
+                    userMsgChooseAnApartment.addTempApartmentSelector(update);
+                    sendApartment(update, messages);
+                }
                 default -> log.info("Unknown RAA data: {}", data);
             }
+    }
+
+    private void sendApartment(Update update, List<Message> messages) throws TelegramApiException {
+        update.getCallbackQuery().setData(RAA_CHOOSE_AN_APARTMENT);
+        messages.addAll(userMsgChooseAnApartment.sendPhotos(update,
+                "img/apartments/" + userMsgChooseAnApartment.getCurrentApartment(update).toString()));
+        messages.add(userMsgChooseAnApartment.sendMessage(update));
     }
 
     private void processingRAA_SET(Update update, List<Message> messages, String data) throws TelegramApiException {
@@ -178,11 +275,8 @@ public class UserServer implements UserCommand {
                 messages.add(userMsgChooseCheckDate.sendMessage(update));
             } else {
                 userMsgChooseCheckDate.setCheckOut(update, Integer.parseInt(data.replaceAll(RAA_SET_DAY, "")));
-                update.getCallbackQuery().setData(RAA_CHOOSE_AN_APARTMENT);
-                userMsgChooseAnApartment.addUserToSelector(update);
-                messages.addAll(userMsgChooseAnApartment.sendPhotos(update,
-                        "img/apartments/" + userMsgChooseAnApartment.getCurrentApartment(update).toString()));
-                messages.add(userMsgChooseAnApartment.sendMessage(update));
+                userMsgChooseAnApartment.addTempApartmentSelector(update);
+                sendApartment(update, messages);
             }
         } else {
             switch (data) {

@@ -52,6 +52,7 @@ public class UserLocalization implements UserCommand {
                 case RAA_CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.msg.choose-an-apartment");
                 case RAA_BOOK -> text = getLocaleMessage(update, "user.msg.book");
                 case NO_FREE_APARTMENTS -> text = getLocaleMessage(update, "user.msg.no-free-apartments");
+                case CAN_NOT_BOOK -> text = getLocaleMessage(update, "user.msg.can-not-book");
                 default -> throw new Exception("Error download message");
             }
 
@@ -81,6 +82,7 @@ public class UserLocalization implements UserCommand {
                 case RAA_CHOOSE_AN_APARTMENT -> text = getLocaleMessage(update, "user.bt.choose-an-apartment");
                 case RAA_BOOK -> text = getLocaleMessage(update, "user.bt.book");
                 case BACK -> text = getLocaleMessage(update, "user.bt.back");
+                case NEXT -> text = getLocaleMessage(update, "user.bt.next");
                 case "month_1" -> text = getLocaleMessage(update, "user.bt.january");
                 case "month_2" -> text = getLocaleMessage(update, "user.bt.february");
                 case "month_3" -> text = getLocaleMessage(update, "user.bt.march");

@@ -1,5 +1,6 @@
 package xao.develop.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Getter;
@@ -11,6 +12,7 @@ public class Apartment {
     @Id
     private Integer number;
 
+    @Column(nullable = false)
     private Double area;
 
     private String amenities;
@@ -19,5 +21,7 @@ public class Apartment {
 
     private String checkOut;
 
-    private Boolean isBooking;
+    private Boolean isBooking = false;
+
+    private Long userId = null;
 }
