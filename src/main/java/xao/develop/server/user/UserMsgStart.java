@@ -5,7 +5,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import xao.develop.config.UserCommand;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,19 +18,19 @@ public class UserMsgStart extends UserMsg {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         buttons.add(msgBuilder.buildIKButton(
-                userLoc.getLocalizationButton(update, UserCommand.RAA_CHOOSE_CHECK_DATE), RAA_CHOOSE_CHECK_DATE));
+                server.getLocaleMessage(update, USER_BT_CHOOSE_CHECK_IN_DATE), RAA_CHOOSE_CHECK_DATE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, ABOUT_US), ABOUT_US));
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_ABOUT_US), ABOUT_US));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, CONTACTS), CONTACTS));
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_CONTACTS), CONTACTS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, CHANGE_LANGUAGE), CHANGE_LANGUAGE));
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

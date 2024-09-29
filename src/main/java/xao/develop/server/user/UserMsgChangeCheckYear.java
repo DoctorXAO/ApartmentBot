@@ -11,7 +11,7 @@ import java.util.Calendar;
 import java.util.List;
 
 @Service
-public class UserMsgChangeCheckInYear extends UserDate {
+public class UserMsgChangeCheckYear extends UserDate {
 
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
@@ -20,7 +20,7 @@ public class UserMsgChangeCheckInYear extends UserDate {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK),
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
                 RAA_QUIT_FROM_CHANGE_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();

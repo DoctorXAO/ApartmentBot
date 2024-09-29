@@ -26,23 +26,50 @@ public class BotConfig {
     private Long adminId;
 
     @Value("${rent.1.day}")
-    private String onePerDay;
+    private int onePerDay;
     @Value("${rent.2.day}")
-    private String twoPerDay;
+    private int twoPerDay;
     @Value("${rent.3.day}")
-    private String threePerDay;
+    private int threePerDay;
     @Value("${rent.1.month}")
-    private String onePerMonth;
+    private int onePerMonth;
     @Value("${rent.2.month}")
-    private String twoPerMonth;
+    private int twoPerMonth;
     @Value("${rent.3.month}")
-    private String threePerMonth;
+    private int threePerMonth;
     @Value("${rent.1.year}")
-    private String onePerYear;
+    private int onePerYear;
     @Value("${rent.2.year}")
-    private String twoPerYear;
+    private int twoPerYear;
     @Value("${rent.3.year}")
-    private String threePerYear;
+    private int threePerYear;
+
+    public int getPerDay(int countOfPeople) {
+        if (countOfPeople == 1)
+            return onePerDay;
+        else if (countOfPeople == 2)
+            return twoPerDay;
+        else
+            return threePerDay;
+    }
+
+    public int getPerMonth(int countOfPeople) {
+        if (countOfPeople == 1)
+            return onePerMonth;
+        else if (countOfPeople == 2)
+            return twoPerMonth;
+        else
+            return threePerMonth;
+    }
+
+    public int getPerYear(int countOfPeople) {
+        if (countOfPeople == 1)
+            return onePerYear;
+        else if (countOfPeople == 2)
+            return twoPerYear;
+        else
+            return threePerYear;
+    }
 
     @Bean
     public TelegramBotsLongPollingApplication telegramBotsLongPollingApplication() {

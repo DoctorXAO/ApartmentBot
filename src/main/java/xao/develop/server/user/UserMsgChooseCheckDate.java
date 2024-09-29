@@ -15,6 +15,12 @@ import java.util.List;
 @Service
 public class UserMsgChooseCheckDate extends UserDate {
 
+    public void deleteUserFromTempBookingData(Update update) {
+        persistence.deleteTempBookingData(server.getChatId(update));
+
+        log.debug("The next user from UserCalendar deleted: {}", server.getChatId(update));
+    }
+
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
@@ -63,7 +69,7 @@ public class UserMsgChooseCheckDate extends UserDate {
             }
         }
 
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK), RAA_QUIT_FROM_CHOOSER_CHECK));
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK), RAA_QUIT_FROM_CHOOSER_CHECK));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup
@@ -83,7 +89,7 @@ public class UserMsgChooseCheckDate extends UserDate {
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        buttons.add(msgBuilder.buildIKButton(getSelectedYear(calendar), RAA_CHANGE_CHECK_IN_YEAR));
+        buttons.add(msgBuilder.buildIKButton(getSelectedYear(calendar), RAA_CHANGE_CHECK_YEAR));
         buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_YEAR));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
@@ -94,8 +100,8 @@ public class UserMsgChooseCheckDate extends UserDate {
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
         buttons.add(msgBuilder.buildIKButton(
-                userLoc.getLocalizationButton(update, "month_" + (calendar.get(Calendar.MONTH) + 1)),
-                RAA_CHANGE_CHECK_IN_MONTH));
+                server.getLocaleMessage(update, USER_BT_MONTH_ + (calendar.get(Calendar.MONTH) + 1)),
+                RAA_CHANGE_CHECK_MONTH));
         buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();

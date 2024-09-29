@@ -13,7 +13,7 @@ public class UserMsgChangeLanguage extends UserMsg {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        userLoc.getLocalizationButton(update, BACK), BACK_TO_START)))
+                        server.getLocaleMessage(update, USER_BT_BACK), BACK_TO_START)))
                 .keyboardRow(new InlineKeyboardRow(
                         msgBuilder.buildIKButton("\uD83C\uDDF9\uD83C\uDDF7 Türkçe", TR)))
                 .keyboardRow(new InlineKeyboardRow(

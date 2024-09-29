@@ -1,124 +1,91 @@
 package xao.develop.server.user;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
-import java.util.HashMap;
+import xao.develop.model.TempBookingData;
+import xao.develop.repository.Persistence;
 
 @Service
 public class UserMsgBooking extends UserMsg
 {
-
-    HashMap<Long, String[]> userCard = new HashMap<>();
-
-    public void createNewUserCard(Update update) {
-        userCard.put(server.getChatId(update), new String[6]);
-    }
+    @Autowired
+    Persistence persistence;
 
     public void setName(Update update, String name) {
-        String[] card = userCard.get(server.getChatId(update));
-        card[0] = name;
-        userCard.put(server.getChatId(update), card);
+        persistence.updateFirstNameTempBookingData(server.getChatId(update), name);
     }
 
     public void setSurname(Update update, String surname) {
-        String[] card = userCard.get(server.getChatId(update));
-        card[1] = surname;
-        userCard.put(server.getChatId(update), card);
+        persistence.updateLastNameTempBookingData(server.getChatId(update), surname);
     }
 
     public void setGender(Update update, String gender) {
-        String[] card = userCard.get(server.getChatId(update));
-        card[2] = gender;
-        userCard.put(server.getChatId(update), card);
+        persistence.updateGenderTempBookingData(server.getChatId(update), gender);
     }
 
     public void setAge(Update update, String age) {
-        String[] card = userCard.get(server.getChatId(update));
-        card[3] = age;
-        userCard.put(server.getChatId(update), card);
+        persistence.updateAgeTempBookingData(server.getChatId(update), age);
     }
 
     public void setCount(Update update, String count) {
-        String[] card = userCard.get(server.getChatId(update));
-        card[4] = count;
-        userCard.put(server.getChatId(update), card);
+        persistence.updateCountOfPeopleTempBookingData(server.getChatId(update), count);
     }
 
     public void setContacts(Update update, String contacts) {
-        String[] card = userCard.get(server.getChatId(update));
-        card[5] = contacts;
-        userCard.put(server.getChatId(update), card);
+        persistence.updateContactsTempBookingData(server.getChatId(update), contacts);
     }
 
-    @Override
-    public Message sendMessage(Update update) throws TelegramApiException {
-        server.deleteOldMessages(update);
-
-        String[] card = userCard.get(server.getChatId(update));
-
-        boolean isOneOfFieldsNull = false;
-
-        for (String param : card)
-            isOneOfFieldsNull = param == null;
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = getIKMarkup(update);
-
-        if (!isOneOfFieldsNull)
-            inlineKeyboardMarkup = getNextIKMarkup(update);
-
-        return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
-                String.format(userLoc.getLocalizationText(update),
-                        card[0],
-                        card[1],
-                        card[2],
-                        card[3],
-                        card[4],
-                        card[5]),
-                inlineKeyboardMarkup));
-    }
-
-    public Message sendCanNotBook(Update update) throws TelegramApiException {
-        server.deleteOldMessages(update);
-
-        update.getCallbackQuery().setData(CAN_NOT_BOOK);
-        return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
-                userLoc.getLocalizationText(update),
-                getCanNotBookIKMarkup(update)));
-    }
-
-    public InlineKeyboardMarkup getNextIKMarkup(Update update) {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, NEXT),
-                                "new_callback")))
-                .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK),
-                                RAA_QUIT_FROM_BOOKING_AN_APARTMENT)))
-                .build();
+    public TempBookingData getTempBookingData(Update update) {
+        return persistence.selectTempBookingData(server.getChatId(update));
     }
 
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
+        TempBookingData tempBookingData = getTempBookingData(update);
+
+        boolean isOneOfFieldsNull = false;
+
+        String[] parameters = new String[6];
+        parameters[0] = tempBookingData.getFirstName();
+        parameters[1] = tempBookingData.getLastName();
+        parameters[2] = tempBookingData.getGender();
+        parameters[3] = String.valueOf(tempBookingData.getAge());
+        parameters[4] = String.valueOf(tempBookingData.getCountOfPeople());
+        parameters[5] = tempBookingData.getContacts();
+
+        for (String param : parameters)
+            if (param == null || param.equals("0")) {
+                isOneOfFieldsNull = true;
+                break;
+            }
+
+        if (isOneOfFieldsNull)
+            return getBackIKMarkup(update);
+        else
+            return getNextIKMarkup(update);
+    }
+
+    private InlineKeyboardMarkup getBackIKMarkup(Update update) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK),
+                        msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
                                 RAA_QUIT_FROM_BOOKING_AN_APARTMENT)))
                 .build();
     }
 
-    public InlineKeyboardMarkup getCanNotBookIKMarkup(Update update) {
+    private InlineKeyboardMarkup getNextIKMarkup(Update update) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK),
-                                RAA_QUIT_CAN_NOT_BOOK)))
+                        msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_NEXT),
+                                RAA_SHOW_PREVIEW)))
+                .keyboardRow(new InlineKeyboardRow(
+                        msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
+                                RAA_QUIT_FROM_BOOKING_AN_APARTMENT)))
                 .build();
     }
 }

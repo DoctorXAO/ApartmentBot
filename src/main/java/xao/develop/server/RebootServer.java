@@ -18,17 +18,16 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.config.UserCommand;
-import xao.develop.model.AccountStatus;
+import xao.develop.config.UserMessageLink;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
-import xao.develop.server.user.UserLocalization;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Service
-public class RebootServer implements UserCommand {
+public class RebootServer implements UserCommand, UserMessageLink {
 
     @Autowired
     BotConfig botConfig;
@@ -40,7 +39,7 @@ public class RebootServer implements UserCommand {
     MessageBuilder msgBuilder;
 
     @Autowired
-    UserLocalization userLoc;
+    Server server;
 
     @Scheduled(cron = "0 0 0 * * ?")
     @EventListener(ContextRefreshedEvent.class)
@@ -64,34 +63,19 @@ public class RebootServer implements UserCommand {
 
                 if (i == tempBotMessages.size() - 1 && chatId != botConfig.getAdminId()) {
                     try {
-                        Update update = new Update();
+                        Update update = initUpdate(chatId);
 
-                        CallbackQuery callbackQuery = new CallbackQuery();
-                        Message message = new Message();
-                        Chat chat = new Chat(chatId, "null");
-
-                        callbackQuery.setData(START);
-                        message.setChat(chat);
-
-                        update.setCallbackQuery(callbackQuery);
-                        update.getCallbackQuery().setMessage(message);
-
-                        EditMessageText editMessageText = EditMessageText
-                                .builder()
-                                .chatId(chatId)
-                                .messageId(tempBotMessage.getMsgId())
-                                .text(userLoc.getLocalizationText(update))
-                                .replyMarkup(getStartIKMarkup(update))
-                                .parseMode("HTML")
-                                .build();
-
-                        botConfig.getTelegramClient().execute(editMessageText);
+                        botConfig.getTelegramClient().execute(
+                                server.editMessageText(update,
+                                        tempBotMessage.getMsgId(),
+                                        server.getLocaleMessage(update, USER_MSG_START),
+                                        getStartIKMarkup(update)));
 
                         log.debug("User {} message {} edited", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
 
                         break;
                     } catch (TelegramApiException ex) {
-                        log.error("""
+                        log.warn("""
                                         [Reboot] Impossible to edit user {} message {}
                                         Exception: {}""",
                                 tempBotMessage.getChatId(), tempBotMessage.getMsgId(), ex.getMessage());
@@ -120,24 +104,40 @@ public class RebootServer implements UserCommand {
         }
     }
 
-    public InlineKeyboardMarkup getStartIKMarkup(Update update) {
+    private Update initUpdate(long chatId) {
+        Update update = new Update();
+
+        CallbackQuery callbackQuery = new CallbackQuery();
+        Message message = new Message();
+        Chat chat = new Chat(chatId, "null");
+
+        callbackQuery.setData(START);
+        message.setChat(chat);
+
+        update.setCallbackQuery(callbackQuery);
+        update.getCallbackQuery().setMessage(message);
+
+        return update;
+    }
+
+    private InlineKeyboardMarkup getStartIKMarkup(Update update) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         buttons.add(msgBuilder.buildIKButton(
-                userLoc.getLocalizationButton(update, UserCommand.RAA_CHOOSE_CHECK_DATE), RAA_CHOOSE_CHECK_DATE));
+                server.getLocaleMessage(update, USER_BT_CHOOSE_CHECK_IN_DATE), RAA_CHOOSE_CHECK_DATE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, ABOUT_US), ABOUT_US));
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_ABOUT_US), ABOUT_US));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, CONTACTS), CONTACTS));
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_CONTACTS), CONTACTS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, CHANGE_LANGUAGE), CHANGE_LANGUAGE));
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

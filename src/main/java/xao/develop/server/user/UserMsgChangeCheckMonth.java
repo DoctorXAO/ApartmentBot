@@ -13,7 +13,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class UserMsgChangeCheckInMonth extends UserDate {
+public class UserMsgChangeCheckMonth extends UserDate {
 
     static final int JANUARY = 0;
     static final int FEBRUARY = 1;
@@ -36,7 +36,7 @@ public class UserMsgChangeCheckInMonth extends UserDate {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK),
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
                 RAA_QUIT_FROM_CHANGE_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
@@ -46,7 +46,7 @@ public class UserMsgChangeCheckInMonth extends UserDate {
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        buttons.add(msgBuilder.buildIKButton(getSelectedYear(selectedTime), RAA_CHANGE_CHECK_IN_YEAR));
+        buttons.add(msgBuilder.buildIKButton(getSelectedYear(selectedTime), RAA_CHANGE_CHECK_YEAR));
         buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_YEAR_CM));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
@@ -58,10 +58,10 @@ public class UserMsgChangeCheckInMonth extends UserDate {
             selectedTime.set(Calendar.MONTH, i - 1); // -1 - так как класс Calendar ведет счет месяца с 0
 
             if (presentTime.get(Calendar.YEAR) < selectedTime.get(Calendar.YEAR))
-                buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, "month_" + i),
+                buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_MONTH_ + i),
                         RAA_SET_MONTH + i));
             else if (presentTime.get(Calendar.MONTH) <= selectedTime.get(Calendar.MONTH))
-                buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, "month_" + i),
+                buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_MONTH_ + i),
                         RAA_SET_MONTH + i));
             else
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));

@@ -13,7 +13,7 @@ public class UserMsgAboutUs extends UserMsg {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        userLoc.getLocalizationButton(update, BACK), BACK_TO_START)))
+                        server.getLocaleMessage(update, USER_BT_BACK), BACK_TO_START)))
                 .build();
     }
 }

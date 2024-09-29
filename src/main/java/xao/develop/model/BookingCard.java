@@ -26,7 +26,7 @@ public class BookingCard {
 
     private int age;
 
-    private int gender;
+    private String gender;
 
     private int countOfPeople;
 

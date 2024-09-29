@@ -11,9 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.model.Amenity;
 import xao.develop.model.Apartment;
-import xao.develop.model.TempBookingData;
 import xao.develop.repository.Persistence;
-import xao.develop.server.Server;
 
 import java.util.*;
 
@@ -22,19 +20,15 @@ import java.util.*;
 public class UserMsgChooseAnApartment extends UserMsg {
 
     @Autowired
-    Server server;
-
-    @Autowired
     Persistence persistence;
 
     public void setIsBooking(Update update, boolean isBooking) {
-        log.debug("Method setIsBooking, update apartment №{}, set isBooking: {}",
-                persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment(), isBooking);
+        int numberOfApartment = getSelectedApartment(update);
 
-        persistence.updateIsBookingApartment(
-                persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment(),
-                isBooking,
-                server.getChatId(update));
+        log.debug("Method setIsBooking, update apartment №{}, set isBooking: {}", numberOfApartment, isBooking);
+
+        persistence.updateIsBookingApartment(numberOfApartment, isBooking, server.getChatId(update));
+        persistence.updateNumberOfApartmentTempBookingData(server.getChatId(update), numberOfApartment);
     }
 
     public boolean getIsBooking(Update update) {
@@ -53,9 +47,9 @@ public class UserMsgChooseAnApartment extends UserMsg {
         }
     }
 
-    public int getSelectedApartment(Update update) {
+    private int getSelectedApartment(Update update) {
         return persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment();
-    };
+    }
 
     public Integer getCurrentApartment(Update update) {
         int selector = persistence.selectTempApartmentSelector(server.getChatId(update)).getSelector();
@@ -121,7 +115,6 @@ public class UserMsgChooseAnApartment extends UserMsg {
         log.debug("Method deleteTempApartmentSelector(Update): the next user deleted: {} ", server.getChatId(update));
     }
 
-    @Override
     public Message sendMessage(Update update) throws TelegramApiException {
         server.deleteOldMessages(update);
 
@@ -135,16 +128,10 @@ public class UserMsgChooseAnApartment extends UserMsg {
                 persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment()
         );
 
-        TempBookingData tempBookingData = persistence.selectTempBookingData(server.getChatId(update));
-
-        String checkIn = getCheckDate(tempBookingData.getCheckIn());
-        String checkOut = getCheckDate(tempBookingData.getCheckOut());
         StringBuilder amenities = getAmenities(update, apartment);
 
-        return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
-                String.format(userLoc.getLocalizationText(update),
-                        checkIn,
-                        checkOut,
+        return botConfig.getTelegramClient().execute(server.sendMessage(update,
+                String.format(server.getLocaleMessage(update, USER_MSG_CHOOSE_AN_APARTMENT),
                         apartment.getArea(),
                         amenities),
                 getIKMarkup(update)));
@@ -152,21 +139,9 @@ public class UserMsgChooseAnApartment extends UserMsg {
 
     private Message showNoFreeApartments(Update update) throws TelegramApiException {
         update.getCallbackQuery().setData(NO_FREE_APARTMENTS);
-        return botConfig.getTelegramClient().execute(msgBuilder.buildSendMessage(update,
-                userLoc.getLocalizationText(update),
+        return botConfig.getTelegramClient().execute(server.sendMessage(update,
+                server.getLocaleMessage(update, USER_MSG_NO_FREE_APARTMENTS),
                 getBackIKMarkup(update)));
-    }
-
-    private String getCheckDate(Long checkTimeInMillis) {
-        Calendar calendar = persistence.getServerPresentTime();
-
-        calendar.setTimeInMillis(checkTimeInMillis);
-        String day = calendar.get(Calendar.DAY_OF_MONTH) < 10 ?
-                "0" + calendar.get(Calendar.DAY_OF_MONTH) : String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
-        String month = calendar.get(Calendar.MONTH) + 1 < 10 ?
-                "0" + (calendar.get(Calendar.MONTH) + 1) : String.valueOf(calendar.get(Calendar.MONTH) + 1);
-
-        return String.format("%s/%s/%s", day, month, calendar.get(Calendar.YEAR));
     }
 
     private StringBuilder getAmenities(Update update, Apartment apartment) {
@@ -179,7 +154,7 @@ public class UserMsgChooseAnApartment extends UserMsg {
             for (String code : amenitiesArray) {
                 Amenity amenity = persistence.selectAmenity(Integer.parseInt(code));
 
-                amenities.append(userLoc.getLocaleMessage(update, amenity.getLink())).append("\n");
+                amenities.append(server.getLocaleMessage(update, amenity.getLink())).append("\n");
             }
         } else
             amenities.append("nothing");
@@ -205,11 +180,11 @@ public class UserMsgChooseAnApartment extends UserMsg {
         InlineKeyboardRow row1 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, RAA_BOOK), RAA_BOOK));
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BOOK), RAA_BOOK));
         InlineKeyboardRow row2 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK), RAA_QUIT_FROM_CHOOSER_AN_APARTMENT));
+        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK), RAA_QUIT_FROM_CHOOSER_AN_APARTMENT));
         InlineKeyboardRow row3 = msgBuilder.buildIKRow(buttons);
 
         return InlineKeyboardMarkup
@@ -224,7 +199,7 @@ public class UserMsgChooseAnApartment extends UserMsg {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(userLoc.getLocalizationButton(update, BACK),
+                        msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
                                 RAA_QUIT_FROM_CHOOSER_AN_APARTMENT)))
                 .build();
     }

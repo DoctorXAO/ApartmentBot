@@ -133,7 +133,10 @@ public abstract class UserDate extends UserMsg {
     }
 
     void addNewUserToTempBookingData(Update update) {
-        persistence.insertTempBookingData(server.getChatId(update), Calendar.getInstance().getTimeInMillis());
+        persistence.insertTempBookingData(
+                server.getChatId(update),
+                Calendar.getInstance().getTimeInMillis(),
+                update.getCallbackQuery().getFrom().getUserName());
     }
 
     void nextMonth(Update update) {

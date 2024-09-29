@@ -88,6 +88,10 @@ public class Persistence {
         tempBotMessageRepository.deleteAll();
     }
 
+    public void deleteMessageTempBotMessage(long chatId, int msgId) {
+        tempBotMessageRepository.deleteByChatIdAndMsgId(chatId, msgId);
+    }
+
     public Apartment selectApartment(int number) {
         return apartmentRepository.getByNumber(number);
     }
@@ -116,11 +120,12 @@ public class Persistence {
         apartmentRepository.save(apartment);
     }
 
-    public void insertTempBookingData(long chatId, long selectedTime) {
+    public void insertTempBookingData(long chatId, long selectedTime, String login) {
         TempBookingData tempBookingData = new TempBookingData();
 
         tempBookingData.setChatId(chatId);
         tempBookingData.setSelectedTime(selectedTime);
+        tempBookingData.setLogin(login);
 
         tempBookingDataRepository.save(tempBookingData);
 
@@ -170,6 +175,90 @@ public class Persistence {
         tempBookingDataRepository.save(tempBookingData);
 
         log.trace("Method updateCheckOutInTempBookingData(long, long) finished");
+    }
+
+    public void updateNumberOfApartmentTempBookingData(long chatId, int numberOfApartment) {
+        log.trace("Method updateNumberOfApartmentTempBookingData(long, int) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setNumberOfApartment(numberOfApartment);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateNumberOfApartmentTempBookingData(long, int) finished");
+    }
+
+    public void updateFirstNameTempBookingData(long chatId, String firstName) {
+        log.trace("Method updateFirstNameTempBookingData(long, String) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setFirstName(firstName);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateFirstNameTempBookingData(long, String) finished");
+    }
+
+    public void updateLastNameTempBookingData(long chatId, String lastName) {
+        log.trace("Method updateLastNameTempBookingData(long, String) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setLastName(lastName);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateLastNameTempBookingData(long, String) finished");
+    }
+
+    public void updateContactsTempBookingData(long chatId, String contacts) {
+        log.trace("Method updateContactsTempBookingData(long, String) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setContacts(contacts);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateContactsTempBookingData(long, String) finished");
+    }
+
+    public void updateAgeTempBookingData(long chatId, String age) {
+        log.trace("Method updateAgeTempBookingData(long, String) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setAge(Integer.parseInt(age));
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateAgeTempBookingData(long, String) finished");
+    }
+
+    public void updateGenderTempBookingData(long chatId, String gender) {
+        log.trace("Method updateGenderTempBookingData(long, String) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setGender(gender);
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateGenderTempBookingData(long, String) finished");
+    }
+
+    public void updateCountOfPeopleTempBookingData(long chatId, String countOfPeople) {
+        log.trace("Method updateCountOfPeopleTempBookingData(long, String) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setCountOfPeople(Integer.parseInt(countOfPeople));
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateCountOfPeopleTempBookingData(long, String) finished");
     }
 
     public void deleteTempBookingData(long chatId) {

@@ -11,16 +11,16 @@ public interface UserCommand {
 
     String RAA = "raa_";
     String RAA_CHOOSE_CHECK_DATE = RAA + "choose_check_date";
-    String RAA_CHANGE_CHECK_IN_MONTH = RAA + "change_check_in_month";
-    String RAA_NEXT_CHECK_YEAR_CM = RAA + "next_check_in_year_cm";
-    String RAA_PREVIOUS_CHECK_YEAR_CM = RAA + "previous_check_in_year_cm";
-    String RAA_QUIT_FROM_CHANGE_CHECK_MONTH = RAA + "quit_from_change_check_in_month";
-    String RAA_CHANGE_CHECK_IN_YEAR = RAA + "change_check_in_year";
-    String RAA_NEXT_CHECK_YEAR = RAA + "next_check_in_year";
-    String RAA_PREVIOUS_CHECK_YEAR = RAA + "previous_check_in_year";
-    String RAA_NEXT_CHECK_MONTH = RAA + "next_check_in_month";
-    String RAA_PREVIOUS_CHECK_MONTH = RAA + "previous_check_in_month";
-    String RAA_QUIT_FROM_CHOOSER_CHECK = RAA + "quit_from_chooser_check_in";
+    String RAA_CHANGE_CHECK_MONTH = RAA + "change_check_month";
+    String RAA_NEXT_CHECK_YEAR_CM = RAA + "next_check_year_cm";
+    String RAA_PREVIOUS_CHECK_YEAR_CM = RAA + "previous_check_year_cm";
+    String RAA_QUIT_FROM_CHANGE_CHECK_MONTH = RAA + "quit_from_change_check_month";
+    String RAA_CHANGE_CHECK_YEAR = RAA + "change_check_year";
+    String RAA_NEXT_CHECK_YEAR = RAA + "next_check_year";
+    String RAA_PREVIOUS_CHECK_YEAR = RAA + "previous_check_year";
+    String RAA_NEXT_CHECK_MONTH = RAA + "next_check_month";
+    String RAA_PREVIOUS_CHECK_MONTH = RAA + "previous_check_month";
+    String RAA_QUIT_FROM_CHOOSER_CHECK = RAA + "quit_from_chooser_check";
 
     String RAA_CHOOSE_CHECK_OUT_DATE = RAA + "choose_check_out_date";
 
@@ -30,9 +30,13 @@ public interface UserCommand {
     String RAA_QUIT_FROM_CHOOSER_AN_APARTMENT = RAA + "quit_from_chooser_an_apartment";
 
     String RAA_BOOK = RAA + "book";
+    String RAA_SHOW_PREVIEW = RAA + "show_preview";
 
     String RAA_QUIT_FROM_BOOKING_AN_APARTMENT = RAA + "quit_from_booking_an_apartment";
     String RAA_QUIT_CAN_NOT_BOOK = RAA + "quit_can_not_book";
+    String RAA_QUIT_FROM_PREVIEW_CARD = RAA + "quit_from_preview_card";
+
+    String RAA_SEND_BOOKING_TO_ADMIN = RAA + "send_booking_to_admin";
 
     String ABOUT_US = "house_information";
 
@@ -46,6 +50,7 @@ public interface UserCommand {
     String BACK = "back";
     String BACK_TO_START = "back_to_start";
     String NEXT = "next";
+    String SEND = "send";
 
     String EMPTY = "empty";
 

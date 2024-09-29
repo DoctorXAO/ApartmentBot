@@ -16,4 +16,20 @@ public class TempBookingData {
     private Long checkIn;
 
     private Long checkOut;
+
+    private Integer numberOfApartment;
+
+    private String login;
+
+    private String firstName;
+
+    private String lastName;
+
+    private String contacts;
+
+    private int age;
+
+    private String gender;
+
+    private int countOfPeople;
 }

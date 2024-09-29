@@ -18,4 +18,7 @@ public interface TempBotMessageRepository extends CrudRepository<TempBotMessage,
 
     @Transactional
     void deleteByChatId(Long chatId);
+
+    @Transactional
+    void deleteByChatIdAndMsgId(Long chatId, Integer msgId);
 }

@@ -6,14 +6,14 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 @Service
-public class UserMsgContacts extends UserMsg {
-
+public class UserMsgBookCanNot extends UserMsg {
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         return InlineKeyboardMarkup
                 .builder()
-                .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        server.getLocaleMessage(update, USER_BT_BACK), BACK_TO_START)))
+                .keyboardRow(new InlineKeyboardRow(
+                        msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
+                                RAA_QUIT_CAN_NOT_BOOK)))
                 .build();
     }
 }

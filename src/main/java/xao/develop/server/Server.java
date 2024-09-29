@@ -2,20 +2,22 @@ package xao.develop.server;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
+import xao.develop.model.AccountStatus;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -27,8 +29,19 @@ public class Server {
     @Autowired
     Persistence persistence;
 
+    @Autowired
+    MessageSource messageSource;
+
     public void setLanguage(Update update, String language) {
         persistence.updateLanguageInAccountStatus(getChatId(update), language);
+    }
+
+    public String getAdminPhone() {
+        return botConfig.getPhone();
+    }
+
+    public String getAdminEmail() {
+        return botConfig.getEmail();
     }
 
     public Long getChatId(Update update) {
@@ -64,6 +77,18 @@ public class Server {
             return update.getCallbackQuery().getData();
     }
 
+    public String getLocaleMessage(Update update, String msg) {
+        AccountStatus accountStatus = update.hasMessage() ?
+                persistence.selectAccountStatus(update.getMessage().getChatId()) :
+                persistence.selectAccountStatus(update.getCallbackQuery().getMessage().getChatId());
+
+        Locale locale = new Locale(accountStatus.getLanguage());
+
+        log.debug("Method getLocaleMessage(Update, String) get the next value: {}", msg);
+
+        return messageSource.getMessage(msg, null, locale);
+    }
+
     public void authorization(Message message) {
         log.trace("Method authorization(Message) started");
 
@@ -71,6 +96,7 @@ public class Server {
         String language = message.getFrom().getLanguageCode();
 
         persistence.insertAccountStatus(chatId, language);
+        persistence.deleteTempBookingData(chatId);
 
         log.debug("""
                 Authorization: the following user parameters have been added to the database:
@@ -111,35 +137,100 @@ public class Server {
         log.trace("Method 'deleteOldMessage' finished for userID: {}", chatId);
     }
 
-    public void deleteLastMessage(Update update) {
-        log.trace("Method deleteLastMessage(Update) started for userID: {}", getChatId(update));
+    public void deleteLastMessage(long chatId, int msgId) {
+        log.trace("Method deleteLastMessage(Update) started for userID: {}", chatId);
 
         try {
             botConfig.getTelegramClient().execute(DeleteMessage
                     .builder()
-                    .chatId(getChatId(update))
-                    .messageId(getMessageId(update))
+                    .chatId(chatId)
+                    .messageId(msgId)
                     .build());
 
-            log.debug("Last messageID {} deleted", getMessageId(update));
+            log.debug("Last messageID {} deleted", msgId);
         } catch (TelegramApiException ex) {
             log.warn("""
-                    Can't delete the user message with userID: {}
+                    Can't delete messageId {} with userID {}
                     Exception: {}""",
-                    getChatId(update), ex.getMessage());
+                    msgId, chatId, ex.getMessage());
         }
 
-        log.trace("Method deleteLastMessage(Update) finished for userID: {}", getChatId(update));
+        log.trace("Method deleteLastMessage(Update) finished for userID: {}", chatId);
     }
 
-    public void deleteUserFromTempBookingData(Update update) {
-        persistence.deleteTempBookingData(getChatId(update));
+    public void deleteMessage(long chatId, int msgId) {
+        try {
+            DeleteMessage deleteMessage = DeleteMessage
+                    .builder()
+                    .chatId(chatId)
+                    .messageId(msgId)
+                    .build();
 
-        log.debug("The next user from UserCalendar deleted: {}", getChatId(update));
+            botConfig.getTelegramClient().execute(deleteMessage);
+
+            persistence.deleteMessageTempBotMessage(chatId, msgId);
+
+            log.debug("The next MessageID {} deleted", msgId);
+        } catch (TelegramApiException ex) {
+            log.warn("""
+                                    Impossible to delete message {} for user {}
+                                    Exception: {}""",
+                    msgId, chatId, ex.getMessage());
+        }
     }
 
-    public void registerMessage(Long chatId, int messageId) {
+    public int deleteAllMessagesExceptTheLastOne(Update update) {
+        List<TempBotMessage> tempBotMessages = persistence.selectTempBotMessages(getChatId(update));
+
+        for (int i = 0; i < tempBotMessages.size() - 1; i++) {
+            TempBotMessage tempBotMessage = tempBotMessages.get(i);
+            deleteMessage(getChatId(update), tempBotMessage.getMsgId());
+        }
+
+        return tempBotMessages.get(tempBotMessages.size() - 1).getMsgId();
+    }
+
+    public void registerMessage(long chatId, int messageId) {
         persistence.insertTempBotMessage(chatId, messageId);
         log.debug("The message {} registered", messageId);
     }
+
+    public int sendSimpleMessage(Update update, String msgLink) throws TelegramApiException {
+            return botConfig.getTelegramClient().execute(SendMessage
+                    .builder()
+                    .chatId(getChatId(update))
+                    .text(getLocaleMessage(update, msgLink))
+                    .parseMode("HTML")
+                    .build()).getMessageId();
+    }
+
+    public SendMessage sendMessage(Update update, String text, InlineKeyboardMarkup markup) {
+        return SendMessage
+                .builder()
+                .chatId(getChatId(update))
+                .text(text)
+                .replyMarkup(markup)
+                .parseMode("HTML")
+                .build();
+    }
+
+    public EditMessageText editMessageText(Update update, int msgId, String msg, InlineKeyboardMarkup markup) {
+        return EditMessageText
+                .builder()
+                .chatId(getChatId(update))
+                .messageId(msgId)
+                .text(msg)
+                .replyMarkup(markup)
+                .parseMode("HTML")
+                .build();
+    }
+
+    public void sendMessageAdminUser(long chatId, Keyboard keyboard) {
+
+    }
+
+    public void sendMessageAdminUser(Keyboard keyboard) {
+
+    }
 }
+
