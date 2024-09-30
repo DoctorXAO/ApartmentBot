@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import xao.develop.model.*;
+import xao.develop.service.BookingCardStatus;
 
 import java.util.Calendar;
 import java.util.List;
@@ -118,6 +119,55 @@ public class Persistence {
             apartment.setUserId(null);
 
         apartmentRepository.save(apartment);
+    }
+
+    public void insertBookingCard(long chatId,
+                                  String login,
+                                  String firstName,
+                                  String lastName,
+                                  String contacts,
+                                  int age,
+                                  String gender,
+                                  int countOfPeople,
+                                  int numberOfApartment,
+                                  Long checkIn,
+                                  Long checkOut) {
+        BookingCard bookingCard = new BookingCard();
+
+        bookingCard.setChatId(chatId);
+        bookingCard.setLogin(login);
+        bookingCard.setFirstName(firstName);
+        bookingCard.setLastName(lastName);
+        bookingCard.setContacts(contacts);
+        bookingCard.setAge(age);
+        bookingCard.setGender(gender);
+        bookingCard.setCountOfPeople(countOfPeople);
+        bookingCard.setNumberOfApartment(numberOfApartment);
+        bookingCard.setCheckIn(checkIn);
+        bookingCard.setCheckOut(checkOut);
+        bookingCard.setStatus(BookingCardStatus.WAITING.getType());
+
+        bookingCardRepository.save(bookingCard);
+    }
+
+    public BookingCard selectBookingCard(long id) {
+        return bookingCardRepository.getById(id);
+    }
+
+    public List<BookingCard> selectBookingCardByStatus(BookingCardStatus type) {
+        return bookingCardRepository.findAllByStatus(type.getType());
+    }
+
+    public void updateBookingCard(long id, String status) {
+        BookingCard bookingCard = bookingCardRepository.getById(id);
+
+        bookingCard.setStatus(status);
+
+        bookingCardRepository.save(bookingCard);
+    }
+
+    public void deleteBookingCard(long id) {
+        bookingCardRepository.deleteById(id);
     }
 
     public void insertTempBookingData(long chatId, long selectedTime, String login) {

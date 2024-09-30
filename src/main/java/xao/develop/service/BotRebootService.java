@@ -1,4 +1,4 @@
-package xao.develop.server;
+package xao.develop.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +7,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.chat.Chat;
@@ -27,7 +26,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class RebootServer implements UserCommand, UserMessageLink {
+public class BotRebootService implements UserCommand, UserMessageLink {
 
     @Autowired
     BotConfig botConfig;
@@ -39,7 +38,7 @@ public class RebootServer implements UserCommand, UserMessageLink {
     MessageBuilder msgBuilder;
 
     @Autowired
-    Server server;
+    BotService service;
 
     @Scheduled(cron = "0 0 0 * * ?")
     @EventListener(ContextRefreshedEvent.class)
@@ -56,51 +55,58 @@ public class RebootServer implements UserCommand, UserMessageLink {
     public void clearAllMessages() {
         List<Long> chatIds = persistence.selectDistinctChatIdsTempBotMessages();
         for (long chatId : chatIds) {
+
+            if (chatId == botConfig.getAdminId())
+                continue;
+
             List<TempBotMessage> tempBotMessages = persistence.selectTempBotMessages(chatId);
 
             for (int i = 0; i < tempBotMessages.size(); i++) {
                 TempBotMessage tempBotMessage = tempBotMessages.get(i);
 
-                if (i == tempBotMessages.size() - 1 && chatId != botConfig.getAdminId()) {
-                    try {
-                        Update update = initUpdate(chatId);
+                if (i == tempBotMessages.size() - 1)
+                    editMessage(tempBotMessage);
+                else
+                    deleteMessage(tempBotMessage);
+            }
+        }
+    }
 
-                        botConfig.getTelegramClient().execute(
-                                server.editMessageText(update,
-                                        tempBotMessage.getMsgId(),
-                                        server.getLocaleMessage(update, USER_MSG_START),
-                                        getStartIKMarkup(update)));
+    private void editMessage(TempBotMessage tempBotMessage) {
+        try {
+            Update update = initUpdate(tempBotMessage.getChatId());
 
-                        log.debug("User {} message {} edited", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
+            botConfig.getTelegramClient().execute(
+                    service.editMessageText(update,
+                            tempBotMessage.getMsgId(),
+                            service.getLocaleMessage(update, USER_MSG_START),
+                            getStartIKMarkup(update)));
 
-                        break;
-                    } catch (TelegramApiException ex) {
-                        log.warn("""
+            log.debug("User {} message {} edited", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
+        } catch (TelegramApiException ex) {
+            log.warn("""
                                         [Reboot] Impossible to edit user {} message {}
                                         Exception: {}""",
-                                tempBotMessage.getChatId(), tempBotMessage.getMsgId(), ex.getMessage());
+                    tempBotMessage.getChatId(), tempBotMessage.getMsgId(), ex.getMessage());
+        }
+    }
 
-                        break;
-                    }
-                }
+    private void deleteMessage(TempBotMessage tempBotMessage) {
+        try {
+            DeleteMessage deleteMessage = DeleteMessage
+                    .builder()
+                    .chatId(tempBotMessage.getChatId())
+                    .messageId(tempBotMessage.getMsgId())
+                    .build();
 
-                try {
-                    DeleteMessage deleteMessage = DeleteMessage
-                            .builder()
-                            .chatId(tempBotMessage.getChatId())
-                            .messageId(tempBotMessage.getMsgId())
-                            .build();
+            botConfig.getTelegramClient().execute(deleteMessage);
 
-                    botConfig.getTelegramClient().execute(deleteMessage);
-
-                    log.debug("User {} message {} deleted", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
-                } catch (TelegramApiException ex) {
-                    log.warn("""
+            log.debug("User {} message {} deleted", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
+        } catch (TelegramApiException ex) {
+            log.warn("""
                                     [Reboot] Impossible to delete message {} for user {}
                                     Exception: {}""",
-                            tempBotMessage.getMsgId(), tempBotMessage.getChatId(), ex.getMessage());
-                }
-            }
+                    tempBotMessage.getMsgId(), tempBotMessage.getChatId(), ex.getMessage());
         }
     }
 
@@ -125,19 +131,19 @@ public class RebootServer implements UserCommand, UserMessageLink {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         buttons.add(msgBuilder.buildIKButton(
-                server.getLocaleMessage(update, USER_BT_CHOOSE_CHECK_IN_DATE), RAA_CHOOSE_CHECK_DATE));
+                service.getLocaleMessage(update, USER_BT_CHOOSE_CHECK_IN_DATE), RAA_CHOOSE_CHECK_DATE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_ABOUT_US), ABOUT_US));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_ABOUT_US), ABOUT_US));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_CONTACTS), CONTACTS));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_CONTACTS), CONTACTS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

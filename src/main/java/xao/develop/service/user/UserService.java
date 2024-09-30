@@ -1,4 +1,4 @@
-package xao.develop.server.user;
+package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +9,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.UserCommand;
 import xao.develop.config.UserMessageLink;
 import xao.develop.model.TempBookingData;
-import xao.develop.server.Keyboard;
-import xao.develop.server.Server;
+import xao.develop.service.BotService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +19,10 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
-public class UserServer implements UserCommand, UserMessageLink {
+public class UserService implements UserCommand, UserMessageLink {
+
+    @Autowired
+    BotService service;
 
     @Autowired
     UserMsgStart userMsgStart;
@@ -49,15 +51,12 @@ public class UserServer implements UserCommand, UserMessageLink {
     @Autowired
     UserMsgChangeLanguage userMsgChangeLanguage;
 
-    @Autowired
-    Server server;
-
     private final ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
 
     public void execute(Update update) {
         log.trace("Method execute(Update, String) started");
 
-        String data = server.getData(update);
+        String data = service.getData(update);
 
         log.debug("Data: {}", data);
 
@@ -79,7 +78,7 @@ public class UserServer implements UserCommand, UserMessageLink {
             log.debug("Is the list of messages empty? {}", messages.isEmpty());
 
             for (Message message : messages)
-                server.registerMessage(server.getChatId(update), message.getMessageId());
+                service.registerMessage(service.getChatId(update), message.getMessageId());
         } catch (TelegramApiException ex) {
             log.error("execute: {}", ex.getMessage());
         }
@@ -92,7 +91,7 @@ public class UserServer implements UserCommand, UserMessageLink {
                                    String data,
                                    String[] parameters) throws TelegramApiException {
 
-        if (parameters.length == 2 && server.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update)) {
+        if (parameters.length == 2 && service.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update)) {
             boolean isCommandCorrect = true;
 
             switch (data) {
@@ -135,18 +134,18 @@ public class UserServer implements UserCommand, UserMessageLink {
             }
 
             if (isCommandCorrect) {
-                server.deleteLastMessage(server.getChatId(update), server.getMessageId(update));
+                service.deleteLastMessage(service.getChatId(update), service.getMessageId(update));
                 update.getMessage().setText(RAA_BOOK);
                 initMsgBooking(update, messages);
             }
         } else {
             if (data.equals(START)) {
-                server.authorization(update.getMessage());
+                service.authorization(update.getMessage());
                 userMsgStart.editMessage(update, messages, USER_MSG_START);
             } else
                 log.info("Unknown message data: {}", data);
 
-            server.deleteLastMessage(server.getChatId(update), server.getMessageId(update));
+            service.deleteLastMessage(service.getChatId(update), service.getMessageId(update));
         }
     }
 
@@ -233,32 +232,16 @@ public class UserServer implements UserCommand, UserMessageLink {
                     userMsgChooseAnApartment.addTempApartmentSelector(update);
                     initMsgApartments(update, messages);
                 }
-                case RAA_SHOW_PREVIEW -> {
-                    TempBookingData tempBookingData = userMsgBooking.getTempBookingData(update);
-
-                    userMsgPreviewCard.editMessage(update, messages, USER_MSG_SHOW_PREVIEW,
-                            tempBookingData.getNumberOfApartment(),
-                            userMsgPreviewCard.getCheckDate(tempBookingData.getCheckIn()),
-                            userMsgPreviewCard.getCheckDate(tempBookingData.getCheckOut()),
-                            tempBookingData.getFirstName(),
-                            tempBookingData.getLastName(),
-                            tempBookingData.getAge(),
-                            tempBookingData.getGender(),
-                            tempBookingData.getCountOfPeople(),
-                            tempBookingData.getContacts(),
-                            userMsgPreviewCard.getTotalRent(
-                                    tempBookingData.getCheckIn(),
-                                    tempBookingData.getCheckOut(),
-                                    tempBookingData.getCountOfPeople()));
-                }
+                case RAA_SHOW_PREVIEW -> userMsgPreviewCard.editMessage(update, messages, USER_MSG_SHOW_PREVIEW,
+                            userMsgPreviewCard.getPackParameters(update));
                 case RAA_QUIT_FROM_PREVIEW_CARD -> initMsgBooking(update, messages);
                 case RAA_SEND_BOOKING_TO_ADMIN -> {
-                    userMsgChooseAnApartment.setIsBooking(update, false);
                     update.getCallbackQuery().setData(START);
                     userMsgStart.editMessage(update, messages, USER_MSG_START);
-                    server.sendMessageAdminUser(Keyboard.CONFIRM_BOOKING);
-                    int msgId = server.sendSimpleMessage(update, USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN);
-                    scheduled.schedule(() -> server.deleteLastMessage(server.getChatId(update), msgId), 10, TimeUnit.SECONDS);
+                    userMsgPreviewCard.insertCardToBookingCard(update);
+                    int msgId = service.sendSimpleMessage(update, USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN);
+                    scheduled.schedule(() ->
+                            service.deleteLastMessage(service.getChatId(update), msgId), 10, TimeUnit.SECONDS);
                 }
 
                 default -> log.info("Unknown RAA data: {}", data);
@@ -268,16 +251,14 @@ public class UserServer implements UserCommand, UserMessageLink {
     private void processingCallbackQuery(Update update, List<Message> messages, String data) throws TelegramApiException {
         switch (data) {
             case ABOUT_US -> userMsgAboutUs.editMessage(update, messages, USER_MSG_ABOUT_US);
-            case CONTACTS -> userMsgContacts.editMessage(update, messages, USER_MSG_CONTACTS,
-                    server.getAdminPhone(),
-                    server.getAdminEmail());
+            case CONTACTS -> userMsgContacts.editMessage(update, messages, USER_MSG_CONTACTS, service.getAdminContacts());
             case CHANGE_LANGUAGE -> userMsgChangeLanguage.editMessage(update, messages, USER_MSG_CHANGE_LANGUAGE);
             case BACK_TO_START -> {
                 update.getCallbackQuery().setData(START);
                 userMsgStart.editMessage(update, messages, USER_MSG_START);
             }
             case EN, TR, RU -> {
-                server.setLanguage(update, data);
+                service.setLanguage(update, data);
                 update.getCallbackQuery().setData(START);
                 userMsgStart.editMessage(update, messages, USER_MSG_START);
             }
@@ -338,14 +319,14 @@ public class UserServer implements UserCommand, UserMessageLink {
     }
 
     private void initMsgApartments(Update update, List<Message> messages) throws TelegramApiException {
-        int msgId = server.sendSimpleMessage(update, USER_MSG_SIMPLE_DOWNLOADING);
+        int msgId = service.sendSimpleMessage(update, USER_MSG_SIMPLE_DOWNLOADING);
 
         update.getCallbackQuery().setData(RAA_CHOOSE_AN_APARTMENT);
         messages.addAll(userMsgChooseAnApartment.sendPhotos(update,
                 "img/apartments/" + userMsgChooseAnApartment.getCurrentApartment(update).toString()));
         messages.add(userMsgChooseAnApartment.sendMessage(update));
 
-        server.deleteLastMessage(server.getChatId(update), msgId);
+        service.deleteLastMessage(service.getChatId(update), msgId);
     }
 
     private void initMsgBooking(Update update, List<Message> messages) throws TelegramApiException {
@@ -362,15 +343,15 @@ public class UserServer implements UserCommand, UserMessageLink {
 
     private boolean initIncorrectEnterCard(Update update, String msgLink) {
         try {
-            int msgId = server.sendSimpleMessage(update, msgLink);
+            int msgId = service.sendSimpleMessage(update, msgLink);
             scheduled.schedule(() -> {
-                server.deleteLastMessage(server.getChatId(update), server.getMessageId(update));
-                server.deleteLastMessage(server.getChatId(update), msgId);
+                service.deleteLastMessage(service.getChatId(update), service.getMessageId(update));
+                service.deleteLastMessage(service.getChatId(update), msgId);
                     }, 10, TimeUnit.SECONDS);
         } catch (TelegramApiException ex) {
             log.warn("""
                     sendSimpleMessage(Update, String) can't send msgLink {} for user {}
-                    Exception: {}""", msgLink, server.getChatId(update), ex.getMessage());
+                    Exception: {}""", msgLink, service.getChatId(update), ex.getMessage());
         }
         return false;
     }

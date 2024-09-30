@@ -1,4 +1,4 @@
-package xao.develop.server.user;
+package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,9 +16,9 @@ import java.util.List;
 public class UserMsgChooseCheckDate extends UserDate {
 
     public void deleteUserFromTempBookingData(Update update) {
-        persistence.deleteTempBookingData(server.getChatId(update));
+        persistence.deleteTempBookingData(service.getChatId(update));
 
-        log.debug("The next user from UserCalendar deleted: {}", server.getChatId(update));
+        log.debug("The next user from UserCalendar deleted: {}", service.getChatId(update));
     }
 
     @Override
@@ -69,7 +69,7 @@ public class UserMsgChooseCheckDate extends UserDate {
             }
         }
 
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK), RAA_QUIT_FROM_CHOOSER_CHECK));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK), RAA_QUIT_FROM_CHOOSER_CHECK));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup
@@ -100,7 +100,7 @@ public class UserMsgChooseCheckDate extends UserDate {
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
         buttons.add(msgBuilder.buildIKButton(
-                server.getLocaleMessage(update, USER_BT_MONTH_ + (calendar.get(Calendar.MONTH) + 1)),
+                service.getLocaleMessage(update, USER_BT_MONTH_ + (calendar.get(Calendar.MONTH) + 1)),
                 RAA_CHANGE_CHECK_MONTH));
         buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));

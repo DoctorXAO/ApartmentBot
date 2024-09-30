@@ -12,7 +12,7 @@ import xao.develop.client.admin.AdminClient;
 import xao.develop.client.user.UserClient;
 
 /**
- * Author: Machov Sergii
+ * Author: Makhov Sergii
  * Company: XAOTI
  */
 
@@ -27,7 +27,7 @@ public class ApartmentBotApplication implements LongPollingSingleThreadUpdateCon
     private AdminClient adminClient;
 
     @Autowired
-    UserClient userClient;
+    private UserClient userClient;
 
     public static void main(String[] args) {
         SpringApplication.run(ApartmentBotApplication.class, args);

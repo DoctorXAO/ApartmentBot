@@ -1,4 +1,4 @@
-package xao.develop.server.user;
+package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class UserMsgChooseAnApartment extends UserMsg {
+public class UserMsgChooseAnApartment extends UserMessage {
 
     @Autowired
     Persistence persistence;
@@ -27,32 +27,32 @@ public class UserMsgChooseAnApartment extends UserMsg {
 
         log.debug("Method setIsBooking, update apartment №{}, set isBooking: {}", numberOfApartment, isBooking);
 
-        persistence.updateIsBookingApartment(numberOfApartment, isBooking, server.getChatId(update));
-        persistence.updateNumberOfApartmentTempBookingData(server.getChatId(update), numberOfApartment);
+        persistence.updateIsBookingApartment(numberOfApartment, isBooking, service.getChatId(update));
+        persistence.updateNumberOfApartmentTempBookingData(service.getChatId(update), numberOfApartment);
     }
 
     public boolean getIsBooking(Update update) {
         return persistence.selectApartment(
                 persistence.selectTempApartmentSelector(
-                        server.getChatId(update)).getNumberOfApartment()).getIsBooking();
+                        service.getChatId(update)).getNumberOfApartment()).getIsBooking();
     }
 
     public Long getUserId(Update update) {
         try {
             return persistence.selectApartment(
                     persistence.selectTempApartmentSelector(
-                            server.getChatId(update)).getNumberOfApartment()).getUserId();
+                            service.getChatId(update)).getNumberOfApartment()).getUserId();
         } catch (NullPointerException ex) {
             return 0L;
         }
     }
 
     private int getSelectedApartment(Update update) {
-        return persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment();
+        return persistence.selectTempApartmentSelector(service.getChatId(update)).getNumberOfApartment();
     }
 
     public Integer getCurrentApartment(Update update) {
-        int selector = persistence.selectTempApartmentSelector(server.getChatId(update)).getSelector();
+        int selector = persistence.selectTempApartmentSelector(service.getChatId(update)).getSelector();
         List<Apartment> apartments = persistence.selectAllApartments();
 
         log.debug("Size of the list of apartment is {}", apartments.size());
@@ -64,21 +64,21 @@ public class UserMsgChooseAnApartment extends UserMsg {
 
     public void addTempApartmentSelector(Update update) {
         log.trace("Method addTempApartmentSelector(Update) started");
-        persistence.insertTempApartmentSelector(server.getChatId(update));
+        persistence.insertTempApartmentSelector(service.getChatId(update));
 
         log.debug("""
                 Method addTempApartmentSelector(Update): added the next user with parameters:
                 chatId = {}
                 current number of apartment = {}""",
-                server.getChatId(update), persistence.selectTempApartmentSelector(server.getChatId(update)));
+                service.getChatId(update), persistence.selectTempApartmentSelector(service.getChatId(update)));
         log.trace("Method addTempApartmentSelector(Update) finished");
     }
 
     public void upSelector(Update update) {
-        int selector = persistence.selectTempApartmentSelector(server.getChatId(update)).getSelector() + 1;
+        int selector = persistence.selectTempApartmentSelector(service.getChatId(update)).getSelector() + 1;
         if (selector < persistence.selectAllApartments().size()) {
             persistence.updateTempApartmentSelector(
-                    server.getChatId(update),
+                    service.getChatId(update),
                     persistence.selectAllApartments().get(selector).getNumber(),
                     selector);
 
@@ -86,17 +86,17 @@ public class UserMsgChooseAnApartment extends UserMsg {
                     Method upSelector(Update): user selector upped:
                     chatId = {}
                     new selector = {}""",
-                    server.getChatId(update), selector);
+                    service.getChatId(update), selector);
         } else
             log.debug("Method upSelector(Update): can't up selector because {} is max!", selector - 1);
     }
 
     public void downSelector(Update update) {
-        int selector = persistence.selectTempApartmentSelector(server.getChatId(update)).getSelector() - 1;
+        int selector = persistence.selectTempApartmentSelector(service.getChatId(update)).getSelector() - 1;
 
         if (selector >= 0) {
             persistence.updateTempApartmentSelector(
-                    server.getChatId(update),
+                    service.getChatId(update),
                     persistence.selectAllApartments().get(selector).getNumber(),
                     selector);
 
@@ -104,19 +104,19 @@ public class UserMsgChooseAnApartment extends UserMsg {
                     Method downSelector(Update): user selector downed:
                     chatId = {}
                     new selector = {}""",
-                    server.getChatId(update), selector);
+                    service.getChatId(update), selector);
         } else
             log.debug("Method downSelector(Update): can't down selector because {} is min!", selector - 1);
     }
 
     public void deleteTempApartmentSelector(Update update) {
-        persistence.deleteTempApartmentSelector(server.getChatId(update));
+        persistence.deleteTempApartmentSelector(service.getChatId(update));
 
-        log.debug("Method deleteTempApartmentSelector(Update): the next user deleted: {} ", server.getChatId(update));
+        log.debug("Method deleteTempApartmentSelector(Update): the next user deleted: {} ", service.getChatId(update));
     }
 
     public Message sendMessage(Update update) throws TelegramApiException {
-        server.deleteOldMessages(update);
+        service.deleteOldMessages(update);
 
         List<Apartment> apartments = persistence.selectAllApartments();
 
@@ -125,13 +125,13 @@ public class UserMsgChooseAnApartment extends UserMsg {
 
     private Message showApartments(Update update) throws TelegramApiException {
         Apartment apartment = persistence.selectApartment(
-                persistence.selectTempApartmentSelector(server.getChatId(update)).getNumberOfApartment()
+                persistence.selectTempApartmentSelector(service.getChatId(update)).getNumberOfApartment()
         );
 
         StringBuilder amenities = getAmenities(update, apartment);
 
-        return botConfig.getTelegramClient().execute(server.sendMessage(update,
-                String.format(server.getLocaleMessage(update, USER_MSG_CHOOSE_AN_APARTMENT),
+        return botConfig.getTelegramClient().execute(service.sendMessage(update,
+                service.getLocaleMessage(update, USER_MSG_CHOOSE_AN_APARTMENT,
                         apartment.getArea(),
                         amenities),
                 getIKMarkup(update)));
@@ -139,8 +139,8 @@ public class UserMsgChooseAnApartment extends UserMsg {
 
     private Message showNoFreeApartments(Update update) throws TelegramApiException {
         update.getCallbackQuery().setData(NO_FREE_APARTMENTS);
-        return botConfig.getTelegramClient().execute(server.sendMessage(update,
-                server.getLocaleMessage(update, USER_MSG_NO_FREE_APARTMENTS),
+        return botConfig.getTelegramClient().execute(service.sendMessage(update,
+                service.getLocaleMessage(update, USER_MSG_NO_FREE_APARTMENTS),
                 getBackIKMarkup(update)));
     }
 
@@ -154,7 +154,7 @@ public class UserMsgChooseAnApartment extends UserMsg {
             for (String code : amenitiesArray) {
                 Amenity amenity = persistence.selectAmenity(Integer.parseInt(code));
 
-                amenities.append(server.getLocaleMessage(update, amenity.getLink())).append("\n");
+                amenities.append(service.getLocaleMessage(update, amenity.getLink())).append("\n");
             }
         } else
             amenities.append("nothing");
@@ -165,7 +165,7 @@ public class UserMsgChooseAnApartment extends UserMsg {
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
-        int selector = persistence.selectTempApartmentSelector(server.getChatId(update)).getSelector();
+        int selector = persistence.selectTempApartmentSelector(service.getChatId(update)).getSelector();
 
         if (selector > 0)
             buttons.add(msgBuilder.buildIKButton("◀️", RAA_PREVIOUS_APARTMENT));
@@ -180,11 +180,11 @@ public class UserMsgChooseAnApartment extends UserMsg {
         InlineKeyboardRow row1 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BOOK), RAA_BOOK));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BOOK), RAA_BOOK));
         InlineKeyboardRow row2 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK), RAA_QUIT_FROM_CHOOSER_AN_APARTMENT));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK), RAA_QUIT_FROM_CHOOSER_AN_APARTMENT));
         InlineKeyboardRow row3 = msgBuilder.buildIKRow(buttons);
 
         return InlineKeyboardMarkup
@@ -199,7 +199,7 @@ public class UserMsgChooseAnApartment extends UserMsg {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
                                 RAA_QUIT_FROM_CHOOSER_AN_APARTMENT)))
                 .build();
     }

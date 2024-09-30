@@ -1,4 +1,4 @@
-package xao.develop.server.user;
+package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,7 +36,7 @@ public class UserMsgChangeCheckMonth extends UserDate {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
                 RAA_QUIT_FROM_CHANGE_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
@@ -58,10 +58,10 @@ public class UserMsgChangeCheckMonth extends UserDate {
             selectedTime.set(Calendar.MONTH, i - 1); // -1 - так как класс Calendar ведет счет месяца с 0
 
             if (presentTime.get(Calendar.YEAR) < selectedTime.get(Calendar.YEAR))
-                buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_MONTH_ + i),
+                buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_MONTH_ + i),
                         RAA_SET_MONTH + i));
             else if (presentTime.get(Calendar.MONTH) <= selectedTime.get(Calendar.MONTH))
-                buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_MONTH_ + i),
+                buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_MONTH_ + i),
                         RAA_SET_MONTH + i));
             else
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));

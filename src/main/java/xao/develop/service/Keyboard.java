@@ -1,4 +1,4 @@
-package xao.develop.server;
+package xao.develop.service;
 
 public enum Keyboard {
     CONFIRM_BOOKING,

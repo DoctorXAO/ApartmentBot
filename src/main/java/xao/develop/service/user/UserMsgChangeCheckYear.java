@@ -1,4 +1,4 @@
-package xao.develop.server.user;
+package xao.develop.service.user;
 
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -7,31 +7,31 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 @Service
-public class UserMsgStart extends UserMsg {
+public class UserMsgChangeCheckYear extends UserDate {
 
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
+        Calendar presentTime = getPresentTime(update);
+
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(
-                server.getLocaleMessage(update, USER_BT_CHOOSE_CHECK_IN_DATE), RAA_CHOOSE_CHECK_DATE));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
+                RAA_QUIT_FROM_CHANGE_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_ABOUT_US), ABOUT_US));
-        keyboard.add(msgBuilder.buildIKRow(buttons));
-        buttons.clear();
+        for (int i = 0; i <= MAX_YEAR; i++) {
+            String year = String.valueOf(presentTime.get(Calendar.YEAR) + i);
+            buttons.add(msgBuilder.buildIKButton(year, RAA_SET_YEAR + year));
 
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_CONTACTS), CONTACTS));
-        keyboard.add(msgBuilder.buildIKRow(buttons));
-        buttons.clear();
-
-        buttons.add(msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
-        keyboard.add(msgBuilder.buildIKRow(buttons));
+            keyboard.add(msgBuilder.buildIKRow(buttons));
+            buttons.clear();
+        }
 
         return InlineKeyboardMarkup
                 .builder()

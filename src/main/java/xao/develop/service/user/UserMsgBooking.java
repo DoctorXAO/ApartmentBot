@@ -1,4 +1,4 @@
-package xao.develop.server.user;
+package xao.develop.service.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,37 +9,37 @@ import xao.develop.model.TempBookingData;
 import xao.develop.repository.Persistence;
 
 @Service
-public class UserMsgBooking extends UserMsg
+public class UserMsgBooking extends UserMessage
 {
     @Autowired
     Persistence persistence;
 
     public void setName(Update update, String name) {
-        persistence.updateFirstNameTempBookingData(server.getChatId(update), name);
+        persistence.updateFirstNameTempBookingData(service.getChatId(update), name);
     }
 
     public void setSurname(Update update, String surname) {
-        persistence.updateLastNameTempBookingData(server.getChatId(update), surname);
+        persistence.updateLastNameTempBookingData(service.getChatId(update), surname);
     }
 
     public void setGender(Update update, String gender) {
-        persistence.updateGenderTempBookingData(server.getChatId(update), gender);
+        persistence.updateGenderTempBookingData(service.getChatId(update), gender);
     }
 
     public void setAge(Update update, String age) {
-        persistence.updateAgeTempBookingData(server.getChatId(update), age);
+        persistence.updateAgeTempBookingData(service.getChatId(update), age);
     }
 
     public void setCount(Update update, String count) {
-        persistence.updateCountOfPeopleTempBookingData(server.getChatId(update), count);
+        persistence.updateCountOfPeopleTempBookingData(service.getChatId(update), count);
     }
 
     public void setContacts(Update update, String contacts) {
-        persistence.updateContactsTempBookingData(server.getChatId(update), contacts);
+        persistence.updateContactsTempBookingData(service.getChatId(update), contacts);
     }
 
     public TempBookingData getTempBookingData(Update update) {
-        return persistence.selectTempBookingData(server.getChatId(update));
+        return persistence.selectTempBookingData(service.getChatId(update));
     }
 
     @Override
@@ -72,7 +72,7 @@ public class UserMsgBooking extends UserMsg
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
                                 RAA_QUIT_FROM_BOOKING_AN_APARTMENT)))
                 .build();
     }
@@ -81,10 +81,10 @@ public class UserMsgBooking extends UserMsg
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_NEXT),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_NEXT),
                                 RAA_SHOW_PREVIEW)))
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(server.getLocaleMessage(update, USER_BT_BACK),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
                                 RAA_QUIT_FROM_BOOKING_AN_APARTMENT)))
                 .build();
     }

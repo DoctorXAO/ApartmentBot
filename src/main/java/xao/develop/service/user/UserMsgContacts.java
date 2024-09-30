@@ -1,4 +1,4 @@
-package xao.develop.server.user;
+package xao.develop.service.user;
 
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -6,14 +6,14 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 @Service
-public class UserMsgContacts extends UserMsg {
+public class UserMsgContacts extends UserMessage {
 
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        server.getLocaleMessage(update, USER_BT_BACK), BACK_TO_START)))
+                        service.getLocaleMessage(update, USER_BT_BACK), BACK_TO_START)))
                 .build();
     }
 }

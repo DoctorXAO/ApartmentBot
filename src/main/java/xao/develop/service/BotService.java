@@ -1,4 +1,4 @@
-package xao.develop.server;
+package xao.develop.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +8,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -18,10 +19,11 @@ import xao.develop.repository.Persistence;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.MissingFormatArgumentException;
 
 @Slf4j
 @Service
-public class Server {
+public class BotService {
 
     @Autowired
     BotConfig botConfig;
@@ -36,12 +38,8 @@ public class Server {
         persistence.updateLanguageInAccountStatus(getChatId(update), language);
     }
 
-    public String getAdminPhone() {
-        return botConfig.getPhone();
-    }
-
-    public String getAdminEmail() {
-        return botConfig.getEmail();
+    public Object[] getAdminContacts() {
+        return new Object[]{botConfig.getPhone(), botConfig.getEmail()};
     }
 
     public Long getChatId(Update update) {
@@ -68,6 +66,12 @@ public class Server {
         return messageId;
     }
 
+    public User getUser(Update update) {
+        return update.hasMessage() ?
+                update.getMessage().getFrom() :
+                update.getCallbackQuery().getFrom();
+    }
+
     public String getData(Update update) {
         log.trace("Method getData(Update) started and finished");
 
@@ -77,16 +81,24 @@ public class Server {
             return update.getCallbackQuery().getData();
     }
 
-    public String getLocaleMessage(Update update, String msg) {
+    public String getLocaleMessage(Update update, String msgLink, Object... args) {
         AccountStatus accountStatus = update.hasMessage() ?
                 persistence.selectAccountStatus(update.getMessage().getChatId()) :
                 persistence.selectAccountStatus(update.getCallbackQuery().getMessage().getChatId());
 
         Locale locale = new Locale(accountStatus.getLanguage());
 
-        log.debug("Method getLocaleMessage(Update, String) get the next value: {}", msg);
+        log.debug("Method getLocaleMessage(Update, String) get the next value: {}", msgLink);
 
-        return messageSource.getMessage(msg, null, locale);
+        try {
+            return String.format(messageSource.getMessage(msgLink, null, locale), args);
+        } catch (MissingFormatArgumentException | IndexOutOfBoundsException ex) {
+            log.warn("""
+                    Impossible to format message link: {}
+                    Args: {}
+                    Exception: {}""", msgLink, args, ex.getMessage());
+            return messageSource.getMessage(msgLink, null, locale);
+        }
     }
 
     public void authorization(Message message) {
@@ -229,8 +241,22 @@ public class Server {
 
     }
 
-    public void sendMessageAdminUser(Keyboard keyboard) {
+    public SendMessage sendMessageAdminUser(String msgLink, Keyboard keyboard, Object... args) {
+        InlineKeyboardMarkup markup;
 
+        switch (keyboard) {
+            case CONFIRM_BOOKING -> markup = null;
+            case ANSWER -> markup = null;
+            default -> markup = null;
+        }
+
+        return SendMessage
+                .builder()
+                .chatId(botConfig.getAdminId())
+                .text(msgLink)
+                .replyMarkup(markup)
+                .parseMode("HTML")
+                .build();
     }
 }
 

@@ -1,4 +1,4 @@
-package xao.develop.server.user;
+package xao.develop.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -7,13 +7,10 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
-import xao.develop.config.UserCommand;
-import xao.develop.config.UserMessageLink;
-import xao.develop.server.BotMessage;
-import xao.develop.server.MessageBuilder;
-import xao.develop.server.Server;
+import xao.develop.repository.Persistence;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -21,35 +18,37 @@ import java.net.URL;
 import java.util.*;
 
 @Slf4j
-public abstract class UserMsg implements BotMessage, UserCommand, UserMessageLink {
-    @Autowired
-    BotConfig botConfig;
+public abstract class BotMessage {
 
     @Autowired
-    Server server;
+    protected BotConfig botConfig;
 
     @Autowired
-    MessageBuilder msgBuilder;
+    protected BotService service;
 
-    @Override
+    @Autowired
+    protected MessageBuilder msgBuilder;
+
+    @Autowired
+    protected Persistence persistence;
+
     public Message sendMessage(Update update, String msgLink, Object... args) throws TelegramApiException {
-        server.deleteOldMessages(update);
+        service.deleteOldMessages(update);
 
-        return botConfig.getTelegramClient().execute(server.sendMessage(update,
-                getFormatMessage(update, msgLink, args),
+        return botConfig.getTelegramClient().execute(service.sendMessage(update,
+                service.getLocaleMessage(update, msgLink, args),
                 getIKMarkup(update)));
     }
 
-    @Override
     public void editMessage(Update update, List<Message> messages, String msgLink, Object... args) throws TelegramApiException {
         try {
-            int lastMsgId = server.deleteAllMessagesExceptTheLastOne(update);
+            int lastMsgId = service.deleteAllMessagesExceptTheLastOne(update);
 
             log.debug("Method editMessage(Update, String): Last messageId {}", lastMsgId);
 
-            botConfig.getTelegramClient().execute(server.editMessageText(update,
+            botConfig.getTelegramClient().execute(service.editMessageText(update,
                     lastMsgId,
-                    getFormatMessage(update, msgLink, args),
+                    service.getLocaleMessage(update, msgLink, args),
                     getIKMarkup(update)));
         } catch (TelegramApiException | IndexOutOfBoundsException ex) {
             log.warn("Method editMessage(Update, String) can't edit messageId. Exception: {}", ex.getMessage());
@@ -57,18 +56,6 @@ public abstract class UserMsg implements BotMessage, UserCommand, UserMessageLin
         }
     }
 
-    private String getFormatMessage(Update update, String msgLink, Object... args) {
-        try {
-            return String.format(server.getLocaleMessage(update, msgLink), args);
-        } catch (MissingFormatArgumentException ex) {
-            log.warn("""
-                    Impossible to format message link: {}
-                    Exception: {}""", msgLink, ex.getMessage());
-            return server.getLocaleMessage(update, msgLink);
-        }
-    }
-
-    @Override
     public List<Message> sendPhotos(Update update, String patch) {
         try {
             ClassLoader classLoader = getClass().getClassLoader();
@@ -91,7 +78,7 @@ public abstract class UserMsg implements BotMessage, UserCommand, UserMessageLin
 
             return botConfig.getTelegramClient().execute(SendMediaGroup
                     .builder()
-                    .chatId(server.getChatId(update))
+                    .chatId(service.getChatId(update))
                     .medias(photos)
                     .build());
         } catch (Exception ex) {
@@ -100,6 +87,8 @@ public abstract class UserMsg implements BotMessage, UserCommand, UserMessageLin
             return null;
         }
     }
+
+    abstract protected InlineKeyboardMarkup getIKMarkup(Update update);
 
     private @NotNull File[] getSortedFiles(URL resource) throws Exception {
         File directory = new File(resource.getFile());

@@ -1,21 +1,21 @@
-package xao.develop.server.user;
+package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import xao.develop.repository.Persistence;
-import xao.develop.server.Server;
+import xao.develop.service.BotService;
 
 import java.util.Calendar;
 
 @Slf4j
-public abstract class UserDate extends UserMsg {
+public abstract class UserDate extends UserMessage {
 
     @Autowired
     Persistence persistence;
 
     @Autowired
-    Server server;
+    BotService service;
 
     final int MAX_YEAR = 10;
 
@@ -24,7 +24,7 @@ public abstract class UserDate extends UserMsg {
 
         selectedTime.set(Calendar.YEAR, year);
 
-        persistence.updateSelectedTimeInTempBookingData(server.getChatId(update),
+        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update),
                 Math.max(getPresentTime(update).getTimeInMillis(), selectedTime.getTimeInMillis()));
     }
 
@@ -33,9 +33,9 @@ public abstract class UserDate extends UserMsg {
 
         Calendar selectedTime = getSelectedTime(update);
         selectedTime.set(Calendar.DAY_OF_MONTH, day);
-        persistence.updateCheckInInTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
+        persistence.updateCheckInInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
 
-        log.debug("For user {} was set check-in with the next parameters: {}", server.getChatId(update), selectedTime);
+        log.debug("For user {} was set check-in with the next parameters: {}", service.getChatId(update), selectedTime);
         log.trace("Method setCheckIn(Update, int) finished");
     }
 
@@ -44,9 +44,9 @@ public abstract class UserDate extends UserMsg {
 
         Calendar selectedTime = getSelectedTime(update);
         selectedTime.set(Calendar.DAY_OF_MONTH, day);
-        persistence.updateCheckOutInTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
+        persistence.updateCheckOutInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
 
-        log.debug("For user {} was set check-out with the next parameters: {}", server.getChatId(update), selectedTime);
+        log.debug("For user {} was set check-out with the next parameters: {}", service.getChatId(update), selectedTime);
         log.trace("Method setCheckOut(Update, int) finished");
     }
 
@@ -55,7 +55,7 @@ public abstract class UserDate extends UserMsg {
             return persistence.getServerPresentTime();
         else {
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(persistence.selectTempBookingData(server.getChatId(update)).getCheckIn());
+            calendar.setTimeInMillis(persistence.selectTempBookingData(service.getChatId(update)).getCheckIn());
             calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) + 1);
             return calendar;
         }
@@ -64,7 +64,7 @@ public abstract class UserDate extends UserMsg {
     Calendar getSelectedTime(Update update) {
         Calendar selectedTime = Calendar.getInstance();
 
-        selectedTime.setTimeInMillis(persistence.selectTempBookingData(server.getChatId(update)).getSelectedTime());
+        selectedTime.setTimeInMillis(persistence.selectTempBookingData(service.getChatId(update)).getSelectedTime());
 
         return selectedTime;
     }
@@ -103,23 +103,23 @@ public abstract class UserDate extends UserMsg {
 
     boolean isCheckInSet(Update update) {
         log.debug("isCheckInSet for user {}: {}",
-                server.getChatId(update), persistence.selectTempBookingData(server.getChatId(update)).getCheckIn() != null);
+                service.getChatId(update), persistence.selectTempBookingData(service.getChatId(update)).getCheckIn() != null);
 
-        return persistence.selectTempBookingData(server.getChatId(update)).getCheckIn() != null;
+        return persistence.selectTempBookingData(service.getChatId(update)).getCheckIn() != null;
     }
 
     boolean isCheckOutSet(Update update) {
-        long checkOut = persistence.selectTempBookingData(server.getChatId(update)).getCheckOut();
+        long checkOut = persistence.selectTempBookingData(service.getChatId(update)).getCheckOut();
 
         log.debug("isCheckIOutSet: checkOut = {}", checkOut);
 
-        return persistence.selectTempBookingData(server.getChatId(update)).getCheckOut() != null;
+        return persistence.selectTempBookingData(service.getChatId(update)).getCheckOut() != null;
     }
 
     void deleteCheckIn(Update update) {
         log.trace("Method deleteCheckIn(Update) started");
 
-        persistence.deleteCheckInInTempBookingData(server.getChatId(update));
+        persistence.deleteCheckInInTempBookingData(service.getChatId(update));
 
         log.trace("Method deleteCheckIn(Update) finished");
     }
@@ -127,14 +127,14 @@ public abstract class UserDate extends UserMsg {
     void deleteCheckOut(Update update) {
         log.trace("Method deleteCheckOut(Update) started");
 
-        persistence.deleteCheckOutInTempBookingData(server.getChatId(update));
+        persistence.deleteCheckOutInTempBookingData(service.getChatId(update));
 
         log.trace("Method deleteCheckOut(Update) finished");
     }
 
     void addNewUserToTempBookingData(Update update) {
         persistence.insertTempBookingData(
-                server.getChatId(update),
+                service.getChatId(update),
                 Calendar.getInstance().getTimeInMillis(),
                 update.getCallbackQuery().getFrom().getUserName());
     }
@@ -144,7 +144,7 @@ public abstract class UserDate extends UserMsg {
 
         selectedTime.set(Calendar.MONTH, selectedTime.get(Calendar.MONTH) + 1);
 
-        persistence.updateSelectedTimeInTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
+        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
     }
 
     void previousMonth(Update update) {
@@ -152,7 +152,7 @@ public abstract class UserDate extends UserMsg {
 
         selectedTime.set(Calendar.MONTH, selectedTime.get(Calendar.MONTH) - 1);
 
-        persistence.updateSelectedTimeInTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
+        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
     }
 
     void nextYear(Update update) {
@@ -164,7 +164,7 @@ public abstract class UserDate extends UserMsg {
 
         log.debug("Selected time after: {}", selectedTime);
 
-        persistence.updateSelectedTimeInTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
+        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
     }
 
     void previousYear(Update update) {
@@ -172,7 +172,7 @@ public abstract class UserDate extends UserMsg {
 
         selectedTime.set(Calendar.YEAR, selectedTime.get(Calendar.YEAR) - 1);
 
-        persistence.updateSelectedTimeInTempBookingData(server.getChatId(update),
+        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update),
                 Math.max(getPresentTime(update).getTimeInMillis(), selectedTime.getTimeInMillis()));
     }
 
@@ -192,7 +192,7 @@ public abstract class UserDate extends UserMsg {
         if (month >= 0 && month <= 11) {
             Calendar selectedTime = getSelectedTime(update);
             selectedTime.set(Calendar.MONTH, month);
-            persistence.updateSelectedTimeInTempBookingData(server.getChatId(update), selectedTime.getTimeInMillis());
+            persistence.updateSelectedTimeInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
         } else
             log.warn("Unknown number of month: {}", month);
     }

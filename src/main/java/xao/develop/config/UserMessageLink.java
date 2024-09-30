@@ -27,6 +27,8 @@ public interface UserMessageLink {
 
     String USER_MSG_CAN_NOT_NOOK = "user.msg.can-not-book";
 
+    String USER_MSG_RENT_CARD = "user.msg.rent-card";
+
     String USER_BT_ABOUT_US = "user.bt.about-us";
     String USER_BT_CONTACTS = "user.bt.contacts";
     String USER_BT_CHANGE_LANGUAGE = "user.bt.change-language";
