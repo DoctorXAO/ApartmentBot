@@ -14,6 +14,10 @@ public interface AdminMessageLink {
     String ADMIN_BT_SETTINGS = "admin.bt.settings";
     String ADMIN_BT_CHANGE_LANGUAGE = "admin.bt.change-language";
 
+    String ADMIN_BT_REFUSE = "admin.bt.refuse";
+    String ADMIN_BT_ACCEPT = "admin.bt.accept";
+    String ADMIN_BT_CHAT = "admin.bt.chat";
+
     String ADMIN_BT_BACK = "admin.bt.back";
 
     String APPLICATION = "admin.bt.application";

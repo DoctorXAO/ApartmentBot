@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum BookingCardStatus {
     WAITING("waiting"),
     ACCEPTED("accepted"),
-    DENIED("denied");
+    DENIED("denied"),
+    FINISHED("finished");
 
     private final String type;
 

@@ -38,6 +38,9 @@ public class Persistence {
     @Autowired
     private AmenityRepository amenityRepository;
 
+    @Autowired
+    private TempAdminSettingsRepository tempAdminSettingsRepository;
+
     public void insertAccountStatus(Long chatId,
                                     String language) {
         AccountStatus accountStatus = new AccountStatus();
@@ -176,19 +179,19 @@ public class Persistence {
         bookingCardRepository.save(bookingCard);
     }
 
-    public BookingCard selectBookingCardById(Long id) {
-        return bookingCardRepository.findById(id).orElse(null);
+    public BookingCard selectBookingCard(Long id) {
+        return bookingCardRepository.findById(id).orElseThrow();
     }
 
     public List<BookingCard> selectBookingCardByStatus(BookingCardStatus type) {
         return bookingCardRepository.findAllByStatus(type.getType());
     }
 
-    public void updateBookingCard(long id, String status) {
+    public void updateBookingCard(long id, BookingCardStatus status) {
         BookingCard bookingCard = bookingCardRepository.findById(id).orElse(null);
 
         if (bookingCard != null) {
-            bookingCard.setStatus(status);
+            bookingCard.setStatus(status.getType());
 
             bookingCardRepository.save(bookingCard);
         }
@@ -409,6 +412,30 @@ public class Persistence {
         tempApartmentSelectorRepository.deleteByChatId(chatId);
     }
 
+    public void insertTempAdminSettings(long chatId) {
+        TempAdminSettings tempAdminSettings = new TempAdminSettings();
+
+        tempAdminSettings.setChatId(chatId);
+
+        tempAdminSettingsRepository.save(tempAdminSettings);
+    }
+
+    public TempAdminSettings selectTempAdminSettings(long chatId) {
+        return tempAdminSettingsRepository.findById(chatId).orElseThrow();
+    }
+
+    public void updateTempAdminSettings(long chatId, int selectedOfApartment) {
+        TempAdminSettings tempAdminSettings = tempAdminSettingsRepository.findById(chatId).orElseThrow();
+
+        tempAdminSettings.setSelectedApplication(selectedOfApartment);
+
+        tempAdminSettingsRepository.save(tempAdminSettings);
+    }
+
+    public void deleteTempAdminSettings(long chatId) {
+        tempAdminSettingsRepository.deleteById(chatId);
+    }
+
     public void setPresentTime() {
         Calendar presentDate = Calendar.getInstance();
 
@@ -441,5 +468,17 @@ public class Persistence {
         calendar.setTimeInMillis(serverStatus.getPresentTime());
 
         return calendar;
+    }
+
+    public void freeUpTheVacatedApartments() {
+        List<BookingCard> bookingCards = selectBookingCardByStatus(BookingCardStatus.ACCEPTED);
+
+        for (BookingCard bookingCard : bookingCards) {
+            if (bookingCard.getCheckOut() < getServerPresentTime().getTimeInMillis()) {
+                bookingCard.setStatus(BookingCardStatus.FINISHED.getType());
+
+                bookingCardRepository.save(bookingCard);
+            }
+        }
     }
 }

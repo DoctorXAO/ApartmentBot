@@ -18,6 +18,14 @@ public class AdminMsgNewApplications extends AdminMessage {
         return persistence.selectBookingCardByStatus(BookingCardStatus.WAITING).size();
     }
 
+    public void createAdminSettings(long chatId) {
+        persistence.insertTempAdminSettings(chatId);
+    }
+
+    public void deleteAdminSettings(long chatId) {
+        persistence.deleteTempAdminSettings(chatId);
+    }
+
     @Override
     protected InlineKeyboardMarkup getIKMarkup(Update update) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
@@ -27,7 +35,7 @@ public class AdminMsgNewApplications extends AdminMessage {
 
         for (BookingCard bookingCard : bookingCards) {
             buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, APPLICATION, bookingCard.getId()),
-                    APP_ + bookingCard.getId()));
+                    APP + bookingCard.getId()));
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();
         }

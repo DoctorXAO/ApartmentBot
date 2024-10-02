@@ -46,6 +46,12 @@ public class BotRebootService implements UserCommand, UserMessageLink {
         persistence.setPresentTime();
     }
 
+    @Scheduled(cron = "0 30 14 * * ?")
+    @EventListener(ContextRefreshedEvent.class)
+    public void freeUpTheVacatedApartments() {
+        persistence.freeUpTheVacatedApartments();
+    }
+
     @EventListener(ContextRefreshedEvent.class)
     public void clearTempDAO() {
         persistence.clearTempDAO();

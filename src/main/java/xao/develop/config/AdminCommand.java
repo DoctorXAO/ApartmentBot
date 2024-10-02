@@ -10,5 +10,8 @@ public interface AdminCommand {
 
     String BACK_TO_START = "back_to_start";
 
-    String APP_ = "app_";
+    String PARAM = "param_";
+    String APP = PARAM + "app_";
+    String ACCEPT_APP = PARAM + "accept_app_";
+    String REFUSE_APP = PARAM + "refuse_app_";
 }

@@ -7,6 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.AdminCommand;
 import xao.develop.config.AdminMessageLink;
+import xao.develop.service.BookingCardStatus;
 import xao.develop.service.BotService;
 
 import java.util.*;
@@ -38,9 +39,8 @@ public class AdminService implements AdminCommand, AdminMessageLink {
         try {
             if (update.hasMessage())
                 processingMessage(update, messages, data);
-            else if (data.startsWith(APP_))
-                adminMsgApplication.editMessage(update, messages, ADMIN_MSG_APPLICATION,
-                        adminMsgApplication.getParameters(Long.parseLong(data.replaceAll(APP_, ""))));
+            else if (data.startsWith(PARAM))
+                processingParam(update, messages, data);
             else if (update.hasCallbackQuery())
                 processingCallbackQuery(update, messages, data);
             else
@@ -65,12 +65,40 @@ public class AdminService implements AdminCommand, AdminMessageLink {
         service.deleteLastMessage(service.getChatId(update), service.getMessageId(update));
     }
 
+    private void processingParam(Update update, List<Integer> messages, String data) throws TelegramApiException {
+        if (data.startsWith(APP)) {
+            adminMsgApplication.updateAdminSettings(service.getChatId(update),
+                    Integer.parseInt(data.replaceAll(APP, "")));
+            adminMsgApplication.editMessage(update, messages, ADMIN_MSG_APPLICATION,
+                    adminMsgApplication.getParameters(Long.parseLong(data.replaceAll(APP, ""))));
+        }
+        else if (data.startsWith(ACCEPT_APP)) {
+            adminMsgApplication.updateBookingCardStatus(Long.parseLong(data.replaceAll(ACCEPT_APP, "")),
+                    BookingCardStatus.ACCEPTED);
+            adminMsgApplication.updateAdminSettings(service.getChatId(update), 0);
+            adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPLICATIONS,
+                    adminMsgNewApplications.getCountOfNewApplications());
+        } else if (data.startsWith(REFUSE_APP)) {
+            adminMsgApplication.updateBookingCardStatus(Long.parseLong(data.replaceAll(REFUSE_APP, "")),
+                    BookingCardStatus.DENIED);
+            adminMsgApplication.updateAdminSettings(service.getChatId(update), 0);
+            adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPLICATIONS,
+                    adminMsgNewApplications.getCountOfNewApplications());
+        }
+    }
+
     private void processingCallbackQuery(Update update, List<Integer> messages, String data) throws TelegramApiException {
         switch (data) {
-            case NEW_APPLICATIONS -> adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPLICATIONS,
-                    adminMsgNewApplications.getCountOfNewApplications());
-            case BACK_TO_START -> adminMsgStart.editMessage(update, messages, ADMIN_MSG_START,
-                    service.getUser(update).getFirstName());
+            case NEW_APPLICATIONS -> {
+                adminMsgNewApplications.createAdminSettings(service.getChatId(update));
+                adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPLICATIONS,
+                        adminMsgNewApplications.getCountOfNewApplications());
+            }
+            case BACK_TO_START -> {
+                adminMsgNewApplications.deleteAdminSettings(service.getChatId(update));
+                adminMsgStart.editMessage(update, messages, ADMIN_MSG_START,
+                        service.getUser(update).getFirstName());
+            }
         }
     }
 }
