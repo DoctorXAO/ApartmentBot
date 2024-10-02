@@ -6,6 +6,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import xao.develop.model.BookingCard;
+import xao.develop.service.BookingCardStatus;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -19,6 +21,17 @@ public class UserMsgChooseCheckDate extends UserDate {
         persistence.deleteTempBookingData(service.getChatId(update));
 
         log.debug("The next user from UserCalendar deleted: {}", service.getChatId(update));
+    }
+
+    public boolean checkIsAlreadyExistRent(Update update) {
+        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(BookingCardStatus.WAITING);
+        bookingCards.addAll(persistence.selectBookingCardByStatus(BookingCardStatus.ACCEPTED));
+
+        for (BookingCard bookingCard : bookingCards)
+            if (bookingCard.getChatId().longValue() == service.getChatId(update))
+                return true;
+
+        return false;
     }
 
     @Override
@@ -47,7 +60,11 @@ public class UserMsgChooseCheckDate extends UserDate {
         // Добавляет все дни выбранного месяца по неделям
         for (int i = 1; i <= maxPresentDaysOfMonth; i++) {
 
-            if (i >= presentDayOfMonth || !areDatesEquals)
+            if (selectedTime.get(Calendar.YEAR) >= presentTime.get(Calendar.YEAR) + MAX_YEAR &&
+                    selectedTime.get(Calendar.MONTH) >= presentTime.get(Calendar.MONTH) &&
+                    i > presentTime.get(Calendar.DAY_OF_MONTH))
+                buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
+            else if (i >= presentDayOfMonth || !areDatesEquals)
                 buttons.add(msgBuilder.buildIKButton(String.valueOf(i), RAA_SET_DAY + i));
             else
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
@@ -90,7 +107,12 @@ public class UserMsgChooseCheckDate extends UserDate {
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
         buttons.add(msgBuilder.buildIKButton(getSelectedYear(calendar), RAA_CHANGE_CHECK_YEAR));
-        buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_YEAR));
+
+        if (calendar.get(Calendar.YEAR) < today.get(Calendar.YEAR) + MAX_YEAR)
+            buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_YEAR));
+        else
+            buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
+
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
@@ -102,7 +124,13 @@ public class UserMsgChooseCheckDate extends UserDate {
         buttons.add(msgBuilder.buildIKButton(
                 service.getLocaleMessage(update, USER_BT_MONTH_ + (calendar.get(Calendar.MONTH) + 1)),
                 RAA_CHANGE_CHECK_MONTH));
-        buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_MONTH));
+
+        if (calendar.get(Calendar.MONTH) < today.get(Calendar.MONTH) ||
+                calendar.get(Calendar.YEAR) < today.get(Calendar.YEAR) + MAX_YEAR)
+            buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_MONTH));
+        else
+            buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
+
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
     }

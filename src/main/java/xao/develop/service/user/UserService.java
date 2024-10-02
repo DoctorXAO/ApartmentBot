@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.UserCommand;
 import xao.develop.config.UserMessageLink;
@@ -38,7 +37,7 @@ public class UserService implements UserCommand, UserMessageLink {
     @Autowired
     UserMsgBooking userMsgBooking;
     @Autowired
-    UserMsgBookCanNot userMsgBookCanNot;
+    UserInfoMessage userInfoMessage;
     @Autowired
     UserMsgPreviewCard userMsgPreviewCard;
 
@@ -60,7 +59,7 @@ public class UserService implements UserCommand, UserMessageLink {
 
         log.debug("Data: {}", data);
 
-        List<Message> messages = new ArrayList<>();
+        List<Integer> messages = new ArrayList<>();
 
         String[] parameters = data != null ? data.split(" ", 2) : new String[]{"null"};
         data = parameters[0];
@@ -77,8 +76,8 @@ public class UserService implements UserCommand, UserMessageLink {
 
             log.debug("Is the list of messages empty? {}", messages.isEmpty());
 
-            for (Message message : messages)
-                service.registerMessage(service.getChatId(update), message.getMessageId());
+            for (Integer message : messages)
+                service.registerMessage(service.getChatId(update), message);
         } catch (TelegramApiException ex) {
             log.error("execute: {}", ex.getMessage());
         }
@@ -87,46 +86,52 @@ public class UserService implements UserCommand, UserMessageLink {
     }
 
     private void processingMessage(Update update,
-                                   List<Message> messages,
+                                   List<Integer> messages,
                                    String data,
                                    String[] parameters) throws TelegramApiException {
 
         if (parameters.length == 2 && service.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update)) {
             boolean isCommandCorrect = true;
+            String msgLink = USER_MSG_BOOK;
 
             switch (data) {
                 case CARD_NAME -> {
-                    if (parameters[1].matches("[a-zA-Z]+"))
+                    if (parameters[1].matches("[a-zA-Z]+")) {
                         userMsgBooking.setName(update, parameters[1]);
-                    else
+                        msgLink = USER_MSG_SET_SURNAME;
+                    } else
                         isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_NAME);
                 }
                 case CARD_SURNAME -> {
-                    if (parameters[1].matches("[a-zA-Z]+"))
+                    if (parameters[1].matches("[a-zA-Z]+")) {
                         userMsgBooking.setSurname(update, parameters[1]);
-                    else
+                        msgLink = USER_MSG_SET_GENDER;
+                    } else
                         isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_SURNAME);
                 }
                 case CARD_GENDER -> {
-                    if (parameters[1].matches("[MW]"))
+                    if (parameters[1].matches("[MW]")) {
                         userMsgBooking.setGender(update, parameters[1]);
-                    else
+                        msgLink = USER_MSG_SET_AGE;
+                    } else
                         isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_GENDER);
                 }
                 case CARD_AGE -> {
                     if (parameters[1].matches("[0-9]+") &&
                             Integer.parseInt(parameters[1]) >= 18 &&
-                            Integer.parseInt(parameters[1]) <= 95)
+                            Integer.parseInt(parameters[1]) <= 95) {
                         userMsgBooking.setAge(update, parameters[1]);
-                    else
+                        msgLink = USER_MSG_SET_COUNT;
+                    } else
                         isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_AGE);
                 }
                 case CARD_COUNT -> {
                     if (parameters[1].matches("[0-9]+") &&
                             Integer.parseInt(parameters[1]) >= 1 &&
-                            Integer.parseInt(parameters[1]) <= 5)
+                            Integer.parseInt(parameters[1]) <= 5) {
                         userMsgBooking.setCount(update, parameters[1]);
-                    else
+                        msgLink = USER_MSG_SET_CONTACTS;
+                    } else
                         isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_COUNT);
                 }
                 case CARD_CONTACTS -> userMsgBooking.setContacts(update, parameters[1]);
@@ -135,8 +140,7 @@ public class UserService implements UserCommand, UserMessageLink {
 
             if (isCommandCorrect) {
                 service.deleteLastMessage(service.getChatId(update), service.getMessageId(update));
-                update.getMessage().setText(RAA_BOOK);
-                initMsgBooking(update, messages);
+                initMsgBooking(update, messages, msgLink);
             }
         } else {
             if (data.equals(START)) {
@@ -149,14 +153,22 @@ public class UserService implements UserCommand, UserMessageLink {
         }
     }
 
-    private void processingCallbackQueryRAA(Update update, List<Message> messages, String data) throws TelegramApiException {
+    private void processingCallbackQueryRAA(Update update, List<Integer> messages, String data) throws TelegramApiException {
         if (data.startsWith(RAA + SET)) {
             processingRAA_SET(update, messages, data);
         } else
             switch (data) {
                 case RAA_CHOOSE_CHECK_DATE -> {
-                    userMsgChooseCheckDate.addNewUserToTempBookingData(update);
-                    userMsgChooseCheckDate.editMessage(update, messages, USER_MSG_CHOOSE_CHECK_IN_DATE);
+                    if (userMsgChooseCheckDate.checkIsAlreadyExistRent(update)) {
+                        userInfoMessage.editMessage(update,
+                                messages,
+                                USER_MSG_ALREADY_EXIST_RENT,
+                                USER_BT_BACK,
+                                BACK_TO_START);
+                    } else {
+                        userMsgChooseCheckDate.addNewUserToTempBookingData(update);
+                        userMsgChooseCheckDate.editMessage(update, messages, USER_MSG_CHOOSE_CHECK_IN_DATE);
+                    }
                 }
                 case RAA_CHANGE_CHECK_YEAR -> userMsgChangeCheckYear.editMessage(update, messages,
                         USER_MSG_CHANGE_CHECK_YEAR);
@@ -192,7 +204,7 @@ public class UserService implements UserCommand, UserMessageLink {
                 case RAA_QUIT_FROM_CHOOSER_CHECK -> {
                     if (userMsgChooseCheckDate.isCheckInSet(update)) {
                         userMsgChooseCheckDate.deleteCheckIn(update);
-                        update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_DATE);
+                        update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_DATE); // todo Можно убрать по идее
                         userMsgChooseCheckDate.editMessage(update, messages, USER_MSG_CHOOSE_CHECK_IN_DATE);
                     } else {
                         userMsgChooseCheckDate.deleteUserFromTempBookingData(update);
@@ -211,15 +223,15 @@ public class UserService implements UserCommand, UserMessageLink {
                 case RAA_QUIT_FROM_CHOOSER_AN_APARTMENT -> {
                     userMsgChooseAnApartment.deleteTempApartmentSelector(update);
                     userMsgChooseCheckDate.deleteCheckOut(update);
-                    update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_OUT_DATE);
+                    update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_OUT_DATE); // todo Можно убрать по идее
                     userMsgChooseCheckDate.editMessage(update, messages, USER_MSG_CHOOSE_CHECK_OUT_DATE);
                 }
                 case RAA_BOOK -> {
                     if (!userMsgChooseAnApartment.getIsBooking(update)) {
                         userMsgChooseAnApartment.setIsBooking(update, true);
-                        initMsgBooking(update, messages);
+                        initMsgBooking(update, messages, USER_MSG_SET_NAME);
                     } else
-                        userMsgBookCanNot.editMessage(update, messages, USER_MSG_CAN_NOT_NOOK);
+                        userInfoMessage.editMessage(update, messages, USER_MSG_CAN_NOT_NOOK);
                 }
                 case RAA_QUIT_FROM_BOOKING_AN_APARTMENT -> {
                     userMsgChooseAnApartment.setIsBooking(update, false);
@@ -234,7 +246,7 @@ public class UserService implements UserCommand, UserMessageLink {
                 }
                 case RAA_SHOW_PREVIEW -> userMsgPreviewCard.editMessage(update, messages, USER_MSG_SHOW_PREVIEW,
                             userMsgPreviewCard.getPackParameters(update));
-                case RAA_QUIT_FROM_PREVIEW_CARD -> initMsgBooking(update, messages);
+                case RAA_QUIT_FROM_PREVIEW_CARD -> initMsgBooking(update, messages, USER_MSG_BOOK);
                 case RAA_SEND_BOOKING_TO_ADMIN -> {
                     update.getCallbackQuery().setData(START);
                     userMsgStart.editMessage(update, messages, USER_MSG_START);
@@ -248,7 +260,7 @@ public class UserService implements UserCommand, UserMessageLink {
             }
     }
 
-    private void processingCallbackQuery(Update update, List<Message> messages, String data) throws TelegramApiException {
+    private void processingCallbackQuery(Update update, List<Integer> messages, String data) throws TelegramApiException {
         switch (data) {
             case ABOUT_US -> userMsgAboutUs.editMessage(update, messages, USER_MSG_ABOUT_US);
             case CONTACTS -> userMsgContacts.editMessage(update, messages, USER_MSG_CONTACTS, service.getAdminContacts());
@@ -266,7 +278,7 @@ public class UserService implements UserCommand, UserMessageLink {
         }
     }
 
-    private void processingRAA_SET(Update update, List<Message> messages, String data) throws TelegramApiException {
+    private void processingRAA_SET(Update update, List<Integer> messages, String data) throws TelegramApiException {
         if (data.startsWith(RAA_SET_YEAR)) {
             userMsgChangeCheckYear.setYear(update, Integer.parseInt(data.replaceAll(RAA_SET_YEAR, "")));
             initMsgChooseCheckDate(update, messages);
@@ -309,7 +321,7 @@ public class UserService implements UserCommand, UserMessageLink {
         }
     }
 
-    private void initMsgChooseCheckDate(Update update, List<Message> messages) throws TelegramApiException {
+    private void initMsgChooseCheckDate(Update update, List<Integer> messages) throws TelegramApiException {
         update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_DATE);
 
         String message = userMsgChooseCheckDate.isCheckInSet(update) ?
@@ -318,27 +330,19 @@ public class UserService implements UserCommand, UserMessageLink {
         userMsgChooseCheckDate.editMessage(update, messages, message);
     }
 
-    private void initMsgApartments(Update update, List<Message> messages) throws TelegramApiException {
+    private void initMsgApartments(Update update, List<Integer> messages) throws TelegramApiException {
         int msgId = service.sendSimpleMessage(update, USER_MSG_SIMPLE_DOWNLOADING);
 
         update.getCallbackQuery().setData(RAA_CHOOSE_AN_APARTMENT);
-        messages.addAll(userMsgChooseAnApartment.sendPhotos(update,
-                "img/apartments/" + userMsgChooseAnApartment.getCurrentApartment(update).toString()));
-        messages.add(userMsgChooseAnApartment.sendMessage(update));
+        userMsgChooseAnApartment.sendPhotos(update, messages,
+                "img/apartments/" + userMsgChooseAnApartment.getCurrentApartment(update).toString());
+        userMsgChooseAnApartment.sendMessage(update, messages);
 
         service.deleteLastMessage(service.getChatId(update), msgId);
     }
 
-    private void initMsgBooking(Update update, List<Message> messages) throws TelegramApiException {
-        TempBookingData tempBookingData = userMsgBooking.getTempBookingData(update);
-
-        userMsgBooking.editMessage(update, messages, USER_MSG_BOOK,
-                tempBookingData.getFirstName(),
-                tempBookingData.getLastName(),
-                tempBookingData.getGender(),
-                tempBookingData.getAge(),
-                tempBookingData.getCountOfPeople(),
-                tempBookingData.getContacts());
+    private void initMsgBooking(Update update, List<Integer> messages, String msgLink) throws TelegramApiException {
+        userMsgBooking.editMessage(update, messages, msgLink, userMsgBooking.getTempBookingData(update));
     }
 
     private boolean initIncorrectEnterCard(Update update, String msgLink) {

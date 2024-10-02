@@ -1,5 +1,6 @@
 package xao.develop.service.admin;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -11,11 +12,27 @@ import xao.develop.service.BookingCardStatus;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
-public class AdminMsgNewApplications extends AdminMessage {
+public class AdminMsgApplication extends AdminMessage {
 
-    public int getCountOfNewApplications() {
-        return persistence.selectBookingCardByStatus(BookingCardStatus.WAITING).size();
+    public Object[] getParameters(Long id) {
+        BookingCard bookingCard = persistence.selectBookingCardById(id);
+
+        return new Object[]{
+                bookingCard.getId(),
+                bookingCard.getNumberOfApartment(),
+                service.getCheckDate(bookingCard.getChatId()),
+                service.getCheckDate(bookingCard.getCheckOut()),
+                bookingCard.getFirstName(),
+                bookingCard.getLastName(),
+                bookingCard.getAge(),
+                bookingCard.getGender(),
+                bookingCard.getCountOfPeople(),
+                "@" + bookingCard.getLogin(),
+                bookingCard.getContacts(),
+                bookingCard.getCost()
+        };
     }
 
     @Override
@@ -23,16 +40,7 @@ public class AdminMsgNewApplications extends AdminMessage {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(BookingCardStatus.WAITING);
-
-        for (BookingCard bookingCard : bookingCards) {
-            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, APPLICATION, bookingCard.getId()),
-                    APP_ + bookingCard.getId()));
-            keyboard.add(msgBuilder.buildIKRow(buttons));
-            buttons.clear();
-        }
-
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_BACK), BACK_TO_START));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_BACK), NEW_APPLICATIONS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

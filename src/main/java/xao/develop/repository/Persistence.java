@@ -97,10 +97,34 @@ public class Persistence {
         return apartmentRepository.getByNumber(number);
     }
 
-    public List<Apartment> selectAllApartments() {
+    public List<Apartment> selectAllFreeApartments(long chatId) {
         List<Apartment> apartments = apartmentRepository.findAll(Sort.by(Sort.Direction.ASC, "number"));
 
         apartments.removeIf(Apartment::getIsBooking);
+
+        List<BookingCard> bookingCards = selectBookingCardByStatus(BookingCardStatus.WAITING);
+        bookingCards.addAll(selectBookingCardByStatus(BookingCardStatus.ACCEPTED));
+        TempBookingData tempBookingData = selectTempBookingData(chatId);
+
+        for (BookingCard bookingCard : bookingCards) {
+            long bc_ci = bookingCard.getCheckIn();
+            long bc_co = bookingCard.getCheckOut();
+            long tb_ci = tempBookingData.getCheckIn();
+            long tb_co = tempBookingData.getCheckOut();
+            int numberOfApartment = bookingCard.getNumberOfApartment();
+
+            log.debug("""
+                    Extra:
+                    nOa: {}
+                    bc_ci: {}
+                    bc_co: {}
+                    tb_ci: {}
+                    tb_co: {}
+                    """, numberOfApartment, bc_ci, bc_co, tb_ci, tb_co);
+
+            if (bc_co >= tb_ci && bc_ci <= tb_co)
+                apartments.removeIf(apartment -> apartment.getNumber() == numberOfApartment);
+        }
 
         for (int i = 0; i < apartments.size(); i++)
             log.debug("Apartment №{}: {} number of room", i, apartments.get(i).getNumber());
@@ -131,7 +155,8 @@ public class Persistence {
                                   int countOfPeople,
                                   int numberOfApartment,
                                   Long checkIn,
-                                  Long checkOut) {
+                                  Long checkOut,
+                                  int cost) {
         BookingCard bookingCard = new BookingCard();
 
         bookingCard.setChatId(chatId);
@@ -146,12 +171,13 @@ public class Persistence {
         bookingCard.setCheckIn(checkIn);
         bookingCard.setCheckOut(checkOut);
         bookingCard.setStatus(BookingCardStatus.WAITING.getType());
+        bookingCard.setCost(cost);
 
         bookingCardRepository.save(bookingCard);
     }
 
-    public BookingCard selectBookingCard(long id) {
-        return bookingCardRepository.getById(id);
+    public BookingCard selectBookingCardById(Long id) {
+        return bookingCardRepository.findById(id).orElse(null);
     }
 
     public List<BookingCard> selectBookingCardByStatus(BookingCardStatus type) {
@@ -159,11 +185,13 @@ public class Persistence {
     }
 
     public void updateBookingCard(long id, String status) {
-        BookingCard bookingCard = bookingCardRepository.getById(id);
+        BookingCard bookingCard = bookingCardRepository.findById(id).orElse(null);
 
-        bookingCard.setStatus(status);
+        if (bookingCard != null) {
+            bookingCard.setStatus(status);
 
-        bookingCardRepository.save(bookingCard);
+            bookingCardRepository.save(bookingCard);
+        }
     }
 
     public void deleteBookingCard(long id) {
@@ -349,7 +377,7 @@ public class Persistence {
     }
 
     public void insertTempApartmentSelector(long chatId) {
-        List<Apartment> apartments = selectAllApartments();
+        List<Apartment> apartments = selectAllFreeApartments(chatId);
 
         if (!apartments.isEmpty()) {
             TempApartmentSelector tempApartmentSelector = new TempApartmentSelector();

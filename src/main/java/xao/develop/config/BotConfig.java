@@ -44,6 +44,11 @@ public class BotConfig {
     @Value("${rent.3.year}")
     private int threePerYear;
 
+    @Value("${check.hours.in}")
+    private int checkInHours;
+    @Value("${check.hours.out}")
+    private int checkOutHours;
+
     public int getPerDay(int countOfPeople) {
         if (countOfPeople == 1)
             return onePerDay;

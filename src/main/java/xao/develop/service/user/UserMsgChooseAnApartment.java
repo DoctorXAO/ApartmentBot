@@ -1,26 +1,20 @@
 package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.model.Amenity;
 import xao.develop.model.Apartment;
-import xao.develop.repository.Persistence;
 
 import java.util.*;
 
 @Slf4j
 @Service
 public class UserMsgChooseAnApartment extends UserMessage {
-
-    @Autowired
-    Persistence persistence;
 
     public void setIsBooking(Update update, boolean isBooking) {
         int numberOfApartment = getSelectedApartment(update);
@@ -53,7 +47,7 @@ public class UserMsgChooseAnApartment extends UserMessage {
 
     public Integer getCurrentApartment(Update update) {
         int selector = persistence.selectTempApartmentSelector(service.getChatId(update)).getSelector();
-        List<Apartment> apartments = persistence.selectAllApartments();
+        List<Apartment> apartments = persistence.selectAllFreeApartments(service.getChatId(update));
 
         log.debug("Size of the list of apartment is {}", apartments.size());
         log.debug("Current selector is {}", selector);
@@ -76,10 +70,10 @@ public class UserMsgChooseAnApartment extends UserMessage {
 
     public void upSelector(Update update) {
         int selector = persistence.selectTempApartmentSelector(service.getChatId(update)).getSelector() + 1;
-        if (selector < persistence.selectAllApartments().size()) {
+        if (selector < persistence.selectAllFreeApartments(service.getChatId(update)).size()) {
             persistence.updateTempApartmentSelector(
                     service.getChatId(update),
-                    persistence.selectAllApartments().get(selector).getNumber(),
+                    persistence.selectAllFreeApartments(service.getChatId(update)).get(selector).getNumber(),
                     selector);
 
             log.debug("""
@@ -97,7 +91,7 @@ public class UserMsgChooseAnApartment extends UserMessage {
         if (selector >= 0) {
             persistence.updateTempApartmentSelector(
                     service.getChatId(update),
-                    persistence.selectAllApartments().get(selector).getNumber(),
+                    persistence.selectAllFreeApartments(service.getChatId(update)).get(selector).getNumber(),
                     selector);
 
             log.debug("""
@@ -115,33 +109,35 @@ public class UserMsgChooseAnApartment extends UserMessage {
         log.debug("Method deleteTempApartmentSelector(Update): the next user deleted: {} ", service.getChatId(update));
     }
 
-    public Message sendMessage(Update update) throws TelegramApiException {
+    public void sendMessage(Update update, List<Integer> messages) throws TelegramApiException {
         service.deleteOldMessages(update);
 
-        List<Apartment> apartments = persistence.selectAllApartments();
+        List<Apartment> apartments = persistence.selectAllFreeApartments(service.getChatId(update));
 
-        return !apartments.isEmpty() ? showApartments(update) : showNoFreeApartments(update);
+        if (apartments.isEmpty())
+            showNoFreeApartments(update, messages, USER_MSG_NO_FREE_APARTMENTS);
+        else
+            showApartments(update, messages);
     }
 
-    private Message showApartments(Update update) throws TelegramApiException {
+    private void showApartments(Update update, List<Integer> messages) throws TelegramApiException {
         Apartment apartment = persistence.selectApartment(
-                persistence.selectTempApartmentSelector(service.getChatId(update)).getNumberOfApartment()
-        );
+                persistence.selectTempApartmentSelector(service.getChatId(update)).getNumberOfApartment());
 
         StringBuilder amenities = getAmenities(update, apartment);
 
-        return botConfig.getTelegramClient().execute(service.sendMessage(update,
+        messages.add(botConfig.getTelegramClient().execute(service.sendMessage(update,
                 service.getLocaleMessage(update, USER_MSG_CHOOSE_AN_APARTMENT,
                         apartment.getArea(),
                         amenities),
-                getIKMarkup(update)));
+                getIKMarkup(update))).getMessageId());
     }
 
-    private Message showNoFreeApartments(Update update) throws TelegramApiException {
+    private void showNoFreeApartments(Update update, List<Integer> messages, String msgLink) throws TelegramApiException {
         update.getCallbackQuery().setData(NO_FREE_APARTMENTS);
-        return botConfig.getTelegramClient().execute(service.sendMessage(update,
-                service.getLocaleMessage(update, USER_MSG_NO_FREE_APARTMENTS),
-                getBackIKMarkup(update)));
+        messages.add(botConfig.getTelegramClient().execute(service.sendMessage(update,
+                service.getLocaleMessage(update, msgLink),
+                getBackIKMarkup(update))).getMessageId());
     }
 
     private StringBuilder getAmenities(Update update, Apartment apartment) {
@@ -172,7 +168,7 @@ public class UserMsgChooseAnApartment extends UserMessage {
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        if (selector < persistence.selectAllApartments().size() - 1)
+        if (selector < persistence.selectAllFreeApartments(service.getChatId(update)).size() - 1)
             buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_APARTMENT));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));

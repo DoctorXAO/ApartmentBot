@@ -17,6 +17,7 @@ import xao.develop.model.AccountStatus;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingFormatArgumentException;
@@ -237,26 +238,16 @@ public class BotService {
                 .build();
     }
 
-    public void sendMessageAdminUser(long chatId, Keyboard keyboard) {
+    public String getCheckDate(Long checkTimeInMillis) {
+        Calendar calendar = persistence.getServerPresentTime();
 
-    }
+        calendar.setTimeInMillis(checkTimeInMillis);
+        String day = calendar.get(Calendar.DAY_OF_MONTH) < 10 ?
+                "0" + calendar.get(Calendar.DAY_OF_MONTH) : String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+        String month = calendar.get(Calendar.MONTH) + 1 < 10 ?
+                "0" + (calendar.get(Calendar.MONTH) + 1) : String.valueOf(calendar.get(Calendar.MONTH) + 1);
 
-    public SendMessage sendMessageAdminUser(String msgLink, Keyboard keyboard, Object... args) {
-        InlineKeyboardMarkup markup;
-
-        switch (keyboard) {
-            case CONFIRM_BOOKING -> markup = null;
-            case ANSWER -> markup = null;
-            default -> markup = null;
-        }
-
-        return SendMessage
-                .builder()
-                .chatId(botConfig.getAdminId())
-                .text(msgLink)
-                .replyMarkup(markup)
-                .parseMode("HTML")
-                .build();
+        return String.format("%s/%s/%s", day, month, calendar.get(Calendar.YEAR));
     }
 }
 

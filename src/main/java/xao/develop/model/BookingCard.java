@@ -44,5 +44,8 @@ public class BookingCard {
     private Long checkOut;
 
     @Column(nullable = false)
+    private int cost;
+
+    @Column(nullable = false)
     private String status;
 }

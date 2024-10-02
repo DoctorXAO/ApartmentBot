@@ -17,10 +17,6 @@ public class Apartment {
 
     private String amenities;
 
-    private String checkIn;
-
-    private String checkOut;
-
     private Boolean isBooking = false;
 
     private Long userId = null;

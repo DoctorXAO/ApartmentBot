@@ -6,10 +6,8 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.model.TempBookingData;
 import xao.develop.repository.Persistence;
-import xao.develop.service.Keyboard;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -38,7 +36,11 @@ public class UserMsgPreviewCard extends UserMessage {
                 tempBookingData.getCountOfPeople(),
                 numberOfApartment,
                 tempBookingData.getCheckIn(),
-                tempBookingData.getCheckOut()
+                tempBookingData.getCheckOut(),
+                getTotalRent(
+                        tempBookingData.getCheckIn(),
+                        tempBookingData.getCheckOut(),
+                        tempBookingData.getCountOfPeople())
         );
 
         persistence.updateIsBookingApartment(numberOfApartment, false, service.getChatId(update));
@@ -51,8 +53,8 @@ public class UserMsgPreviewCard extends UserMessage {
 
         return new Object[]{
                 tempBookingData.getNumberOfApartment(),
-                getCheckDate(tempBookingData.getCheckIn()),
-                getCheckDate(tempBookingData.getCheckOut()),
+                service.getCheckDate(tempBookingData.getCheckIn()),
+                service.getCheckDate(tempBookingData.getCheckOut()),
                 tempBookingData.getFirstName(),
                 tempBookingData.getLastName(),
                 tempBookingData.getAge(),
@@ -64,18 +66,6 @@ public class UserMsgPreviewCard extends UserMessage {
                         tempBookingData.getCheckOut(),
                         tempBookingData.getCountOfPeople())
         };
-    }
-
-    public String getCheckDate(Long checkTimeInMillis) {
-        Calendar calendar = persistence.getServerPresentTime();
-
-        calendar.setTimeInMillis(checkTimeInMillis);
-        String day = calendar.get(Calendar.DAY_OF_MONTH) < 10 ?
-                "0" + calendar.get(Calendar.DAY_OF_MONTH) : String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
-        String month = calendar.get(Calendar.MONTH) + 1 < 10 ?
-                "0" + (calendar.get(Calendar.MONTH) + 1) : String.valueOf(calendar.get(Calendar.MONTH) + 1);
-
-        return String.format("%s/%s/%s", day, month, calendar.get(Calendar.YEAR));
     }
 
     public int getTotalRent(long checkIn, long checkOut, int countOfPeople) {

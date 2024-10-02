@@ -8,6 +8,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.repository.Persistence;
@@ -32,15 +33,28 @@ public abstract class BotMessage {
     @Autowired
     protected Persistence persistence;
 
-    public Message sendMessage(Update update, String msgLink, Object... args) throws TelegramApiException {
+    public void sendMessage(Update update, List<Integer> messages, String msgLink, Object... args) throws TelegramApiException {
         service.deleteOldMessages(update);
 
-        return botConfig.getTelegramClient().execute(service.sendMessage(update,
+        messages.add(botConfig.getTelegramClient().execute(service.sendMessage(update,
                 service.getLocaleMessage(update, msgLink, args),
-                getIKMarkup(update)));
+                getIKMarkup(update))).getMessageId());
     }
 
-    public void editMessage(Update update, List<Message> messages, String msgLink, Object... args) throws TelegramApiException {
+    public void sendMessage(Update update,
+                            List<Integer> messages,
+                            String msgLink,
+                            String btMsgLink,
+                            String btData,
+                            Object... args) throws TelegramApiException {
+        service.deleteOldMessages(update);
+
+        messages.add(botConfig.getTelegramClient().execute(service.sendMessage(update,
+                service.getLocaleMessage(update, msgLink, args),
+                getIKMarkup(update, btMsgLink, btData))).getMessageId());
+    }
+
+    public void editMessage(Update update, List<Integer> messages, String msgLink, Object... args) throws TelegramApiException {
         try {
             int lastMsgId = service.deleteAllMessagesExceptTheLastOne(update);
 
@@ -52,11 +66,33 @@ public abstract class BotMessage {
                     getIKMarkup(update)));
         } catch (TelegramApiException | IndexOutOfBoundsException ex) {
             log.warn("Method editMessage(Update, String) can't edit messageId. Exception: {}", ex.getMessage());
-            messages.add(sendMessage(update, msgLink, args));
+            sendMessage(update, messages, msgLink, args);
         }
     }
 
-    public List<Message> sendPhotos(Update update, String patch) {
+    public void editMessage(Update update,
+                            List<Integer> messages,
+                            String msgLink,
+                            String btMsgLink,
+                            String btData,
+                            Object... args) throws TelegramApiException {
+        try {
+            int lastMsgId = service.deleteAllMessagesExceptTheLastOne(update);
+
+            log.debug("Method editMessage(Update, String, String, String, Object...): Last messageId {}", lastMsgId);
+
+            botConfig.getTelegramClient().execute(service.editMessageText(update,
+                    lastMsgId,
+                    service.getLocaleMessage(update, msgLink, args),
+                    getIKMarkup(update, btMsgLink, btData)));
+        } catch (TelegramApiException | IndexOutOfBoundsException ex) {
+            log.warn("Method editMessage(Update, String, String, String, Object...) can't edit messageId. Exception: {}",
+                    ex.getMessage());
+            sendMessage(update, messages, msgLink, btMsgLink, btData, args);
+        }
+    }
+
+    public void sendPhotos(Update update, List<Integer> messages, String patch) {
         try {
             ClassLoader classLoader = getClass().getClassLoader();
             URL resource = classLoader.getResource(patch);
@@ -73,22 +109,32 @@ public abstract class BotMessage {
 
             if (photos.size() == 1)
                 throw new Exception("В процессе отправка одного фото..."); // todo доделать отправку одного фото
-            else if (photos.size() < 2)
+            else if (photos.size() < 2) // todo Можно сделать циклом по 10 фото отправлять
                 throw new Exception("Current directory has less than two photos (*.jpg/*.png)");
 
-            return botConfig.getTelegramClient().execute(SendMediaGroup
+            List<Message> msgPhotos = botConfig.getTelegramClient().execute(SendMediaGroup
                     .builder()
                     .chatId(service.getChatId(update))
                     .medias(photos)
                     .build());
+
+            for (Message message : msgPhotos)
+                messages.add(message.getMessageId());
         } catch (Exception ex) {
             log.error("sendPhotos: {}", ex.getMessage());
-
-            return null;
         }
     }
 
-    abstract protected InlineKeyboardMarkup getIKMarkup(Update update);
+    protected InlineKeyboardMarkup getIKMarkup(Update update) {
+        return null;
+    };
+
+    protected InlineKeyboardMarkup getIKMarkup(Update update, String msgLink, String data) {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(service.getLocaleMessage(update, msgLink), data)))
+                .build();
+    }
 
     private @NotNull File[] getSortedFiles(URL resource) throws Exception {
         File directory = new File(resource.getFile());

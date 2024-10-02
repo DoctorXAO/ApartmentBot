@@ -9,4 +9,6 @@ public interface AdminCommand {
     String CHANGE_LANGUAGE = "change_language";
 
     String BACK_TO_START = "back_to_start";
+
+    String APP_ = "app_";
 }

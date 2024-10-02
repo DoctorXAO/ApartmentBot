@@ -3,6 +3,7 @@ package xao.develop.service.user;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import xao.develop.model.TempBookingData;
 import xao.develop.repository.Persistence;
 import xao.develop.service.BotService;
 
@@ -17,7 +18,7 @@ public abstract class UserDate extends UserMessage {
     @Autowired
     BotService service;
 
-    final int MAX_YEAR = 10;
+    final int MAX_YEAR = 1;
 
     void setYear(Update update, int year) {
         Calendar selectedTime = getSelectedTime(update);
@@ -33,7 +34,11 @@ public abstract class UserDate extends UserMessage {
 
         Calendar selectedTime = getSelectedTime(update);
         selectedTime.set(Calendar.DAY_OF_MONTH, day);
+        selectedTime.set(Calendar.HOUR_OF_DAY, botConfig.getCheckInHours());
         persistence.updateCheckInInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
+
+        if (day == getMaxDaysOfMonth(getSelectedTime(update), 0))
+            nextMonth(update);
 
         log.debug("For user {} was set check-in with the next parameters: {}", service.getChatId(update), selectedTime);
         log.trace("Method setCheckIn(Update, int) finished");
@@ -44,6 +49,7 @@ public abstract class UserDate extends UserMessage {
 
         Calendar selectedTime = getSelectedTime(update);
         selectedTime.set(Calendar.DAY_OF_MONTH, day);
+        selectedTime.set(Calendar.HOUR_OF_DAY, botConfig.getCheckOutHours());
         persistence.updateCheckOutInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
 
         log.debug("For user {} was set check-out with the next parameters: {}", service.getChatId(update), selectedTime);
@@ -119,6 +125,8 @@ public abstract class UserDate extends UserMessage {
     void deleteCheckIn(Update update) {
         log.trace("Method deleteCheckIn(Update) started");
 
+        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update),
+                persistence.selectTempBookingData(service.getChatId(update)).getCheckIn());
         persistence.deleteCheckInInTempBookingData(service.getChatId(update));
 
         log.trace("Method deleteCheckIn(Update) finished");
@@ -127,6 +135,8 @@ public abstract class UserDate extends UserMessage {
     void deleteCheckOut(Update update) {
         log.trace("Method deleteCheckOut(Update) started");
 
+        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update),
+                persistence.selectTempBookingData(service.getChatId(update)).getCheckOut());
         persistence.deleteCheckOutInTempBookingData(service.getChatId(update));
 
         log.trace("Method deleteCheckOut(Update) finished");
@@ -135,7 +145,7 @@ public abstract class UserDate extends UserMessage {
     void addNewUserToTempBookingData(Update update) {
         persistence.insertTempBookingData(
                 service.getChatId(update),
-                Calendar.getInstance().getTimeInMillis(),
+                persistence.getServerPresentTime().getTimeInMillis(),
                 update.getCallbackQuery().getFrom().getUserName());
     }
 
@@ -164,7 +174,11 @@ public abstract class UserDate extends UserMessage {
 
         log.debug("Selected time after: {}", selectedTime);
 
-        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
+        Calendar maxCalendar = getPresentTime(update);
+        maxCalendar.set(Calendar.YEAR, maxCalendar.get(Calendar.YEAR) + MAX_YEAR);
+
+        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update),
+                Math.min(maxCalendar.getTimeInMillis(), selectedTime.getTimeInMillis()));
     }
 
     void previousYear(Update update) {

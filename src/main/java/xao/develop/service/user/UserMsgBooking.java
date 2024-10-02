@@ -1,18 +1,14 @@
 package xao.develop.service.user;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import xao.develop.model.TempBookingData;
-import xao.develop.repository.Persistence;
 
 @Service
 public class UserMsgBooking extends UserMessage
 {
-    @Autowired
-    Persistence persistence;
 
     public void setName(Update update, String name) {
         persistence.updateFirstNameTempBookingData(service.getChatId(update), name);
@@ -38,25 +34,26 @@ public class UserMsgBooking extends UserMessage
         persistence.updateContactsTempBookingData(service.getChatId(update), contacts);
     }
 
-    public TempBookingData getTempBookingData(Update update) {
-        return persistence.selectTempBookingData(service.getChatId(update));
+    public Object[] getTempBookingData(Update update) {
+        TempBookingData tempBookingData = persistence.selectTempBookingData(service.getChatId(update));
+
+        return new Object[]{
+                tempBookingData.getFirstName(),
+                tempBookingData.getLastName(),
+                tempBookingData.getGender(),
+                tempBookingData.getAge(),
+                tempBookingData.getCountOfPeople(),
+                tempBookingData.getContacts()
+        };
     }
 
     @Override
     public InlineKeyboardMarkup getIKMarkup(Update update) {
-        TempBookingData tempBookingData = getTempBookingData(update);
-
         boolean isOneOfFieldsNull = false;
 
-        String[] parameters = new String[6];
-        parameters[0] = tempBookingData.getFirstName();
-        parameters[1] = tempBookingData.getLastName();
-        parameters[2] = tempBookingData.getGender();
-        parameters[3] = String.valueOf(tempBookingData.getAge());
-        parameters[4] = String.valueOf(tempBookingData.getCountOfPeople());
-        parameters[5] = tempBookingData.getContacts();
+        Object[] parameters = getTempBookingData(update);
 
-        for (String param : parameters)
+        for (Object param : parameters)
             if (param == null || param.equals("0")) {
                 isOneOfFieldsNull = true;
                 break;

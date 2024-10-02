@@ -41,13 +41,27 @@ public class UserMsgChangeCheckMonth extends UserDate {
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        if (presentTime.get(Calendar.YEAR) < selectedTime.get(Calendar.YEAR))
+        int pYear = presentTime.get(Calendar.YEAR);
+        int pMonth = presentTime.get(Calendar.MONTH);
+
+        Calendar maxCalendar = (Calendar) presentTime.clone();
+        maxCalendar.set(Calendar.YEAR, maxCalendar.get(Calendar.YEAR) + MAX_YEAR);
+
+        int mYear = maxCalendar.get(Calendar.YEAR);
+        int mMonth = maxCalendar.get(Calendar.MONTH);
+
+        if (pYear < selectedTime.get(Calendar.YEAR))
             buttons.add(msgBuilder.buildIKButton("◀️", RAA_PREVIOUS_CHECK_YEAR_CM));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
         buttons.add(msgBuilder.buildIKButton(getSelectedYear(selectedTime), RAA_CHANGE_CHECK_YEAR));
-        buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_YEAR_CM));
+
+        if (selectedTime.get(Calendar.YEAR) < mYear)
+            buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_YEAR_CM));
+        else
+            buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
+
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
@@ -57,10 +71,22 @@ public class UserMsgChangeCheckMonth extends UserDate {
         for (int i = 1; i <= 12; i++) {
             selectedTime.set(Calendar.MONTH, i - 1); // -1 - так как класс Calendar ведет счет месяца с 0
 
-            if (presentTime.get(Calendar.YEAR) < selectedTime.get(Calendar.YEAR))
-                buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_MONTH_ + i),
-                        RAA_SET_MONTH + i));
-            else if (presentTime.get(Calendar.MONTH) <= selectedTime.get(Calendar.MONTH))
+            int sYear = selectedTime.get(Calendar.YEAR);
+            int sMonth = selectedTime.get(Calendar.MONTH);
+
+            log.debug("""
+                    EXTRA:
+                    pYear: {}
+                    sYear: {}
+                    mYear: {}
+                    pMonth: {}
+                    sMonth: {}
+                    mMonth: {}
+                    """, pYear, sYear, mYear, pMonth, sMonth, mMonth);
+
+            if (sYear > mYear || (sYear == mYear && sMonth > mMonth))
+                buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
+            else if (sYear > pYear || sMonth >= pMonth)
                 buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_MONTH_ + i),
                         RAA_SET_MONTH + i));
             else

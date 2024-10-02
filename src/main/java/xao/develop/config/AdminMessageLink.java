@@ -7,7 +7,7 @@ public interface AdminMessageLink {
     String ADMIN_MSG_SETTINGS = "admin.msg.settings";
     String ADMIN_MSG_CHANGE_LANGUAGE = "admin.msg.change-language";
 
-    String APPLICATION = "admin.msg.application";
+    String ADMIN_MSG_APPLICATION = "admin.msg.application";
 
     String ADMIN_BT_NEW_APPLICATIONS = "admin.bt.new-applications";
     String ADMIN_BT_ARCHIVE = "admin.bt.archive";
@@ -15,4 +15,6 @@ public interface AdminMessageLink {
     String ADMIN_BT_CHANGE_LANGUAGE = "admin.bt.change-language";
 
     String ADMIN_BT_BACK = "admin.bt.back";
+
+    String APPLICATION = "admin.bt.application";
 }

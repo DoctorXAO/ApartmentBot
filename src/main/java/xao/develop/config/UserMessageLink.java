@@ -21,7 +21,16 @@ public interface UserMessageLink {
 
     String USER_MSG_NO_FREE_APARTMENTS = "user.msg.no-free-apartments";
 
+    String USER_MSG_ALREADY_EXIST_RENT = "user.msg.already-exist-rent";
+
     String USER_MSG_BOOK = "user.msg.book";
+
+    String USER_MSG_SET_NAME = "user.msg.set-name";
+    String USER_MSG_SET_SURNAME = "user.msg.set-surname";
+    String USER_MSG_SET_GENDER = "user.msg.set-gender";
+    String USER_MSG_SET_AGE = "user.msg.set-age";
+    String USER_MSG_SET_COUNT = "user.msg.set-count";
+    String USER_MSG_SET_CONTACTS = "user.msg.set-contacts";
 
     String USER_MSG_SHOW_PREVIEW = "user.msg.show-preview";
 
