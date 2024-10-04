@@ -1,9 +1,9 @@
-package xao.develop.service;
+package xao.develop.config.enums;
 
 import lombok.Getter;
 
 @Getter
-public enum BookingCardStatus {
+public enum TypesOfAppStatus {
     WAITING("waiting"),
     ACCEPTED("accepted"),
     DENIED("denied"),
@@ -11,7 +11,7 @@ public enum BookingCardStatus {
 
     private final String type;
 
-    BookingCardStatus(String type) {
+    TypesOfAppStatus(String type) {
         this.type = type;
     }
 }

@@ -20,6 +20,7 @@ import xao.develop.config.UserCommand;
 import xao.develop.config.UserMessageLink;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
+import xao.develop.service.admin.AdminService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,9 +71,9 @@ public class BotRebootService implements UserCommand, UserMessageLink {
             for (int i = 0; i < tempBotMessages.size(); i++) {
                 TempBotMessage tempBotMessage = tempBotMessages.get(i);
 
-                if (i == tempBotMessages.size() - 1)
+                if (i == tempBotMessages.size() - 1) {
                     editMessage(tempBotMessage);
-                else
+                } else
                     deleteMessage(tempBotMessage);
             }
         }
@@ -80,7 +81,7 @@ public class BotRebootService implements UserCommand, UserMessageLink {
 
     private void editMessage(TempBotMessage tempBotMessage) {
         try {
-            Update update = initUpdate(tempBotMessage.getChatId());
+            Update update = initUpdate(tempBotMessage.getChatId(), START);
 
             botConfig.getTelegramClient().execute(
                     service.editMessageText(update,
@@ -116,14 +117,14 @@ public class BotRebootService implements UserCommand, UserMessageLink {
         }
     }
 
-    private Update initUpdate(long chatId) {
+    private Update initUpdate(long chatId, String data) {
         Update update = new Update();
 
         CallbackQuery callbackQuery = new CallbackQuery();
         Message message = new Message();
         Chat chat = new Chat(chatId, "null");
 
-        callbackQuery.setData(START);
+        callbackQuery.setData(data);
         message.setChat(chat);
 
         update.setCallbackQuery(callbackQuery);

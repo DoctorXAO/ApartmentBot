@@ -7,7 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import xao.develop.model.BookingCard;
-import xao.develop.service.BookingCardStatus;
+import xao.develop.config.enums.TypesOfAppStatus;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,11 +24,11 @@ public class UserMsgChooseCheckDate extends UserDate {
     }
 
     public boolean checkIsAlreadyExistRent(Update update) {
-        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(BookingCardStatus.WAITING);
-        bookingCards.addAll(persistence.selectBookingCardByStatus(BookingCardStatus.ACCEPTED));
+        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(TypesOfAppStatus.WAITING);
+        bookingCards.addAll(persistence.selectBookingCardByStatus(TypesOfAppStatus.ACCEPTED));
 
         for (BookingCard bookingCard : bookingCards)
-            if (bookingCard.getChatId().longValue() == service.getChatId(update))
+            if (bookingCard.getChatId() == service.getChatId(update))
                 return true;
 
         return false;

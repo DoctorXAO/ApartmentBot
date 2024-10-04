@@ -9,10 +9,10 @@ import lombok.Setter;
 public class BookingCard {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
     @Column(nullable = false)
-    private Long chatId;
+    private long chatId;
 
     private String login;
 
@@ -38,10 +38,10 @@ public class BookingCard {
     private int numberOfApartment;
 
     @Column(nullable = false)
-    private Long checkIn;
+    private long checkIn;
 
     @Column(nullable = false)
-    private Long checkOut;
+    private long checkOut;
 
     @Column(nullable = false)
     private int cost;

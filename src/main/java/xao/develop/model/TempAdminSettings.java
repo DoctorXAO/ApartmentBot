@@ -11,5 +11,7 @@ public class TempAdminSettings {
     @Id
     Long chatId;
 
-    int selectedApplication;
+    int selectedApplication = 0;
+
+    int selectedPage = 0;
 }

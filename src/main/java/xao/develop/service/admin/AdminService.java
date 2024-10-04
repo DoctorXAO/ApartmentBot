@@ -7,7 +7,9 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.AdminCommand;
 import xao.develop.config.AdminMessageLink;
-import xao.develop.service.BookingCardStatus;
+import xao.develop.config.enums.TypeOfActionOfSelector;
+import xao.develop.config.enums.TypeOfApp;
+import xao.develop.config.enums.TypesOfAppStatus;
 import xao.develop.service.BotService;
 
 import java.util.*;
@@ -26,25 +28,30 @@ public class AdminService implements AdminCommand, AdminMessageLink {
     AdminMsgNewApplications adminMsgNewApplications;
 
     @Autowired
-    AdminMsgApplication adminMsgApplication;
+    AdminMsgOpenApp adminMsgOpenApp;
+
+    @Autowired
+    AdminMsgArchive adminMsgArchive;
+
+    @Autowired
+    AdminMsgOpenArc adminMsgOpenArc;
 
     public void execute(Update update) {
 
-        String data = service.getData(update);
+        String[] data = service.getData(update).split(X);
 
-        log.debug("Data: {}", data);
+        for (String d : data)
+            log.debug("data: {}", d);
 
         List<Integer> messages = new ArrayList<>();
 
         try {
             if (update.hasMessage())
-                processingMessage(update, messages, data);
-            else if (data.startsWith(PARAM))
-                processingParam(update, messages, data);
+                processingMessage(update, messages, data[0]);
             else if (update.hasCallbackQuery())
                 processingCallbackQuery(update, messages, data);
             else
-                log.warn("Unknown data: {}", data);
+                log.warn("Unknown data: {}", data[0]);
         } catch (TelegramApiException ex) {
             log.error("Can't execute function: {}", ex.getMessage());
         }
@@ -56,49 +63,94 @@ public class AdminService implements AdminCommand, AdminMessageLink {
     }
 
     private void processingMessage(Update update, List<Integer> messages, String data) throws TelegramApiException {
-        if (data.equals(START)) {
-            service.authorization(update.getMessage());
-            adminMsgStart.editMessage(update, messages, ADMIN_MSG_START, service.getUser(update).getFirstName());
-        } else
+        if (data.equals(START))
+            start(update, messages, update.hasMessage());
+        else
             log.info("Unknown message data: {}", data);
 
         service.deleteLastMessage(service.getChatId(update), service.getMessageId(update));
     }
 
-    private void processingParam(Update update, List<Integer> messages, String data) throws TelegramApiException {
-        if (data.startsWith(APP)) {
-            adminMsgApplication.updateAdminSettings(service.getChatId(update),
-                    Integer.parseInt(data.replaceAll(APP, "")));
-            adminMsgApplication.editMessage(update, messages, ADMIN_MSG_APPLICATION,
-                    adminMsgApplication.getParameters(Long.parseLong(data.replaceAll(APP, ""))));
-        }
-        else if (data.startsWith(ACCEPT_APP)) {
-            adminMsgApplication.updateBookingCardStatus(Long.parseLong(data.replaceAll(ACCEPT_APP, "")),
-                    BookingCardStatus.ACCEPTED);
-            adminMsgApplication.updateAdminSettings(service.getChatId(update), 0);
-            adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPLICATIONS,
-                    adminMsgNewApplications.getCountOfNewApplications());
-        } else if (data.startsWith(REFUSE_APP)) {
-            adminMsgApplication.updateBookingCardStatus(Long.parseLong(data.replaceAll(REFUSE_APP, "")),
-                    BookingCardStatus.DENIED);
-            adminMsgApplication.updateAdminSettings(service.getChatId(update), 0);
-            adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPLICATIONS,
-                    adminMsgNewApplications.getCountOfNewApplications());
+    private void processingCallbackQuery(Update update, List<Integer> messages, String[] data) throws TelegramApiException {
+        switch (data[0]) {
+            case NEW_APPLICATIONS -> openListOfApps(update, messages, TypeOfApp.APP, false);
+            case ARCHIVE -> openListOfApps(update, messages, TypeOfApp.ARC, false);
+
+            case PREVIOUS_PAGE_OF_NEW_APPS -> changePage(update, messages, TypeOfApp.APP, TypeOfActionOfSelector.PREVIOUS);
+            case NEXT_PAGE_OF_NEW_APPS -> changePage(update, messages, TypeOfApp.APP, TypeOfActionOfSelector.NEXT);
+            case PREVIOUS_PAGE_OF_ARCHIVE -> changePage(update, messages, TypeOfApp.ARC, TypeOfActionOfSelector.PREVIOUS);
+            case NEXT_PAGE_OF_ARCHIVE -> changePage(update, messages, TypeOfApp.ARC, TypeOfActionOfSelector.NEXT);
+
+            case APP -> openApp(update, messages, data[1], TypeOfApp.APP);
+            case ARC -> openApp(update, messages, data[1], TypeOfApp.ARC);
+
+            case REFUSE_APP -> performActionStatement(update, messages, data[1], TypesOfAppStatus.DENIED);
+            case ACCEPT_APP -> performActionStatement(update, messages, data[1], TypesOfAppStatus.ACCEPTED);
+            case RETURN_APP -> performActionStatement(update, messages, data[1], TypesOfAppStatus.WAITING);
+
+            case QUIT_FROM_APP -> openListOfApps(update, messages, TypeOfApp.APP, true);
+            case QUIT_FROM_ARC -> openListOfApps(update, messages, TypeOfApp.ARC, true);
+
+            case BACK_TO_START -> start(update, messages, update.hasMessage());
+
+            default -> log.warn("Unknown callback query: {}", data[0]);
         }
     }
 
-    private void processingCallbackQuery(Update update, List<Integer> messages, String data) throws TelegramApiException {
-        switch (data) {
-            case NEW_APPLICATIONS -> {
-                adminMsgNewApplications.createAdminSettings(service.getChatId(update));
-                adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPLICATIONS,
-                        adminMsgNewApplications.getCountOfNewApplications());
-            }
-            case BACK_TO_START -> {
-                adminMsgNewApplications.deleteAdminSettings(service.getChatId(update));
-                adminMsgStart.editMessage(update, messages, ADMIN_MSG_START,
-                        service.getUser(update).getFirstName());
-            }
-        }
+    private void start(Update update, List<Integer> messages, boolean isInit) throws TelegramApiException {
+        if (isInit)
+            service.authorization(update.getMessage());
+
+        adminMsgStart.deleteAdminSettings(service.getChatId(update));
+        adminMsgStart.editMessage(update, messages, ADMIN_MSG_START, service.getUser(update).getFirstName());
+    }
+
+    private void openListOfApps(Update update, List<Integer> messages, TypeOfApp type, boolean isBack) throws TelegramApiException {
+        if (!isBack)
+            adminMsgStart.createAdminSettings(service.getChatId(update));
+
+        if (type.equals(TypeOfApp.APP))
+            adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps());
+        else if (type.equals(TypeOfApp.ARC))
+            adminMsgArchive.editMessage(update, messages, ADMIN_MSG_ARCHIVE, adminMsgStart.getCountOfArchive());
+    }
+
+    private void changePage(Update update,
+                            List<Integer> messages,
+                            TypeOfApp typeOfApp,
+                            TypeOfActionOfSelector typeOfSelector) throws TelegramApiException {
+
+        if (typeOfSelector.equals(TypeOfActionOfSelector.PREVIOUS))
+            adminMsgStart.previousPage(service.getChatId(update));
+        else if (typeOfSelector.equals(TypeOfActionOfSelector.NEXT))
+            adminMsgStart.nextPage(service.getChatId(update));
+
+        if (typeOfApp.equals(TypeOfApp.APP))
+            adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps());
+        else if (typeOfApp.equals(TypeOfApp.ARC))
+            adminMsgArchive.editMessage(update, messages, ADMIN_MSG_ARCHIVE, adminMsgStart.getCountOfArchive());
+    }
+
+    private void performActionStatement(Update update,
+                                        List<Integer> messages,
+                                        String data,
+                                        TypesOfAppStatus typesOfAppStatus) throws TelegramApiException {
+
+        int numOfApp = Integer.parseInt(data);
+
+        adminMsgStart.updateBookingCardStatus(numOfApp, typesOfAppStatus);
+        adminMsgStart.updateAdminSettings(service.getChatId(update), 0);
+        adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps());
+    }
+
+    private void openApp(Update update, List<Integer> messages, String data, TypeOfApp type) throws TelegramApiException {
+        int numOfApp = Integer.parseInt(data);
+
+        adminMsgStart.updateAdminSettings(service.getChatId(update), numOfApp);
+
+        if (type.equals(TypeOfApp.APP))
+            adminMsgOpenApp.editMessage(update, messages, ADMIN_MSG_APP, adminMsgStart.getAppParameters(numOfApp));
+        else if (type.equals(TypeOfApp.ARC))
+            adminMsgOpenArc.editMessage(update, messages, ADMIN_MSG_APP, adminMsgStart.getAppParameters(numOfApp));
     }
 }

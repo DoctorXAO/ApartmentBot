@@ -2,12 +2,12 @@ package xao.develop.config;
 
 public interface AdminMessageLink {
     String ADMIN_MSG_START = "admin.msg.start";
-    String ADMIN_MSG_NEW_APPLICATIONS = "admin.msg.new-applications";
+    String ADMIN_MSG_NEW_APPS = "admin.msg.new-applications";
     String ADMIN_MSG_ARCHIVE = "admin.msg.archive";
     String ADMIN_MSG_SETTINGS = "admin.msg.settings";
     String ADMIN_MSG_CHANGE_LANGUAGE = "admin.msg.change-language";
 
-    String ADMIN_MSG_APPLICATION = "admin.msg.application";
+    String ADMIN_MSG_APP = "admin.msg.app";
 
     String ADMIN_BT_NEW_APPLICATIONS = "admin.bt.new-applications";
     String ADMIN_BT_ARCHIVE = "admin.bt.archive";
@@ -16,6 +16,7 @@ public interface AdminMessageLink {
 
     String ADMIN_BT_REFUSE = "admin.bt.refuse";
     String ADMIN_BT_ACCEPT = "admin.bt.accept";
+    String ADMIN_BT_RETURN = "admin.bt.return";
     String ADMIN_BT_CHAT = "admin.bt.chat";
 
     String ADMIN_BT_BACK = "admin.bt.back";

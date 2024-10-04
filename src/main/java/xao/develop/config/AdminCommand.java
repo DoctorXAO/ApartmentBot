@@ -8,10 +8,23 @@ public interface AdminCommand {
     String SETTINGS = "settings";
     String CHANGE_LANGUAGE = "change_language";
 
+    String QUIT_FROM_APP = "quit_from_app";
+    String QUIT_FROM_ARC = "quit_from_arc";
     String BACK_TO_START = "back_to_start";
 
-    String PARAM = "param_";
-    String APP = PARAM + "app_";
-    String ACCEPT_APP = PARAM + "accept_app_";
-    String REFUSE_APP = PARAM + "refuse_app_";
+    String PREVIOUS_PAGE_OF_ARCHIVE = "previous_page_of_archive";
+    String NEXT_PAGE_OF_ARCHIVE = "next_page_of_archive";
+    String PREVIOUS_PAGE_OF_NEW_APPS = "previous_page_of_new_apps";
+    String NEXT_PAGE_OF_NEW_APPS = "next_page_of_new_apps";
+
+    String APP = "app";
+    String ACCEPT_APP = "accept_app";
+    String REFUSE_APP = "refuse_app";
+    String ARC = "arc";
+    String RETURN_APP = "return_arc";
+
+    String OPEN_CHAT = "open_chat";
+
+    String X = " ";
+    String EMPTY = "empty";
 }
