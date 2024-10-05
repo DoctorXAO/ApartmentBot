@@ -10,28 +10,28 @@ import xao.develop.model.TempBookingData;
 public class UserMsgBooking extends UserMessage
 {
 
-    public void setName(Update update, String name) {
-        persistence.updateFirstNameTempBookingData(service.getChatId(update), name);
+    public void setName(long chatId, String name) {
+        persistence.updateFirstNameTempBookingData(chatId, name);
     }
 
-    public void setSurname(Update update, String surname) {
-        persistence.updateLastNameTempBookingData(service.getChatId(update), surname);
+    public void setSurname(long chatId, String surname) {
+        persistence.updateLastNameTempBookingData(chatId, surname);
     }
 
-    public void setGender(Update update, String gender) {
-        persistence.updateGenderTempBookingData(service.getChatId(update), gender);
+    public void setGender(long chatId, String gender) {
+        persistence.updateGenderTempBookingData(chatId, gender);
     }
 
-    public void setAge(Update update, String age) {
-        persistence.updateAgeTempBookingData(service.getChatId(update), age);
+    public void setAge(long chatId, String age) {
+        persistence.updateAgeTempBookingData(chatId, age);
     }
 
-    public void setCount(Update update, String count) {
-        persistence.updateCountOfPeopleTempBookingData(service.getChatId(update), count);
+    public void setCount(long chatId, String count) {
+        persistence.updateCountOfPeopleTempBookingData(chatId, count);
     }
 
-    public void setContacts(Update update, String contacts) {
-        persistence.updateContactsTempBookingData(service.getChatId(update), contacts);
+    public void setContacts(long chatId, String contacts) {
+        persistence.updateContactsTempBookingData(chatId, contacts);
     }
 
     public Object[] getTempBookingData(Update update) {
@@ -69,7 +69,7 @@ public class UserMsgBooking extends UserMessage
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
                                 RAA_QUIT_FROM_BOOKING_AN_APARTMENT)))
                 .build();
     }
@@ -78,10 +78,10 @@ public class UserMsgBooking extends UserMessage
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_NEXT),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), USER_BT_NEXT),
                                 RAA_SHOW_PREVIEW)))
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
                                 RAA_QUIT_FROM_BOOKING_AN_APARTMENT)))
                 .build();
     }

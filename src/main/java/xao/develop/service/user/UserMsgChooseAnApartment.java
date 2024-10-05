@@ -126,8 +126,8 @@ public class UserMsgChooseAnApartment extends UserMessage {
 
         StringBuilder amenities = getAmenities(update, apartment);
 
-        messages.add(botConfig.getTelegramClient().execute(service.sendMessage(update,
-                service.getLocaleMessage(update, USER_MSG_CHOOSE_AN_APARTMENT,
+        messages.add(botConfig.getTelegramClient().execute(service.sendMessage(service.getChatId(update),
+                service.getLocaleMessage(service.getChatId(update), USER_MSG_CHOOSE_AN_APARTMENT,
                         apartment.getArea(),
                         amenities),
                 getIKMarkup(update))).getMessageId());
@@ -135,8 +135,8 @@ public class UserMsgChooseAnApartment extends UserMessage {
 
     private void showNoFreeApartments(Update update, List<Integer> messages, String msgLink) throws TelegramApiException {
         update.getCallbackQuery().setData(NO_FREE_APARTMENTS);
-        messages.add(botConfig.getTelegramClient().execute(service.sendMessage(update,
-                service.getLocaleMessage(update, msgLink),
+        messages.add(botConfig.getTelegramClient().execute(service.sendMessage(service.getChatId(update),
+                service.getLocaleMessage(service.getChatId(update), msgLink),
                 getBackIKMarkup(update))).getMessageId());
     }
 
@@ -150,7 +150,7 @@ public class UserMsgChooseAnApartment extends UserMessage {
             for (String code : amenitiesArray) {
                 Amenity amenity = persistence.selectAmenity(Integer.parseInt(code));
 
-                amenities.append(service.getLocaleMessage(update, amenity.getLink())).append("\n");
+                amenities.append(service.getLocaleMessage(service.getChatId(update), amenity.getLink())).append("\n");
             }
         } else
             amenities.append("nothing");
@@ -176,11 +176,12 @@ public class UserMsgChooseAnApartment extends UserMessage {
         InlineKeyboardRow row1 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BOOK), RAA_BOOK));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), USER_BT_BOOK), RAA_BOOK));
         InlineKeyboardRow row2 = msgBuilder.buildIKRow(buttons);
 
         buttons.clear();
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK), RAA_QUIT_FROM_CHOOSER_AN_APARTMENT));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
+                RAA_QUIT_FROM_CHOOSER_AN_APARTMENT));
         InlineKeyboardRow row3 = msgBuilder.buildIKRow(buttons);
 
         return InlineKeyboardMarkup
@@ -195,7 +196,7 @@ public class UserMsgChooseAnApartment extends UserMessage {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
                                 RAA_QUIT_FROM_CHOOSER_AN_APARTMENT)))
                 .build();
     }

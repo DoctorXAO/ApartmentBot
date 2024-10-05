@@ -20,7 +20,8 @@ public class AdminMsgArchive extends AdminMessage {
 
         initSelectorApps(update, keyboard, buttons, TypeOfApp.ARC);
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_BACK), BACK_TO_START));
+        buttons.add(msgBuilder.buildIKButton(
+                service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK), BACK_TO_START));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

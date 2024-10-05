@@ -7,16 +7,18 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.AdminCommand;
 import xao.develop.config.AdminMessageLink;
+import xao.develop.config.GeneralCommand;
+import xao.develop.config.GeneralMessageLink;
 import xao.develop.config.enums.TypeOfActionOfSelector;
 import xao.develop.config.enums.TypeOfApp;
-import xao.develop.config.enums.TypesOfAppStatus;
+import xao.develop.config.enums.TypeOfAppStatus;
 import xao.develop.service.BotService;
 
 import java.util.*;
 
 @Slf4j
 @Service
-public class AdminService implements AdminCommand, AdminMessageLink {
+public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCommand, AdminMessageLink {
 
     @Autowired
     BotService service;
@@ -52,14 +54,14 @@ public class AdminService implements AdminCommand, AdminMessageLink {
                 processingCallbackQuery(update, messages, data);
             else
                 log.warn("Unknown data: {}", data[0]);
+
+            for (Integer message : messages)
+                service.registerMessage(service.getChatId(update), message);
         } catch (TelegramApiException ex) {
             log.error("Can't execute function: {}", ex.getMessage());
         }
 
         log.debug("Is the list of messages empty? {}", messages.isEmpty());
-
-        for (Integer message : messages)
-            service.registerMessage(service.getChatId(update), message);
     }
 
     private void processingMessage(Update update, List<Integer> messages, String data) throws TelegramApiException {
@@ -84,14 +86,16 @@ public class AdminService implements AdminCommand, AdminMessageLink {
             case APP -> openApp(update, messages, data[1], TypeOfApp.APP);
             case ARC -> openApp(update, messages, data[1], TypeOfApp.ARC);
 
-            case REFUSE_APP -> performActionStatement(update, messages, data[1], TypesOfAppStatus.DENIED);
-            case ACCEPT_APP -> performActionStatement(update, messages, data[1], TypesOfAppStatus.ACCEPTED);
-            case RETURN_APP -> performActionStatement(update, messages, data[1], TypesOfAppStatus.WAITING);
+            case REFUSE_APP -> performActionStatement(update, messages, data[1], TypeOfAppStatus.DENIED);
+            case ACCEPT_APP -> performActionStatement(update, messages, data[1], TypeOfAppStatus.ACCEPTED);
+            case RETURN_APP -> performActionStatement(update, messages, data[1], TypeOfAppStatus.WAITING);
 
             case QUIT_FROM_APP -> openListOfApps(update, messages, TypeOfApp.APP, true);
             case QUIT_FROM_ARC -> openListOfApps(update, messages, TypeOfApp.ARC, true);
 
             case BACK_TO_START -> start(update, messages, update.hasMessage());
+
+            case DELETE -> deleteMessage(update);
 
             default -> log.warn("Unknown callback query: {}", data[0]);
         }
@@ -134,13 +138,31 @@ public class AdminService implements AdminCommand, AdminMessageLink {
     private void performActionStatement(Update update,
                                         List<Integer> messages,
                                         String data,
-                                        TypesOfAppStatus typesOfAppStatus) throws TelegramApiException {
+                                        TypeOfAppStatus typeOfAppStatus) throws TelegramApiException {
 
         int numOfApp = Integer.parseInt(data);
 
-        adminMsgStart.updateBookingCardStatus(numOfApp, typesOfAppStatus);
+        adminMsgStart.updateBookingCardStatus(numOfApp, typeOfAppStatus);
         adminMsgStart.updateAdminSettings(service.getChatId(update), 0);
-        adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps());
+
+        if (typeOfAppStatus.equals(TypeOfAppStatus.WAITING))
+            adminMsgArchive.editMessage(update, messages, ADMIN_MSG_ARCHIVE, adminMsgStart.getCountOfArchive());
+        else
+            adminMsgNewApplications.editMessage(update, messages, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps());
+
+        String status;
+        long userId = adminMsgStart.getUserId(numOfApp);
+
+        switch (typeOfAppStatus) {
+            case WAITING -> status = service.getLocaleMessage(userId, ADMIN_MSG_STATUS_WAITING);
+            case ACCEPTED -> status = service.getLocaleMessage(userId, ADMIN_MSG_STATUS_ACCEPTED);
+            case DENIED -> status = service.getLocaleMessage(userId, ADMIN_MSG_STATUS_DENIED);
+            case FINISHED -> status = service.getLocaleMessage(userId, ADMIN_MSG_STATUS_FINISHED);
+            default -> status = "null";
+        }
+
+        service.sendMessageAdminUserUpdatedStatus(userId, GENERAL_MSG_UPDATED_STATUS,
+                adminMsgStart.getIKMarkupUpdatedStatus(service.getChatId(update)), status);
     }
 
     private void openApp(Update update, List<Integer> messages, String data, TypeOfApp type) throws TelegramApiException {
@@ -149,8 +171,12 @@ public class AdminService implements AdminCommand, AdminMessageLink {
         adminMsgStart.updateAdminSettings(service.getChatId(update), numOfApp);
 
         if (type.equals(TypeOfApp.APP))
-            adminMsgOpenApp.editMessage(update, messages, ADMIN_MSG_APP, adminMsgStart.getAppParameters(numOfApp));
+            adminMsgOpenApp.editMessage(update, messages, ADMIN_MSG_APP, adminMsgStart.getAppParameters(update, numOfApp));
         else if (type.equals(TypeOfApp.ARC))
-            adminMsgOpenArc.editMessage(update, messages, ADMIN_MSG_APP, adminMsgStart.getAppParameters(numOfApp));
+            adminMsgOpenArc.editMessage(update, messages, ADMIN_MSG_APP, adminMsgStart.getAppParameters(update, numOfApp));
+    }
+
+    private void deleteMessage(Update update) {
+        service.deleteMessage(service.getChatId(update), service.getMessageId(update));
     }
 }

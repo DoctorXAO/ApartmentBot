@@ -36,7 +36,7 @@ public class UserMsgChangeCheckMonth extends UserDate {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
                 RAA_QUIT_FROM_CHANGE_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
@@ -74,20 +74,11 @@ public class UserMsgChangeCheckMonth extends UserDate {
             int sYear = selectedTime.get(Calendar.YEAR);
             int sMonth = selectedTime.get(Calendar.MONTH);
 
-            log.debug("""
-                    EXTRA:
-                    pYear: {}
-                    sYear: {}
-                    mYear: {}
-                    pMonth: {}
-                    sMonth: {}
-                    mMonth: {}
-                    """, pYear, sYear, mYear, pMonth, sMonth, mMonth);
-
             if (sYear > mYear || (sYear == mYear && sMonth > mMonth))
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
             else if (sYear > pYear || sMonth >= pMonth)
-                buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_MONTH_ + i),
+                buttons.add(msgBuilder.buildIKButton(
+                        service.getLocaleMessage(service.getChatId(update), USER_BT_MONTH_ + i),
                         RAA_SET_MONTH + i));
             else
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));

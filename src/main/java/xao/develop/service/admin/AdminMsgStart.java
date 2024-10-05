@@ -17,19 +17,23 @@ public class AdminMsgStart extends AdminMessage {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_NEW_APPLICATIONS), NEW_APPLICATIONS));
+        buttons.add(msgBuilder.buildIKButton(
+                service.getLocaleMessage(service.getChatId(update), ADMIN_BT_NEW_APPLICATIONS), NEW_APPLICATIONS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_ARCHIVE), ARCHIVE));
+        buttons.add(msgBuilder.buildIKButton(
+                service.getLocaleMessage(service.getChatId(update), ADMIN_BT_ARCHIVE), ARCHIVE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_SETTINGS), SETTINGS));
+        buttons.add(msgBuilder.buildIKButton(
+                service.getLocaleMessage(service.getChatId(update), ADMIN_BT_SETTINGS), SETTINGS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
+        buttons.add(msgBuilder.buildIKButton(
+                service.getLocaleMessage(service.getChatId(update), ADMIN_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

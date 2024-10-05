@@ -86,7 +86,7 @@ public class BotRebootService implements UserCommand, UserMessageLink {
             botConfig.getTelegramClient().execute(
                     service.editMessageText(update,
                             tempBotMessage.getMsgId(),
-                            service.getLocaleMessage(update, USER_MSG_START),
+                            service.getLocaleMessage(service.getChatId(update), USER_MSG_START),
                             getStartIKMarkup(update)));
 
             log.debug("User {} message {} edited", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
@@ -138,19 +138,22 @@ public class BotRebootService implements UserCommand, UserMessageLink {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(update, USER_BT_CHOOSE_CHECK_IN_DATE), RAA_CHOOSE_CHECK_DATE));
+                service.getLocaleMessage(service.getChatId(update), USER_BT_CHOOSE_CHECK_IN_DATE), RAA_CHOOSE_CHECK_DATE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_ABOUT_US), ABOUT_US));
+        buttons.add(msgBuilder.buildIKButton(
+                service.getLocaleMessage(service.getChatId(update), USER_BT_ABOUT_US), ABOUT_US));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_CONTACTS), CONTACTS));
+        buttons.add(msgBuilder.buildIKButton(
+                service.getLocaleMessage(service.getChatId(update), USER_BT_CONTACTS), CONTACTS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
+        buttons.add(msgBuilder.buildIKButton(
+                service.getLocaleMessage(service.getChatId(update), USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

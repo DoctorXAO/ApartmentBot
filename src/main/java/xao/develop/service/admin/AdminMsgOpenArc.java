@@ -5,7 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import xao.develop.config.enums.TypesOfAppStatus;
+import xao.develop.config.enums.TypeOfAppStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +20,8 @@ public class AdminMsgOpenArc extends AdminMessage {
 
         int selectedApp = persistence.selectTempAdminSettings(service.getChatId(update)).getSelectedApplication();
 
-        if (!getStatusOfApp(selectedApp).equals(TypesOfAppStatus.FINISHED.getType())) {
-            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_RETURN),
+        if (!getStatusOfApp(selectedApp).equals(TypeOfAppStatus.FINISHED.getType())) {
+            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), ADMIN_BT_RETURN),
                     RETURN_APP + X + selectedApp));
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();
@@ -29,7 +29,7 @@ public class AdminMsgOpenArc extends AdminMessage {
 
         initBtChat(update, keyboard, buttons);
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_BACK), QUIT_FROM_ARC));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK), QUIT_FROM_ARC));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

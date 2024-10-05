@@ -17,14 +17,12 @@ public interface AdminCommand {
     String PREVIOUS_PAGE_OF_NEW_APPS = "previous_page_of_new_apps";
     String NEXT_PAGE_OF_NEW_APPS = "next_page_of_new_apps";
 
-    String APP = "app";
+    String ARC = "arc";
     String ACCEPT_APP = "accept_app";
     String REFUSE_APP = "refuse_app";
-    String ARC = "arc";
     String RETURN_APP = "return_arc";
 
     String OPEN_CHAT = "open_chat";
 
-    String X = " ";
     String EMPTY = "empty";
 }

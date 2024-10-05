@@ -5,9 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import xao.develop.config.GeneralCommand;
+import xao.develop.config.GeneralMessageLink;
 import xao.develop.config.UserCommand;
 import xao.develop.config.UserMessageLink;
-import xao.develop.model.TempBookingData;
+import xao.develop.config.enums.Card;
 import xao.develop.service.BotService;
 
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
-public class UserService implements UserCommand, UserMessageLink {
+public class UserService implements GeneralMessageLink, GeneralCommand, UserCommand, UserMessageLink {
 
     @Autowired
     BotService service;
@@ -91,56 +93,16 @@ public class UserService implements UserCommand, UserMessageLink {
                                    String[] parameters) throws TelegramApiException {
 
         if (parameters.length == 2 && service.getChatId(update).longValue() == userMsgChooseAnApartment.getUserId(update)) {
-            boolean isCommandCorrect = true;
-            String msgLink = USER_MSG_BOOK;
+            long chatId = service.getChatId(update);
+            int msgId = service.getMessageId(update);
 
             switch (data) {
-                case CARD_NAME -> {
-                    if (parameters[1].matches("[a-zA-Z]+")) {
-                        userMsgBooking.setName(update, parameters[1]);
-                        msgLink = USER_MSG_SET_SURNAME;
-                    } else
-                        isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_NAME);
-                }
-                case CARD_SURNAME -> {
-                    if (parameters[1].matches("[a-zA-Z]+")) {
-                        userMsgBooking.setSurname(update, parameters[1]);
-                        msgLink = USER_MSG_SET_GENDER;
-                    } else
-                        isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_SURNAME);
-                }
-                case CARD_GENDER -> {
-                    if (parameters[1].matches("[MW]")) {
-                        userMsgBooking.setGender(update, parameters[1]);
-                        msgLink = USER_MSG_SET_AGE;
-                    } else
-                        isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_GENDER);
-                }
-                case CARD_AGE -> {
-                    if (parameters[1].matches("[0-9]+") &&
-                            Integer.parseInt(parameters[1]) >= 18 &&
-                            Integer.parseInt(parameters[1]) <= 95) {
-                        userMsgBooking.setAge(update, parameters[1]);
-                        msgLink = USER_MSG_SET_COUNT;
-                    } else
-                        isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_AGE);
-                }
-                case CARD_COUNT -> {
-                    if (parameters[1].matches("[0-9]+") &&
-                            Integer.parseInt(parameters[1]) >= 1 &&
-                            Integer.parseInt(parameters[1]) <= 5) {
-                        userMsgBooking.setCount(update, parameters[1]);
-                        msgLink = USER_MSG_SET_CONTACTS;
-                    } else
-                        isCommandCorrect = initIncorrectEnterCard(update, USER_MSG_SIMPLE_INCORRECT_COUNT);
-                }
-                case CARD_CONTACTS -> userMsgBooking.setContacts(update, parameters[1]);
-                default -> isCommandCorrect = false;
-            }
-
-            if (isCommandCorrect) {
-                service.deleteLastMessage(service.getChatId(update), service.getMessageId(update));
-                initMsgBooking(update, messages, msgLink);
+                case CARD_NAME -> cardDataProcessing(update, messages, chatId, msgId, parameters[1], Card.NAME);
+                case CARD_SURNAME -> cardDataProcessing(update, messages, chatId, msgId, parameters[1], Card.SURNAME);
+                case CARD_GENDER -> cardDataProcessing(update, messages, chatId, msgId, parameters[1], Card.GENDER);
+                case CARD_AGE -> cardDataProcessing(update, messages, chatId, msgId, parameters[1], Card.AGE);
+                case CARD_COUNT -> cardDataProcessing(update, messages, chatId, msgId, parameters[1], Card.COUNT);
+                case CARD_CONTACTS -> cardDataProcessing(update, messages, chatId, msgId, parameters[1], Card.CONTACTS);
             }
         } else {
             if (data.equals(START)) {
@@ -160,10 +122,10 @@ public class UserService implements UserCommand, UserMessageLink {
             switch (data) {
                 case RAA_CHOOSE_CHECK_DATE -> {
                     if (userMsgChooseCheckDate.checkIsAlreadyExistRent(update)) {
-                        userInfoMessage.editMessage(update,
+                        userInfoMessage.legacyEditMessage(update,
                                 messages,
                                 USER_MSG_ALREADY_EXIST_RENT,
-                                USER_BT_BACK,
+                                GENERAL_BT_BACK,
                                 BACK_TO_START);
                     } else {
                         userMsgChooseCheckDate.addNewUserToTempBookingData(update);
@@ -250,8 +212,9 @@ public class UserService implements UserCommand, UserMessageLink {
                 case RAA_SEND_BOOKING_TO_ADMIN -> {
                     update.getCallbackQuery().setData(START);
                     userMsgStart.editMessage(update, messages, USER_MSG_START);
-                    userMsgPreviewCard.insertCardToBookingCard(update);
-                    int msgId = service.sendSimpleMessage(update, USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN);
+                    service.sendMessageAdminUserUpdatedStatus(service.getAdminId(), GENERAL_MSG_GOT_NEW_APP,
+                            userMsgStart.getIKMarkupGotNewApp(service.getAdminId()));
+                    int msgId = service.sendSimpleMessage(service.getChatId(update), USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN);
                     scheduled.schedule(() ->
                             service.deleteLastMessage(service.getChatId(update), msgId), 10, TimeUnit.SECONDS);
                 }
@@ -274,6 +237,8 @@ public class UserService implements UserCommand, UserMessageLink {
                 update.getCallbackQuery().setData(START);
                 userMsgStart.editMessage(update, messages, USER_MSG_START);
             }
+            case DELETE -> service.deleteMessage(service.getChatId(update),
+                    update.getCallbackQuery().getMessage().getMessageId());
             default -> log.info("Unknown callback query data: {}", data);
         }
     }
@@ -321,6 +286,88 @@ public class UserService implements UserCommand, UserMessageLink {
         }
     }
 
+    private void cardDataProcessing(Update update,
+                                       List<Integer> messages,
+                                       long chatId,
+                                       int msgId,
+                                       String data,
+                                       Card type) throws TelegramApiException {
+        switch (type) {
+            case NAME -> {
+                if (data.matches("[a-zA-Z]+"))
+                    correctInputCard(update, messages, chatId, msgId, data, type);
+                else
+                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_NAME);
+            }
+            case SURNAME -> {
+                if (data.matches("[a-zA-Z]+"))
+                    correctInputCard(update, messages, chatId, msgId, data, type);
+                else
+                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_SURNAME);
+            }
+            case GENDER -> {
+                if (data.matches("[MW]"))
+                    correctInputCard(update, messages, chatId, msgId, data, type);
+                else
+                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_GENDER);
+            }
+            case AGE -> {
+                if (data.matches("[0-9]+") &&
+                        Integer.parseInt(data) >= 18 &&
+                        Integer.parseInt(data) <= 95)
+                    correctInputCard(update, messages, chatId, msgId, data, type);
+                else
+                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_AGE);
+            }
+            case COUNT -> {
+                if (data.matches("[0-9]+") &&
+                        Integer.parseInt(data) >= 1 &&
+                        Integer.parseInt(data) <= 5)
+                    correctInputCard(update, messages, chatId, msgId, data, type);
+                else
+                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_COUNT);
+            }
+            case CONTACTS -> correctInputCard(update, messages, chatId, msgId, data, type);
+        }
+    }
+
+    private void correctInputCard(Update update,
+                                  List<Integer> messages,
+                                  long chatId,
+                                  int msgId,
+                                  String data,
+                                  Card type) throws TelegramApiException {
+
+        service.deleteLastMessage(chatId, msgId);
+
+        switch (type) {
+            case NAME -> {
+                userMsgBooking.setName(chatId, data);
+                initMsgBooking(update, messages, USER_MSG_SET_SURNAME);
+            }
+            case SURNAME -> {
+                userMsgBooking.setSurname(chatId, data);
+                initMsgBooking(update, messages, USER_MSG_SET_GENDER);
+            }
+            case GENDER -> {
+                userMsgBooking.setGender(chatId, data);
+                initMsgBooking(update, messages, USER_MSG_SET_AGE);
+            }
+            case AGE -> {
+                userMsgBooking.setAge(chatId, data);
+                initMsgBooking(update, messages, USER_MSG_SET_COUNT);
+            }
+            case COUNT -> {
+                userMsgBooking.setCount(chatId, data);
+                initMsgBooking(update, messages, USER_MSG_SET_CONTACTS);
+            }
+            case CONTACTS -> {
+                userMsgBooking.setContacts(chatId, data);
+                initMsgBooking(update, messages, USER_MSG_BOOK);
+            }
+        }
+    }
+
     private void initMsgChooseCheckDate(Update update, List<Integer> messages) throws TelegramApiException {
         update.getCallbackQuery().setData(RAA_CHOOSE_CHECK_DATE);
 
@@ -331,7 +378,7 @@ public class UserService implements UserCommand, UserMessageLink {
     }
 
     private void initMsgApartments(Update update, List<Integer> messages) throws TelegramApiException {
-        int msgId = service.sendSimpleMessage(update, USER_MSG_SIMPLE_DOWNLOADING);
+        int msgId = service.sendSimpleMessage(service.getChatId(update), USER_MSG_SIMPLE_DOWNLOADING);
 
         update.getCallbackQuery().setData(RAA_CHOOSE_AN_APARTMENT);
         userMsgChooseAnApartment.sendPhotos(update, messages,
@@ -345,17 +392,17 @@ public class UserService implements UserCommand, UserMessageLink {
         userMsgBooking.editMessage(update, messages, msgLink, userMsgBooking.getTempBookingData(update));
     }
 
-    private boolean initIncorrectEnterCard(Update update, String msgLink) {
+    private boolean initIncorrectEnterCard(long chatId, int msgId, String msgLink) {
         try {
-            int msgId = service.sendSimpleMessage(update, msgLink);
+            int simpleMsgId = service.sendSimpleMessage(chatId, msgLink);
             scheduled.schedule(() -> {
-                service.deleteLastMessage(service.getChatId(update), service.getMessageId(update));
-                service.deleteLastMessage(service.getChatId(update), msgId);
+                service.deleteLastMessage(chatId, msgId);
+                service.deleteLastMessage(chatId, simpleMsgId);
                     }, 10, TimeUnit.SECONDS);
         } catch (TelegramApiException ex) {
             log.warn("""
                     sendSimpleMessage(Update, String) can't send msgLink {} for user {}
-                    Exception: {}""", msgLink, service.getChatId(update), ex.getMessage());
+                    Exception: {}""", msgLink, chatId, ex.getMessage());
         }
         return false;
     }

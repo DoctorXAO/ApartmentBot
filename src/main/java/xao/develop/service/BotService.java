@@ -11,16 +11,15 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.model.AccountStatus;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
 
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
-import java.util.MissingFormatArgumentException;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -35,8 +34,16 @@ public class BotService {
     @Autowired
     MessageSource messageSource;
 
+    // setters
+
     public void setLanguage(Update update, String language) {
         persistence.updateLanguageInAccountStatus(getChatId(update), language);
+    }
+
+    // getters
+
+    public long getAdminId() {
+        return botConfig.getAdminId();
     }
 
     public Object[] getAdminContacts() {
@@ -82,10 +89,8 @@ public class BotService {
             return update.getCallbackQuery().getData();
     }
 
-    public String getLocaleMessage(Update update, String msgLink, Object... args) {
-        AccountStatus accountStatus = update.hasMessage() ?
-                persistence.selectAccountStatus(update.getMessage().getChatId()) :
-                persistence.selectAccountStatus(update.getCallbackQuery().getMessage().getChatId());
+    public String getLocaleMessage(long chatId, String msgLink, Object... args) {
+        AccountStatus accountStatus = persistence.selectAccountStatus(chatId);
 
         Locale locale = new Locale(accountStatus.getLanguage());
 
@@ -101,6 +106,8 @@ public class BotService {
             return messageSource.getMessage(msgLink, null, locale);
         }
     }
+
+    // actions
 
     public void authorization(Message message) {
         log.trace("Method authorization(Message) started");
@@ -208,23 +215,34 @@ public class BotService {
         log.debug("The message {} registered", messageId);
     }
 
-    public int sendSimpleMessage(Update update, String msgLink) throws TelegramApiException {
+    public int sendSimpleMessage(long chatId, String msgLink) throws TelegramApiException {
             return botConfig.getTelegramClient().execute(SendMessage
                     .builder()
-                    .chatId(getChatId(update))
-                    .text(getLocaleMessage(update, msgLink))
+                    .chatId(chatId)
+                    .text(getLocaleMessage(chatId, msgLink))
                     .parseMode("HTML")
                     .build()).getMessageId();
     }
 
-    public SendMessage sendMessage(Update update, String text, InlineKeyboardMarkup markup) {
+    public SendMessage sendMessage(long chatId, String text, InlineKeyboardMarkup markup) {
         return SendMessage
                 .builder()
-                .chatId(getChatId(update))
+                .chatId(chatId)
                 .text(text)
                 .replyMarkup(markup)
                 .parseMode("HTML")
                 .build();
+    }
+
+    public void sendMessageAdminUserUpdatedStatus(long chatId,
+                                                  String msgLink,
+                                                  InlineKeyboardMarkup markup,
+                                                  Object... args) throws TelegramApiException {
+
+        botConfig.getTelegramClient().execute(sendMessage(
+                chatId,
+                getLocaleMessage(chatId, msgLink, args),
+                markup));
     }
 
     public EditMessageText editMessageText(Update update, int msgId, String msg, InlineKeyboardMarkup markup) {

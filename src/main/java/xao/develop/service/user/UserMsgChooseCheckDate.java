@@ -7,7 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import xao.develop.model.BookingCard;
-import xao.develop.config.enums.TypesOfAppStatus;
+import xao.develop.config.enums.TypeOfAppStatus;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,8 +24,8 @@ public class UserMsgChooseCheckDate extends UserDate {
     }
 
     public boolean checkIsAlreadyExistRent(Update update) {
-        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(TypesOfAppStatus.WAITING);
-        bookingCards.addAll(persistence.selectBookingCardByStatus(TypesOfAppStatus.ACCEPTED));
+        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(TypeOfAppStatus.WAITING);
+        bookingCards.addAll(persistence.selectBookingCardByStatus(TypeOfAppStatus.ACCEPTED));
 
         for (BookingCard bookingCard : bookingCards)
             if (bookingCard.getChatId() == service.getChatId(update))
@@ -86,7 +86,8 @@ public class UserMsgChooseCheckDate extends UserDate {
             }
         }
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK), RAA_QUIT_FROM_CHOOSER_CHECK));
+        buttons.add(msgBuilder.buildIKButton(
+                service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK), RAA_QUIT_FROM_CHOOSER_CHECK));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup
@@ -122,7 +123,7 @@ public class UserMsgChooseCheckDate extends UserDate {
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
         buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(update, USER_BT_MONTH_ + (calendar.get(Calendar.MONTH) + 1)),
+                service.getLocaleMessage(service.getChatId(update), USER_BT_MONTH_ + (calendar.get(Calendar.MONTH) + 1)),
                 RAA_CHANGE_CHECK_MONTH));
 
         if (calendar.get(Calendar.MONTH) < today.get(Calendar.MONTH) ||

@@ -3,7 +3,7 @@ package xao.develop.config.enums;
 import lombok.Getter;
 
 @Getter
-public enum TypesOfAppStatus {
+public enum TypeOfAppStatus {
     WAITING("waiting"),
     ACCEPTED("accepted"),
     DENIED("denied"),
@@ -11,7 +11,7 @@ public enum TypesOfAppStatus {
 
     private final String type;
 
-    TypesOfAppStatus(String type) {
+    TypeOfAppStatus(String type) {
         this.type = type;
     }
 }

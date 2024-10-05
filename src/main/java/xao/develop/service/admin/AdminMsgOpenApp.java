@@ -21,16 +21,16 @@ public class AdminMsgOpenApp extends AdminMessage {
 
         int selectedApp = persistence.selectTempAdminSettings(service.getChatId(update)).getSelectedApplication();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_REFUSE),
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), ADMIN_BT_REFUSE),
                 REFUSE_APP + X + selectedApp));
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_ACCEPT),
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), ADMIN_BT_ACCEPT),
                 ACCEPT_APP + X + selectedApp));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
         initBtChat(update, keyboard, buttons);
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(update, ADMIN_BT_BACK), QUIT_FROM_APP));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK), QUIT_FROM_APP));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

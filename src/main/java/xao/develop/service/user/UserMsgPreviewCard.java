@@ -20,12 +20,12 @@ public class UserMsgPreviewCard extends UserMessage {
     @Autowired
     Persistence persistence;
 
-    public void insertCardToBookingCard(Update update) {
+    public int insertCardToBookingCard(Update update) {
         TempBookingData tempBookingData = persistence.selectTempBookingData(service.getChatId(update));
 
         int numberOfApartment = tempBookingData.getNumberOfApartment();
 
-        persistence.insertBookingCard(
+        int numOfCard = persistence.insertBookingCard(
                 tempBookingData.getChatId(),
                 service.getUser(update).getUserName(),
                 tempBookingData.getFirstName(),
@@ -46,6 +46,8 @@ public class UserMsgPreviewCard extends UserMessage {
         persistence.updateIsBookingApartment(numberOfApartment, false, service.getChatId(update));
         persistence.deleteTempBookingData(service.getChatId(update));
         persistence.deleteTempApartmentSelector(service.getChatId(update));
+
+        return numOfCard;
     }
 
     public Object[] getPackParameters(Update update) {
@@ -110,10 +112,10 @@ public class UserMsgPreviewCard extends UserMessage {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_SEND),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), USER_BT_SEND),
                                 RAA_SEND_BOOKING_TO_ADMIN)))
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(service.getLocaleMessage(update, USER_BT_BACK),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
                                 RAA_QUIT_FROM_PREVIEW_CARD)))
                 .build();
     }

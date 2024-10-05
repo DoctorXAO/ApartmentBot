@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import xao.develop.model.*;
-import xao.develop.config.enums.TypesOfAppStatus;
+import xao.develop.config.enums.TypeOfAppStatus;
 
 import java.util.Calendar;
 import java.util.List;
@@ -105,8 +105,8 @@ public class Persistence {
 
         apartments.removeIf(Apartment::getIsBooking);
 
-        List<BookingCard> bookingCards = selectBookingCardByStatus(TypesOfAppStatus.WAITING);
-        bookingCards.addAll(selectBookingCardByStatus(TypesOfAppStatus.ACCEPTED));
+        List<BookingCard> bookingCards = selectBookingCardByStatus(TypeOfAppStatus.WAITING);
+        bookingCards.addAll(selectBookingCardByStatus(TypeOfAppStatus.ACCEPTED));
         TempBookingData tempBookingData = selectTempBookingData(chatId);
 
         for (BookingCard bookingCard : bookingCards) {
@@ -148,7 +148,7 @@ public class Persistence {
         apartmentRepository.save(apartment);
     }
 
-    public void insertBookingCard(long chatId,
+    public int insertBookingCard(long chatId,
                                   String login,
                                   String firstName,
                                   String lastName,
@@ -173,10 +173,10 @@ public class Persistence {
         bookingCard.setNumberOfApartment(numberOfApartment);
         bookingCard.setCheckIn(checkIn);
         bookingCard.setCheckOut(checkOut);
-        bookingCard.setStatus(TypesOfAppStatus.WAITING.getType());
+        bookingCard.setStatus(TypeOfAppStatus.WAITING.getType());
         bookingCard.setCost(cost);
 
-        bookingCardRepository.save(bookingCard);
+        return bookingCardRepository.save(bookingCard).getId();
     }
 
     public BookingCard selectBookingCard(int idOfCard) {
@@ -185,7 +185,7 @@ public class Persistence {
         return bookingCardRepository.findById(idOfCard);
     }
 
-    public List<BookingCard> selectBookingCardByStatus(TypesOfAppStatus type) {
+    public List<BookingCard> selectBookingCardByStatus(TypeOfAppStatus type) {
         return bookingCardRepository.findAllByStatus(type.getType());
     }
 
@@ -193,7 +193,7 @@ public class Persistence {
         return bookingCardRepository.findAllExceptWaiting();
     }
 
-    public void updateBookingCard(int idOfCard, TypesOfAppStatus status) {
+    public void updateBookingCard(int idOfCard, TypeOfAppStatus status) {
         BookingCard bookingCard = bookingCardRepository.findById(idOfCard);
 
         bookingCard.setStatus(status.getType());
@@ -425,19 +425,29 @@ public class Persistence {
     }
 
     public TempAdminSettings selectTempAdminSettings(long chatId) {
-        return tempAdminSettingsRepository.findById(chatId).orElseThrow();
+        return tempAdminSettingsRepository.findById(chatId);
     }
 
     public void updateSelectedAppTempAdminSettings(long chatId, int selectedApp) {
-        TempAdminSettings tempAdminSettings = tempAdminSettingsRepository.findById(chatId).orElseThrow();
+        TempAdminSettings tempAdminSettings;
 
-        tempAdminSettings.setSelectedApplication(selectedApp);
+        try {
+            tempAdminSettings = tempAdminSettingsRepository.findById(chatId);
+
+            tempAdminSettings.setSelectedApplication(selectedApp);
+        }
+        catch (NullPointerException ex) {
+            tempAdminSettings = new TempAdminSettings();
+
+            tempAdminSettings.setChatId(chatId);
+            tempAdminSettings.setSelectedApplication(selectedApp);
+        }
 
         tempAdminSettingsRepository.save(tempAdminSettings);
     }
 
     public void updateSelectedPageTempAdminSettings(long chatId, int selectedPage) {
-        TempAdminSettings tempAdminSettings = tempAdminSettingsRepository.findById(chatId).orElseThrow();
+        TempAdminSettings tempAdminSettings = tempAdminSettingsRepository.findById(chatId);
 
         tempAdminSettings.setSelectedPage(selectedPage);
 
@@ -483,11 +493,11 @@ public class Persistence {
     }
 
     public void freeUpTheVacatedApartments() {
-        List<BookingCard> bookingCards = selectBookingCardByStatus(TypesOfAppStatus.ACCEPTED);
+        List<BookingCard> bookingCards = selectBookingCardByStatus(TypeOfAppStatus.ACCEPTED);
 
         for (BookingCard bookingCard : bookingCards) {
             if (bookingCard.getCheckOut() < getServerPresentTime().getTimeInMillis()) {
-                bookingCard.setStatus(TypesOfAppStatus.FINISHED.getType());
+                bookingCard.setStatus(TypeOfAppStatus.FINISHED.getType());
 
                 bookingCardRepository.save(bookingCard);
             }

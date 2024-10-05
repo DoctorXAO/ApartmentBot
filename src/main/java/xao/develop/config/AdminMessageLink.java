@@ -19,7 +19,8 @@ public interface AdminMessageLink {
     String ADMIN_BT_RETURN = "admin.bt.return";
     String ADMIN_BT_CHAT = "admin.bt.chat";
 
-    String ADMIN_BT_BACK = "admin.bt.back";
-
-    String APPLICATION = "admin.bt.application";
+    String ADMIN_MSG_STATUS_WAITING = "admin.msg.status.waiting";
+    String ADMIN_MSG_STATUS_ACCEPTED = "admin.msg.status.accepted";
+    String ADMIN_MSG_STATUS_DENIED = "admin.msg.status.denied";
+    String ADMIN_MSG_STATUS_FINISHED = "admin.msg.status.finished";
 }

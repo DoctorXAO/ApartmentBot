@@ -46,7 +46,6 @@ public interface UserMessageLink {
     String USER_BT_CHOOSE_AN_APARTMENT = "user.bt.choose-an-apartment";
     String USER_BT_BOOK = "user.bt.book";
 
-    String USER_BT_BACK = "user.bt.back";
     String USER_BT_NEXT = "user.bt.next";
     String USER_BT_SEND = "user.bt.send";
 
