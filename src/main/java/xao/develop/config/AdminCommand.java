@@ -6,7 +6,6 @@ public interface AdminCommand {
     String NEW_APPLICATIONS = "new_applications";
     String ARCHIVE = "archive";
     String SETTINGS = "settings";
-    String CHANGE_LANGUAGE = "change_language";
 
     String QUIT_FROM_APP = "quit_from_app";
     String QUIT_FROM_ARC = "quit_from_arc";

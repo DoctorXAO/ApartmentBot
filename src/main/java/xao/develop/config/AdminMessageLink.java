@@ -5,14 +5,12 @@ public interface AdminMessageLink {
     String ADMIN_MSG_NEW_APPS = "admin.msg.new-applications";
     String ADMIN_MSG_ARCHIVE = "admin.msg.archive";
     String ADMIN_MSG_SETTINGS = "admin.msg.settings";
-    String ADMIN_MSG_CHANGE_LANGUAGE = "admin.msg.change-language";
 
     String ADMIN_MSG_APP = "admin.msg.app";
 
     String ADMIN_BT_NEW_APPLICATIONS = "admin.bt.new-applications";
     String ADMIN_BT_ARCHIVE = "admin.bt.archive";
     String ADMIN_BT_SETTINGS = "admin.bt.settings";
-    String ADMIN_BT_CHANGE_LANGUAGE = "admin.bt.change-language";
 
     String ADMIN_BT_REFUSE = "admin.bt.refuse";
     String ADMIN_BT_ACCEPT = "admin.bt.accept";

@@ -68,10 +68,6 @@ public class Persistence {
         return tempBotMessageRepository.findByChatId(chatID);
     }
 
-    public List<TempBotMessage> selectAllTempBotMessages() {
-        return tempBotMessageRepository.findAll();
-    }
-
     public List<Long> selectDistinctChatIdsTempBotMessages() {
         return tempBotMessageRepository.findDistinctChatIds();
     }
@@ -86,10 +82,6 @@ public class Persistence {
 
     public void deleteTempBotMessages(long chatId) {
         tempBotMessageRepository.deleteByChatId(chatId);
-    }
-
-    public void deleteAllTempBotMessages() {
-        tempBotMessageRepository.deleteAll();
     }
 
     public void deleteMessageTempBotMessage(long chatId, int msgId) {
@@ -148,7 +140,7 @@ public class Persistence {
         apartmentRepository.save(apartment);
     }
 
-    public int insertBookingCard(long chatId,
+    public void insertBookingCard(long chatId,
                                   String login,
                                   String firstName,
                                   String lastName,
@@ -176,7 +168,7 @@ public class Persistence {
         bookingCard.setStatus(TypeOfAppStatus.WAITING.getType());
         bookingCard.setCost(cost);
 
-        return bookingCardRepository.save(bookingCard).getId();
+        bookingCardRepository.save(bookingCard);
     }
 
     public BookingCard selectBookingCard(int idOfCard) {
@@ -199,10 +191,6 @@ public class Persistence {
         bookingCard.setStatus(status.getType());
 
         bookingCardRepository.save(bookingCard);
-    }
-
-    public void deleteBookingCard(long id) {
-        bookingCardRepository.deleteById(id);
     }
 
     public void insertTempBookingData(long chatId, long selectedTime, String login) {

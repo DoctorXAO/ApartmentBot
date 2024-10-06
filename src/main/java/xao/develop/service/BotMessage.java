@@ -4,11 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.config.GeneralCommand;
@@ -53,22 +51,6 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
 
     // actions
 
-    public void editMessage(Update update, List<Integer> messages, String msgLink, Object... args) {
-        try {
-            int lastMsgId = service.deleteAllMessagesExceptTheLastOne(service.getChatId(update));
-
-            log.debug("Method editMessage(Update, String): Last messageId {}", lastMsgId);
-
-            botConfig.getTelegramClient().execute(service.editMessageText(service.getChatId(update),
-                    lastMsgId,
-                    service.getLocaleMessage(service.getChatId(update), msgLink, args),
-                    getIKMarkup(update)));
-        } catch (TelegramApiException | IndexOutOfBoundsException ex) {
-            log.warn("Method editMessage(Update, String) can't edit messageId. Exception: {}", ex.getMessage());
-//            sendMessage(update, messages, msgLink, args);
-        }
-    }
-
     public int sendMessage(long chatId, String msgLink, Object... args) throws TelegramApiException {
         service.deleteOldMessages(chatId);
 
@@ -95,7 +77,7 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
         }
     }
 
-    public List<Integer> sendPhotos(long chatId, String patch) throws TelegramApiException {
+    public List<Integer> sendPhotos(long chatId, String patch) {
         try {
             ClassLoader classLoader = getClass().getClassLoader();
             URL resource = classLoader.getResource(patch);
@@ -133,21 +115,7 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
         }
     }
 
-    protected InlineKeyboardMarkup getIKMarkup(Update update) {
-        return null;
-    }
-
-    protected InlineKeyboardMarkup getIKMarkup(long chatId) {
-        return null;
-    }
-
-    protected InlineKeyboardMarkup legacyGetIKMarkup(Update update, String msgLink, String data) {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        service.getLocaleMessage(service.getChatId(update), msgLink), data)))
-                .build();
-    }
+    abstract protected InlineKeyboardMarkup getIKMarkup(long chatId);
 
     private @NotNull File[] getSortedFiles(URL resource) throws Exception {
         File directory = new File(resource.getFile());
@@ -167,42 +135,5 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
         Arrays.sort(files, Comparator.comparing(File::getName));
 
         return files;
-    }
-
-    // legacy todo Переделать методы на более полезные
-
-    public void legacySendMessage(Update update,
-                                  List<Integer> messages,
-                                  String msgLink,
-                                  String btMsgLink,
-                                  String btData,
-                                  Object... args) throws TelegramApiException {
-        service.deleteOldMessages(service.getChatId(update));
-
-        messages.add(botConfig.getTelegramClient().execute(service.sendMessage(service.getChatId(update),
-                service.getLocaleMessage(service.getChatId(update), msgLink, args),
-                legacyGetIKMarkup(update, btMsgLink, btData))).getMessageId());
-    }
-
-    public void legacyEditMessage(Update update,
-                                  List<Integer> messages,
-                                  String msgLink,
-                                  String btMsgLink,
-                                  String btData,
-                                  Object... args) throws TelegramApiException {
-        try {
-            int lastMsgId = service.deleteAllMessagesExceptTheLastOne(service.getChatId(update));
-
-            log.debug("Method editMessage(Update, String, String, String, Object...): Last messageId {}", lastMsgId);
-
-            botConfig.getTelegramClient().execute(service.editMessageText(service.getChatId(update),
-                    lastMsgId,
-                    service.getLocaleMessage(service.getChatId(update), msgLink, args),
-                    legacyGetIKMarkup(update, btMsgLink, btData)));
-        } catch (TelegramApiException | IndexOutOfBoundsException ex) {
-            log.warn("Method editMessage(Update, String, String, String, Object...) can't edit messageId. Exception: {}",
-                    ex.getMessage());
-            legacySendMessage(update, messages, msgLink, btMsgLink, btData, args);
-        }
     }
 }

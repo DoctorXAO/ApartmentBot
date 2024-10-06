@@ -7,8 +7,6 @@ public interface UserMessageLink {
 
     String USER_MSG_CONTACTS = "user.msg.contacts";
 
-    String USER_MSG_CHANGE_LANGUAGE = "user.msg.change-language";
-
     String USER_MSG_CHOOSE_CHECK_IN_DATE = "user.msg.choose-check-in-date";
 
     String USER_MSG_CHANGE_CHECK_MONTH = "user.msg.change-check-month";
@@ -34,7 +32,7 @@ public interface UserMessageLink {
 
     String USER_MSG_SHOW_PREVIEW = "user.msg.show-preview";
 
-    String USER_MSG_CAN_NOT_NOOK = "user.msg.can-not-book";
+    String USER_MSG_CAN_NOT_BOOK = "user.msg.can-not-book";
 
     String USER_MSG_RENT_CARD = "user.msg.rent-card";
 

@@ -48,10 +48,10 @@ public class UserMsgBooking extends UserMessage
     }
 
     @Override
-    public InlineKeyboardMarkup getIKMarkup(Update update) {
+    public InlineKeyboardMarkup getIKMarkup(long chatId) {
         boolean isOneOfFieldsNull = false;
 
-        Object[] parameters = getTempBookingData(service.getChatId(update));
+        Object[] parameters = getTempBookingData(chatId);
 
         for (Object param : parameters)
             if (param == null || param.equals("0")) {
@@ -60,28 +60,28 @@ public class UserMsgBooking extends UserMessage
             }
 
         if (isOneOfFieldsNull)
-            return getBackIKMarkup(update);
+            return getBackIKMarkup(chatId);
         else
-            return getNextIKMarkup(update);
+            return getNextIKMarkup(chatId);
     }
 
-    private InlineKeyboardMarkup getBackIKMarkup(Update update) {
+    private InlineKeyboardMarkup getBackIKMarkup(long chatId) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK),
                                 RAA_QUIT_FROM_BOOKING_AN_APARTMENT)))
                 .build();
     }
 
-    private InlineKeyboardMarkup getNextIKMarkup(Update update) {
+    private InlineKeyboardMarkup getNextIKMarkup(long chatId) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), USER_BT_NEXT),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(chatId, USER_BT_NEXT),
                                 RAA_SHOW_PREVIEW)))
                 .keyboardRow(new InlineKeyboardRow(
-                        msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
+                        msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK),
                                 RAA_QUIT_FROM_BOOKING_AN_APARTMENT)))
                 .build();
     }

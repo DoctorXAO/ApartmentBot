@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import xao.develop.config.AdminCommand;
 import xao.develop.config.AdminMessageLink;
+import xao.develop.config.GeneralCommand;
 import xao.develop.model.BookingCard;
 import xao.develop.model.TempAdminSettings;
 import xao.develop.config.enums.TypeOfApp;
@@ -14,7 +15,7 @@ import xao.develop.service.BotMessage;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AdminMessage extends BotMessage implements AdminCommand, AdminMessageLink {
+public abstract class AdminMessage extends BotMessage implements AdminCommand, AdminMessageLink, GeneralCommand {
 
     // setters
 

@@ -42,7 +42,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
     @Autowired
     UserMsgBooking userMsgBooking;
     @Autowired
-    UserInfoMessage userInfoMessage;
+    UserMsgCanNotBook userMsgCanNotBook;
     @Autowired
     UserMsgAlreadyRenting userMsgAlreadyRenting;
     @Autowired
@@ -79,7 +79,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
             if (update.hasMessage())
                 processingMessage(chatId, msgId, user, messages, data);
             else if (update.hasCallbackQuery() && data[0].startsWith(RAA))
-                processingCallbackQueryRAA(update, messages, data[0]);
+                processingCallbackQueryRAA(chatId, user, messages, data[0]);
             else if (update.hasCallbackQuery())
                 processingCallbackQuery(chatId, msgId, user, messages, data[0]);
             else
@@ -121,90 +121,93 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         }
     }
 
-    private void processingCallbackQueryRAA(Update update, List<Integer> messages, String data) throws TelegramApiException {
+    private void processingCallbackQueryRAA(long chatId,
+                                            User user,
+                                            List<Integer> messages,
+                                            String data) throws TelegramApiException {
         if (data.startsWith(RAA + SET)) {
-            processingRAA_SET(update, messages, data);
+            processingRAA_SET(chatId, messages, data);
         } else
             switch (data) {
-                case RAA_CHANGE_CHECK_YEAR -> userMsgChangeCheckYear.editMessage(update, messages,
-                        USER_MSG_CHANGE_CHECK_YEAR);
-                case RAA_CHANGE_CHECK_MONTH -> userMsgChangeCheckMonth.editMessage(update, messages,
-                        USER_MSG_CHANGE_CHECK_MONTH);
+                case RAA_CHANGE_CHECK_YEAR -> messages.add(userMsgChangeCheckYear.editMessage(chatId,
+                        USER_MSG_CHANGE_CHECK_YEAR));
+                case RAA_CHANGE_CHECK_MONTH -> messages.add(userMsgChangeCheckMonth.editMessage(chatId,
+                        USER_MSG_CHANGE_CHECK_MONTH));
                 case RAA_NEXT_CHECK_YEAR_CM -> {
-                    userMsgChooseCheckDate.nextYear(service.getChatId(update));
-                    userMsgChangeCheckMonth.editMessage(update, messages, USER_MSG_CHANGE_CHECK_MONTH);
+                    userMsgChooseCheckDate.nextYear(chatId);
+                    messages.add(userMsgChangeCheckMonth.editMessage(chatId, USER_MSG_CHANGE_CHECK_MONTH));
                 }
                 case RAA_PREVIOUS_CHECK_YEAR_CM -> {
-                    userMsgChooseCheckDate.previousYear(update);
-                    userMsgChangeCheckMonth.editMessage(update, messages, USER_MSG_CHANGE_CHECK_MONTH);
+                    userMsgChooseCheckDate.previousYear(chatId);
+                    messages.add(userMsgChangeCheckMonth.editMessage(chatId, USER_MSG_CHANGE_CHECK_MONTH));
                 }
-                case RAA_QUIT_FROM_CHANGE_CHECK_MONTH -> initMsgChooseCheckDate(update, messages);
+                case RAA_QUIT_FROM_CHANGE_CHECK_MONTH -> openMsgChooseCheckDate(chatId, messages);
                 case RAA_NEXT_CHECK_YEAR -> {
-                    userMsgChooseCheckDate.nextYear(service.getChatId(update));
-                    initMsgChooseCheckDate(update, messages);
+                    userMsgChooseCheckDate.nextYear(chatId);
+                    openMsgChooseCheckDate(chatId, messages);
                 }
                 case RAA_PREVIOUS_CHECK_YEAR -> {
-                    userMsgChooseCheckDate.previousYear(update);
-                    initMsgChooseCheckDate(update, messages);
+                    userMsgChooseCheckDate.previousYear(chatId);
+                    openMsgChooseCheckDate(chatId, messages);
                 }
                 case RAA_NEXT_CHECK_MONTH -> {
-                    userMsgChooseCheckDate.nextMonth(service.getChatId(update));
-                    initMsgChooseCheckDate(update, messages);
+                    userMsgChooseCheckDate.nextMonth(chatId);
+                    openMsgChooseCheckDate(chatId, messages);
                 }
                 case RAA_PREVIOUS_CHECK_MONTH -> {
-                    userMsgChooseCheckDate.previousMonth(service.getChatId(update));
-                    initMsgChooseCheckDate(update, messages);
+                    userMsgChooseCheckDate.previousMonth(chatId);
+                    openMsgChooseCheckDate(chatId, messages);
                 }
                 case RAA_QUIT_FROM_CHOOSER_CHECK -> {
-                    if (userMsgChooseCheckDate.isCheckInSet(service.getChatId(update))) {
-                        userMsgChooseCheckDate.deleteCheckIn(service.getChatId(update));
-                        userMsgChooseCheckDate.editMessage(update, messages, USER_MSG_CHOOSE_CHECK_IN_DATE);
+                    if (userMsgChooseCheckDate.isCheckInSet(chatId)) {
+                        userMsgChooseCheckDate.deleteCheckIn(chatId);
+                        messages.add(userMsgChooseCheckDate.editMessage(chatId, USER_MSG_CHOOSE_CHECK_IN_DATE));
                     } else {
-                        userMsgChooseCheckDate.deleteUserFromTempBookingData(update);
-                        messages.add(userMsgStart.editMessage(service.getChatId(update), USER_MSG_START));
+                        userMsgChooseCheckDate.deleteUserFromTempBookingData(chatId);
+                        messages.add(userMsgStart.editMessage(chatId, USER_MSG_START));
                     }
                 }
                 case RAA_NEXT_APARTMENT -> {
-                    userMsgChooseAnApartment.changeSelector(service.getChatId(update), Selector.NEXT);
-                    initMsgApartments(service.getChatId(update), messages);
+                    userMsgChooseAnApartment.changeSelector(chatId, Selector.NEXT);
+                    initMsgApartments(chatId, messages);
                 }
                 case RAA_PREVIOUS_APARTMENT -> {
-                    userMsgChooseAnApartment.changeSelector(service.getChatId(update), Selector.PREVIOUS);
-                    initMsgApartments(service.getChatId(update), messages);
+                    userMsgChooseAnApartment.changeSelector(chatId, Selector.PREVIOUS);
+                    initMsgApartments(chatId, messages);
                 }
                 case RAA_QUIT_FROM_CHOOSER_AN_APARTMENT -> {
-                    userMsgChooseAnApartment.deleteTempApartmentSelector(service.getChatId(update));
-                    userMsgChooseCheckDate.deleteCheckOut(update);
-                    userMsgChooseCheckDate.editMessage(update, messages, USER_MSG_CHOOSE_CHECK_OUT_DATE);
+                    userMsgChooseAnApartment.deleteTempApartmentSelector(chatId);
+                    userMsgChooseCheckDate.deleteCheckOut(chatId);
+                    messages.add(userMsgChooseCheckDate.editMessage(chatId, USER_MSG_CHOOSE_CHECK_OUT_DATE));
                 }
                 case RAA_BOOK -> {
-                    if (!userMsgChooseAnApartment.isBookingApartment(service.getChatId(update))) {
-                        userMsgChooseAnApartment.setIsBookingApartment(service.getChatId(update), true);
-                        initMsgBooking(service.getChatId(update), messages, USER_MSG_SET_NAME);
+                    if (!userMsgChooseAnApartment.isBookingApartment(chatId)) {
+                        userMsgChooseAnApartment.setIsBookingApartment(chatId, true);
+                        initMsgBooking(chatId, messages, USER_MSG_SET_NAME);
                     } else
-                        userInfoMessage.editMessage(update, messages, USER_MSG_CAN_NOT_NOOK);
+                        messages.add(userMsgCanNotBook.editMessage(chatId, USER_MSG_CAN_NOT_BOOK));
                 }
                 case RAA_QUIT_FROM_BOOKING_AN_APARTMENT -> {
-                    userMsgChooseAnApartment.setIsBookingApartment(service.getChatId(update), false);
-                    userMsgChooseAnApartment.deleteTempApartmentSelector(service.getChatId(update));
-                    userMsgChooseAnApartment.addTempApartmentSelector(service.getChatId(update));
-                    initMsgApartments(service.getChatId(update), messages);
+                    userMsgChooseAnApartment.setIsBookingApartment(chatId, false);
+                    userMsgChooseAnApartment.deleteTempApartmentSelector(chatId);
+                    userMsgChooseAnApartment.addTempApartmentSelector(chatId);
+                    initMsgApartments(chatId, messages);
                 }
                 case RAA_QUIT_CAN_NOT_BOOK -> {
-                    userMsgChooseAnApartment.deleteTempApartmentSelector(service.getChatId(update));
-                    userMsgChooseAnApartment.addTempApartmentSelector(service.getChatId(update));
-                    initMsgApartments(service.getChatId(update), messages);
+                    userMsgChooseAnApartment.deleteTempApartmentSelector(chatId);
+                    userMsgChooseAnApartment.addTempApartmentSelector(chatId);
+                    initMsgApartments(chatId, messages);
                 }
-                case RAA_SHOW_PREVIEW -> userMsgPreviewCard.editMessage(update, messages, USER_MSG_SHOW_PREVIEW,
-                            userMsgPreviewCard.getPackParameters(update));
-                case RAA_QUIT_FROM_PREVIEW_CARD -> initMsgBooking(service.getChatId(update), messages, USER_MSG_BOOK);
+                case RAA_SHOW_PREVIEW -> messages.add(userMsgPreviewCard.editMessage(chatId, USER_MSG_SHOW_PREVIEW,
+                        userMsgPreviewCard.getPackParameters(chatId)));
+                case RAA_QUIT_FROM_PREVIEW_CARD -> initMsgBooking(chatId, messages, USER_MSG_BOOK);
                 case RAA_SEND_BOOKING_TO_ADMIN -> {
-                    userMsgStart.editMessage(update, messages, USER_MSG_START);
+                    userMsgPreviewCard.insertCardToBookingCard(chatId, user);
+                    messages.add(userMsgStart.editMessage(chatId, USER_MSG_START));
                     service.sendMessageAdminUserUpdatedStatus(service.getAdminId(), GENERAL_MSG_GOT_NEW_APP,
                             userMsgStart.getIKMarkupGotNewApp(service.getAdminId()));
-                    int msgId = service.sendSimpleMessage(service.getChatId(update), USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN);
-                    scheduled.schedule(() ->
-                            service.deleteLastMessage(service.getChatId(update), msgId), 10, TimeUnit.SECONDS);
+                    int msgId = service.sendSimpleMessage(chatId, USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN);
+                    scheduled.schedule(() -> service.deleteLastMessage(chatId, msgId), 10, TimeUnit.SECONDS);
                 }
 
                 default -> log.info("Unknown RAA data: {}", data);
@@ -228,39 +231,36 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         }
     }
 
-    private void processingRAA_SET(Update update, List<Integer> messages, String data) throws TelegramApiException {
+    private void processingRAA_SET(long chatId, List<Integer> messages, String data) throws TelegramApiException {
         if (data.startsWith(RAA_SET_YEAR)) {
-            userMsgChangeCheckYear.setYear(
-                    service.getChatId(update), Integer.parseInt(data.replaceAll(RAA_SET_YEAR, "")));
-            initMsgChooseCheckDate(update, messages);
+            userMsgChangeCheckYear.setYear(chatId, Integer.parseInt(data.replaceAll(RAA_SET_YEAR, "")));
+            openMsgChooseCheckDate(chatId, messages);
         } else if (data.startsWith(RAA_SET_DAY)) {
-            if (!userMsgChooseCheckDate.isCheckInSet(service.getChatId(update))) {
-                userMsgChooseCheckDate.setCheckIn(
-                        service.getChatId(update), Integer.parseInt(data.replaceAll(RAA_SET_DAY, "")));
-                userMsgChooseCheckDate.editMessage(update, messages, USER_MSG_CHOOSE_CHECK_OUT_DATE);
+            if (!userMsgChooseCheckDate.isCheckInSet(chatId)) {
+                userMsgChooseCheckDate.setCheckIn(chatId, Integer.parseInt(data.replaceAll(RAA_SET_DAY, "")));
+                messages.add(userMsgChooseCheckDate.editMessage(chatId, USER_MSG_CHOOSE_CHECK_OUT_DATE));
             } else {
-                userMsgChooseCheckDate.setCheckOut(
-                        service.getChatId(update), Integer.parseInt(data.replaceAll(RAA_SET_DAY, "")));
-                userMsgChooseAnApartment.addTempApartmentSelector(service.getChatId(update));
-                initMsgApartments(service.getChatId(update), messages);
+                userMsgChooseCheckDate.setCheckOut(chatId, Integer.parseInt(data.replaceAll(RAA_SET_DAY, "")));
+                userMsgChooseAnApartment.addTempApartmentSelector(chatId);
+                initMsgApartments(chatId, messages);
             }
         } else {
             switch (data) {
-                case RAA_SET_JANUARY -> userMsgChooseCheckDate.setSelectedMonth(update, Month.JANUARY.getMonth());
-                case RAA_SET_FEBRUARY -> userMsgChooseCheckDate.setSelectedMonth(update, Month.FEBRUARY.getMonth());
-                case RAA_SET_MARCH -> userMsgChooseCheckDate.setSelectedMonth(update, Month.MARCH.getMonth());
-                case RAA_SET_APRIL -> userMsgChooseCheckDate.setSelectedMonth(update, Month.APRIL.getMonth());
-                case RAA_SET_MAY -> userMsgChooseCheckDate.setSelectedMonth(update, Month.MAY.getMonth());
-                case RAA_SET_JUNE -> userMsgChooseCheckDate.setSelectedMonth(update, Month.JUNE.getMonth());
-                case RAA_SET_JULY -> userMsgChooseCheckDate.setSelectedMonth(update, Month.JULY.getMonth());
-                case RAA_SET_AUGUST -> userMsgChooseCheckDate.setSelectedMonth(update, Month.AUGUST.getMonth());
-                case RAA_SET_SEPTEMBER -> userMsgChooseCheckDate.setSelectedMonth(update, Month.SEPTEMBER.getMonth());
-                case RAA_SET_OCTOBER -> userMsgChooseCheckDate.setSelectedMonth(update, Month.OCTOBER.getMonth());
-                case RAA_SET_NOVEMBER -> userMsgChooseCheckDate.setSelectedMonth(update, Month.NOVEMBER.getMonth());
-                case RAA_SET_DECEMBER -> userMsgChooseCheckDate.setSelectedMonth(update, Month.DECEMBER.getMonth());
+                case RAA_SET_JANUARY -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.JANUARY.getMonth());
+                case RAA_SET_FEBRUARY -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.FEBRUARY.getMonth());
+                case RAA_SET_MARCH -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.MARCH.getMonth());
+                case RAA_SET_APRIL -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.APRIL.getMonth());
+                case RAA_SET_MAY -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.MAY.getMonth());
+                case RAA_SET_JUNE -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.JUNE.getMonth());
+                case RAA_SET_JULY -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.JULY.getMonth());
+                case RAA_SET_AUGUST -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.AUGUST.getMonth());
+                case RAA_SET_SEPTEMBER -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.SEPTEMBER.getMonth());
+                case RAA_SET_OCTOBER -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.OCTOBER.getMonth());
+                case RAA_SET_NOVEMBER -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.NOVEMBER.getMonth());
+                case RAA_SET_DECEMBER -> userMsgChooseCheckDate.setSelectedMonth(chatId, Month.DECEMBER.getMonth());
                 default -> log.warn("Unknown RAA_SET data: {}", data);
             }
-            initMsgChooseCheckDate(update, messages);
+            openMsgChooseCheckDate(chatId, messages);
         }
     }
 
@@ -273,7 +273,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
     }
 
     private void openChangeLanguage(long chatId, List<Integer> messages) throws TelegramApiException {
-        messages.add(userMsgChangeLanguage.editMessage(chatId, USER_MSG_CHANGE_LANGUAGE));
+        messages.add(userMsgChangeLanguage.editMessage(chatId, GENERAL_MSG_CHANGE_LANGUAGE));
     }
 
     private void cardDataProcessing(long chatId,
@@ -373,7 +373,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
     }
 
     private void chooseCheckDate(long chatId, User user, List<Integer> messages) throws TelegramApiException {
-        if (userMsgChooseCheckDate.checkIsAlreadyExistRent(chatId)) {
+        if (userMsgChooseCheckDate.isAlreadyExistRent(chatId)) {
             messages.add(userMsgAlreadyRenting.editMessage(chatId, USER_MSG_ALREADY_EXIST_RENT));
         } else {
             userMsgChooseCheckDate.addNewUserToTempBookingData(chatId, user);
@@ -381,11 +381,11 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         }
     }
 
-    private void initMsgChooseCheckDate(Update update, List<Integer> messages) {
-        String message = userMsgChooseCheckDate.isCheckInSet(service.getChatId(update)) ?
+    private void openMsgChooseCheckDate(long chatId, List<Integer> messages) throws TelegramApiException {
+        String message = userMsgChooseCheckDate.isCheckInSet(chatId) ?
                 USER_MSG_CHOOSE_CHECK_OUT_DATE : USER_MSG_CHOOSE_CHECK_IN_DATE;
 
-        userMsgChooseCheckDate.editMessage(update, messages, message);
+        messages.add(userMsgChooseCheckDate.editMessage(chatId, message));
     }
 
     private void initMsgApartments(long chatId, List<Integer> messages) throws TelegramApiException {

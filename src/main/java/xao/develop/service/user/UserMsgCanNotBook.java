@@ -9,14 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class UserMsgNoFreeApartment extends UserMessage {
+public class UserMsgCanNotBook extends UserMessage {
 
     @Override
     protected InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), RAA_QUIT_FROM_CHOOSER_AN_APARTMENT));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), RAA_CHOOSE_AN_APARTMENT));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

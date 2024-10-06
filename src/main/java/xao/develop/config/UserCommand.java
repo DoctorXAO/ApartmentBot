@@ -42,11 +42,6 @@ public interface UserCommand {
 
     String CONTACTS = "contacts";
 
-    String CHANGE_LANGUAGE = "change_language";
-    String TR = "tr";
-    String EN = "en";
-    String RU = "ru";
-
     String BACK = "back";
     String BACK_TO_START = "back_to_start";
     String NEXT = "next";

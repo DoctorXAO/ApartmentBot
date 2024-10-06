@@ -2,7 +2,6 @@ package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import xao.develop.repository.Persistence;
 import xao.develop.service.BotService;
@@ -37,7 +36,7 @@ public abstract class UserDate extends UserMessage {
         selectedTime.set(Calendar.HOUR_OF_DAY, botConfig.getCheckInHours());
         persistence.updateCheckInInTempBookingData(chatId, selectedTime.getTimeInMillis());
 
-        if (day == getMaxDaysOfMonth(getSelectedTime(chatId), 0))
+        if (day == getMaxDaysOfMonth(getSelectedTime(chatId)))
             nextMonth(chatId);
 
         log.debug("For user {} was set check-in with the next parameters: {}", chatId, selectedTime);
@@ -79,10 +78,10 @@ public abstract class UserDate extends UserMessage {
         return String.valueOf(calendar.get(Calendar.YEAR));
     }
 
-    Integer getMaxDaysOfMonth(Calendar calendar, int bias) {
+    Integer getMaxDaysOfMonth(Calendar calendar) {
         Calendar c = (Calendar) calendar.clone();
 
-        c.set(Calendar.MONTH, c.get(Calendar.MONTH) + bias);
+        c.set(Calendar.MONTH, c.get(Calendar.MONTH));
 
         return c.getActualMaximum(Calendar.DAY_OF_MONTH);
     }
@@ -111,10 +110,6 @@ public abstract class UserDate extends UserMessage {
         return persistence.selectTempBookingData(chatId).getCheckIn() != null;
     }
 
-    boolean isCheckOutSet(long chatId) {
-        return persistence.selectTempBookingData(chatId).getCheckOut() != null;
-    }
-
     void deleteCheckIn(long chatId) {
         log.trace("Method deleteCheckIn(Update) started");
 
@@ -124,12 +119,12 @@ public abstract class UserDate extends UserMessage {
         log.trace("Method deleteCheckIn(Update) finished");
     }
 
-    void deleteCheckOut(Update update) {
+    void deleteCheckOut(long chatId) {
         log.trace("Method deleteCheckOut(Update) started");
-
-        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update),
-                persistence.selectTempBookingData(service.getChatId(update)).getCheckOut());
-        persistence.deleteCheckOutInTempBookingData(service.getChatId(update));
+        
+        persistence.updateSelectedTimeInTempBookingData(chatId,
+                persistence.selectTempBookingData(chatId).getCheckOut());
+        persistence.deleteCheckOutInTempBookingData(chatId);
 
         log.trace("Method deleteCheckOut(Update) finished");
     }
@@ -173,13 +168,13 @@ public abstract class UserDate extends UserMessage {
                 Math.min(maxCalendar.getTimeInMillis(), selectedTime.getTimeInMillis()));
     }
 
-    void previousYear(Update update) {
-        Calendar selectedTime = getSelectedTime(service.getChatId(update));
+    void previousYear(long chatId) {
+        Calendar selectedTime = getSelectedTime(chatId);
 
         selectedTime.set(Calendar.YEAR, selectedTime.get(Calendar.YEAR) - 1);
 
-        persistence.updateSelectedTimeInTempBookingData(service.getChatId(update),
-                Math.max(getPresentTime(service.getChatId(update)).getTimeInMillis(), selectedTime.getTimeInMillis()));
+        persistence.updateSelectedTimeInTempBookingData(chatId,
+                Math.max(getPresentTime(chatId).getTimeInMillis(), selectedTime.getTimeInMillis()));
     }
 
     boolean checkEqualsDate(long chatId) {
@@ -192,13 +187,13 @@ public abstract class UserDate extends UserMessage {
         return areMonthsEqual && areYearsEqual;
     }
 
-    void setSelectedMonth(Update update, int month) {
+    void setSelectedMonth(long chatId, int month) {
         log.debug("Selected number of month: {}", month);
 
         if (month >= 0 && month <= 11) {
-            Calendar selectedTime = getSelectedTime(service.getChatId(update));
+            Calendar selectedTime = getSelectedTime(chatId);
             selectedTime.set(Calendar.MONTH, month);
-            persistence.updateSelectedTimeInTempBookingData(service.getChatId(update), selectedTime.getTimeInMillis());
+            persistence.updateSelectedTimeInTempBookingData(chatId, selectedTime.getTimeInMillis());
         } else
             log.warn("Unknown number of month: {}", month);
     }

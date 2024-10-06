@@ -2,12 +2,9 @@ package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import xao.develop.model.BookingCard;
-import xao.develop.config.enums.TypeOfAppStatus;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -17,23 +14,6 @@ import java.util.List;
 @Service
 public class UserMsgChooseCheckDate extends UserDate {
 
-    public void deleteUserFromTempBookingData(Update update) {
-        persistence.deleteTempBookingData(service.getChatId(update));
-
-        log.debug("The next user from UserCalendar deleted: {}", service.getChatId(update));
-    }
-
-    public boolean checkIsAlreadyExistRent(long chatId) {
-        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(TypeOfAppStatus.WAITING);
-        bookingCards.addAll(persistence.selectBookingCardByStatus(TypeOfAppStatus.ACCEPTED));
-
-        for (BookingCard bookingCard : bookingCards)
-            if (bookingCard.getChatId() == chatId)
-                return true;
-
-        return false;
-    }
-
     @Override
     public InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
@@ -42,7 +22,7 @@ public class UserMsgChooseCheckDate extends UserDate {
         Calendar presentTime = getPresentTime(chatId);
         Calendar selectedTime = getSelectedTime(chatId);
 
-        int maxPresentDaysOfMonth = getMaxDaysOfMonth(selectedTime, 0);
+        int maxPresentDaysOfMonth = getMaxDaysOfMonth(selectedTime);
         int firstDayOfWeekInMonth = getFirstDayOfWeekInMonth(selectedTime);
         int presentDayOfMonth = getPresentDayOfMonth(presentTime);
 

@@ -1,19 +1,25 @@
 package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.UserCommand;
 import xao.develop.config.UserMessageLink;
 import xao.develop.config.enums.Selector;
+import xao.develop.config.enums.TypeOfAppStatus;
 import xao.develop.model.Amenity;
 import xao.develop.model.Apartment;
+import xao.develop.model.BookingCard;
+import xao.develop.model.TempBookingData;
 import xao.develop.service.BotMessage;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 @Slf4j
@@ -81,7 +87,75 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
         return amenities;
     }
 
+    public int getTotalRent(long checkIn, long checkOut, int countOfPeople) {
+
+        Calendar calendarCheckIn = persistence.getServerPresentTime();
+        calendarCheckIn.setTimeInMillis(checkIn);
+
+        Calendar calendarCheckOut = persistence.getServerPresentTime();
+        calendarCheckOut.setTimeInMillis(checkOut);
+
+        LocalDate checkInDate = LocalDate.of(
+                calendarCheckIn.get(Calendar.YEAR),
+                calendarCheckIn.get(Calendar.MONTH) + 1,
+                calendarCheckIn.get(Calendar.DAY_OF_MONTH));
+
+        LocalDate checkOutDate = LocalDate.of(
+                calendarCheckOut.get(Calendar.YEAR),
+                calendarCheckOut.get(Calendar.MONTH) + 1,
+                calendarCheckOut.get(Calendar.DAY_OF_MONTH));
+
+        Period period = Period.between(checkInDate, checkOutDate);
+
+        int years = period.getYears();
+        int months = period.getMonths();
+        int days = period.getDays();
+
+        log.debug("""
+                Period has next parameters:
+                years = {}
+                months = {}
+                days = {}""", years, months, days);
+
+        int costPerYear = botConfig.getPerYear(countOfPeople);
+        int costPerMonth = botConfig.getPerMonth(countOfPeople);
+        int costPerDay = botConfig.getPerDay(countOfPeople);
+
+        return (years * costPerYear) + (months * costPerMonth) + (days * costPerDay);
+    }
+
+    public Object[] getPackParameters(long chatId) {
+        TempBookingData tempBookingData = persistence.selectTempBookingData(chatId);
+
+        return new Object[]{
+                tempBookingData.getNumberOfApartment(),
+                service.getCheckDate(tempBookingData.getCheckIn()),
+                service.getCheckDate(tempBookingData.getCheckOut()),
+                tempBookingData.getFirstName(),
+                tempBookingData.getLastName(),
+                tempBookingData.getAge(),
+                tempBookingData.getGender(),
+                tempBookingData.getCountOfPeople(),
+                tempBookingData.getContacts(),
+                getTotalRent(
+                        tempBookingData.getCheckIn(),
+                        tempBookingData.getCheckOut(),
+                        tempBookingData.getCountOfPeople())
+        };
+    }
+
     // boolean
+
+    public boolean isAlreadyExistRent(long chatId) {
+        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(TypeOfAppStatus.WAITING);
+        bookingCards.addAll(persistence.selectBookingCardByStatus(TypeOfAppStatus.ACCEPTED));
+
+        for (BookingCard bookingCard : bookingCards)
+            if (bookingCard.getChatId() == chatId)
+                return true;
+
+        return false;
+    }
 
     public boolean isBookingApartment(long chatId) {
         return persistence.selectApartment(getSelectedApartment(chatId)).getIsBooking();
@@ -129,6 +203,34 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
         }
     }
 
+    public void insertCardToBookingCard(long chatId, User user) {
+        TempBookingData tempBookingData = persistence.selectTempBookingData(chatId);
+
+        int numberOfApartment = tempBookingData.getNumberOfApartment();
+
+        persistence.insertBookingCard(
+                tempBookingData.getChatId(),
+                user.getUserName(),
+                tempBookingData.getFirstName(),
+                tempBookingData.getLastName(),
+                tempBookingData.getContacts(),
+                tempBookingData.getAge(),
+                tempBookingData.getGender(),
+                tempBookingData.getCountOfPeople(),
+                numberOfApartment,
+                tempBookingData.getCheckIn(),
+                tempBookingData.getCheckOut(),
+                getTotalRent(
+                        tempBookingData.getCheckIn(),
+                        tempBookingData.getCheckOut(),
+                        tempBookingData.getCountOfPeople())
+        );
+
+        persistence.updateIsBookingApartment(numberOfApartment, false, chatId);
+        persistence.deleteTempBookingData(chatId);
+        persistence.deleteTempApartmentSelector(chatId);
+    }
+
     private void updateSelector(long chatId, int selector) {
         persistence.updateTempApartmentSelector(
                 chatId,
@@ -145,6 +247,12 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
         persistence.deleteTempApartmentSelector(chatId);
 
         log.debug("Method deleteTempApartmentSelector(Update): the next user deleted: {} ", chatId);
+    }
+
+    public void deleteUserFromTempBookingData(long chatId) {
+        persistence.deleteTempBookingData(chatId);
+
+        log.debug("The next user from UserCalendar deleted: {}", chatId);
     }
 
     // markups

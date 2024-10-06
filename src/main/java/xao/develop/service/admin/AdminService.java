@@ -39,6 +39,9 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     @Autowired
     AdminMsgOpenArc adminMsgOpenArc;
 
+    @Autowired
+    AdminMsgChangeLanguage adminMsgChangeLanguage;
+
     public void execute(Update update) {
         log.trace("Method execute(Update, String) started");
 
@@ -91,6 +94,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         switch (data[0]) {
             case NEW_APPLICATIONS -> openListOfApps(chatId, messages, TypeOfApp.APP, false);
             case ARCHIVE -> openListOfApps(chatId, messages, TypeOfApp.ARC, false);
+            case CHANGE_LANGUAGE -> openChangeLanguage(chatId, messages);
 
             case PREVIOUS_PAGE_OF_NEW_APPS -> changePage(chatId, messages, TypeOfApp.APP, Selector.PREVIOUS);
             case NEXT_PAGE_OF_NEW_APPS -> changePage(chatId, messages, TypeOfApp.APP, Selector.NEXT);
@@ -106,6 +110,8 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
             case QUIT_FROM_APP -> openListOfApps(chatId, messages, TypeOfApp.APP, true);
             case QUIT_FROM_ARC -> openListOfApps(chatId, messages, TypeOfApp.ARC, true);
+
+            case TR, EN, RU -> changeLanguage(chatId, user, messages, data[0]);
 
             case BACK_TO_START -> start(chatId, user, messages, false);
 
@@ -132,6 +138,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             messages.add(adminMsgNewApplications.editMessage(chatId, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps()));
         else if (type.equals(TypeOfApp.ARC))
             messages.add(adminMsgArchive.editMessage(chatId, ADMIN_MSG_ARCHIVE, adminMsgStart.getCountOfArchive()));
+    }
+
+    private void openChangeLanguage(long chatId, List<Integer> messages) throws TelegramApiException {
+        messages.add(adminMsgChangeLanguage.editMessage(chatId, GENERAL_MSG_CHANGE_LANGUAGE));
     }
 
     private void changePage(long chatId,
@@ -189,6 +199,11 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             messages.add(adminMsgOpenApp.editMessage(chatId, ADMIN_MSG_APP, adminMsgStart.getAppParameters(chatId, numOfApp)));
         else if (type.equals(TypeOfApp.ARC))
             messages.add(adminMsgOpenArc.editMessage(chatId, ADMIN_MSG_APP, adminMsgStart.getAppParameters(chatId, numOfApp)));
+    }
+
+    private void changeLanguage(long chatId, User user, List<Integer> messages, String data) throws TelegramApiException {
+        service.setLanguage(chatId, data);
+        start(chatId, user, messages, false);
     }
 
     private void deleteMessage(long chatId, int msgId) {
