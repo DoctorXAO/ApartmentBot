@@ -9,10 +9,7 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.model.AccountStatus;
@@ -36,8 +33,8 @@ public class BotService {
 
     // setters
 
-    public void setLanguage(Update update, String language) {
-        persistence.updateLanguageInAccountStatus(getChatId(update), language);
+    public void setLanguage(long chatId, String language) {
+        persistence.updateLanguageInAccountStatus(chatId, language);
     }
 
     // getters
@@ -50,7 +47,7 @@ public class BotService {
         return new Object[]{botConfig.getPhone(), botConfig.getEmail()};
     }
 
-    public Long getChatId(Update update) {
+    public long getChatId(Update update) {
         log.trace("Method 'getChatId' started");
 
         Long chatId = update.hasMessage() ?
@@ -109,28 +106,23 @@ public class BotService {
 
     // actions
 
-    public void authorization(Message message) {
+    public void authorization(long chatId, User user) {
         log.trace("Method authorization(Message) started");
 
-        Long chatId = message.getChatId();
-        String language = message.getFrom().getLanguageCode();
-
-        persistence.insertAccountStatus(chatId, language);
+        persistence.insertAccountStatus(chatId, user.getLanguageCode());
         persistence.deleteTempBookingData(chatId);
 
         log.debug("""
                 Authorization: the following user parameters have been added to the database:
                 chatId = {}
                 language = {}
-                """, chatId, language);
+                """, chatId, user.getLanguageCode());
 
         log.trace("Method authorization(Message) finished");
     }
 
-    public void deleteOldMessages(Update update) {
-        log.trace("Method 'deleteOldMessage' started for userID: {}", getChatId(update));
-
-        Long chatId = getChatId(update);
+    public void deleteOldMessages(long chatId) {
+        log.trace("Method 'deleteOldMessage' started for userID: {}", chatId);
 
         List<TempBotMessage> userMessages = persistence.selectTempBotMessages(chatId);
 
@@ -199,20 +191,23 @@ public class BotService {
         }
     }
 
-    public int deleteAllMessagesExceptTheLastOne(Update update) {
-        List<TempBotMessage> tempBotMessages = persistence.selectTempBotMessages(getChatId(update));
+    public int deleteAllMessagesExceptTheLastOne(long chatId) {
+        List<TempBotMessage> tempBotMessages = persistence.selectTempBotMessages(chatId);
 
         for (int i = 0; i < tempBotMessages.size() - 1; i++) {
             TempBotMessage tempBotMessage = tempBotMessages.get(i);
-            deleteMessage(getChatId(update), tempBotMessage.getMsgId());
+            deleteMessage(chatId, tempBotMessage.getMsgId());
         }
 
         return tempBotMessages.get(tempBotMessages.size() - 1).getMsgId();
     }
 
     public void registerMessage(long chatId, int messageId) {
-        persistence.insertTempBotMessage(chatId, messageId);
-        log.debug("The message {} registered", messageId);
+        if (messageId != 0) {
+            persistence.insertTempBotMessage(chatId, messageId);
+
+            log.debug("The message {} registered", messageId);
+        }
     }
 
     public int sendSimpleMessage(long chatId, String msgLink) throws TelegramApiException {
@@ -245,10 +240,10 @@ public class BotService {
                 markup));
     }
 
-    public EditMessageText editMessageText(Update update, int msgId, String msg, InlineKeyboardMarkup markup) {
+    public EditMessageText editMessageText(long chatId, int msgId, String msg, InlineKeyboardMarkup markup) {
         return EditMessageText
                 .builder()
-                .chatId(getChatId(update))
+                .chatId(chatId)
                 .messageId(msgId)
                 .text(msg)
                 .replyMarkup(markup)

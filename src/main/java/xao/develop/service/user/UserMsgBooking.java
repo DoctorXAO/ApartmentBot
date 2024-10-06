@@ -34,8 +34,8 @@ public class UserMsgBooking extends UserMessage
         persistence.updateContactsTempBookingData(chatId, contacts);
     }
 
-    public Object[] getTempBookingData(Update update) {
-        TempBookingData tempBookingData = persistence.selectTempBookingData(service.getChatId(update));
+    public Object[] getTempBookingData(long chatId) {
+        TempBookingData tempBookingData = persistence.selectTempBookingData(chatId);
 
         return new Object[]{
                 tempBookingData.getFirstName(),
@@ -51,7 +51,7 @@ public class UserMsgBooking extends UserMessage
     public InlineKeyboardMarkup getIKMarkup(Update update) {
         boolean isOneOfFieldsNull = false;
 
-        Object[] parameters = getTempBookingData(update);
+        Object[] parameters = getTempBookingData(service.getChatId(update));
 
         for (Object param : parameters)
             if (param == null || param.equals("0")) {

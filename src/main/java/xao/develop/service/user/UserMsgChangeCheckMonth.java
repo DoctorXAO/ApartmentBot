@@ -2,7 +2,6 @@ package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -29,14 +28,14 @@ public class UserMsgChangeCheckMonth extends UserDate {
     static final int DECEMBER = 11;
 
     @Override
-    public InlineKeyboardMarkup getIKMarkup(Update update) {
-        Calendar presentTime = getPresentTime(update);
-        Calendar selectedTime = getSelectedTime(update);
+    public InlineKeyboardMarkup getIKMarkup(long chatId) {
+        Calendar presentTime = getPresentTime(chatId);
+        Calendar selectedTime = getSelectedTime(chatId);
 
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK),
                 RAA_QUIT_FROM_CHANGE_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
@@ -77,8 +76,7 @@ public class UserMsgChangeCheckMonth extends UserDate {
             if (sYear > mYear || (sYear == mYear && sMonth > mMonth))
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
             else if (sYear > pYear || sMonth >= pMonth)
-                buttons.add(msgBuilder.buildIKButton(
-                        service.getLocaleMessage(service.getChatId(update), USER_BT_MONTH_ + i),
+                buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, USER_BT_MONTH_ + i),
                         RAA_SET_MONTH + i));
             else
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));

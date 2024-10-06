@@ -1,7 +1,6 @@
 package xao.develop.service.user;
 
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -14,13 +13,13 @@ import java.util.List;
 public class UserMsgChangeCheckYear extends UserDate {
 
     @Override
-    public InlineKeyboardMarkup getIKMarkup(Update update) {
-        Calendar presentTime = getPresentTime(update);
+    public InlineKeyboardMarkup getIKMarkup(long chatId) {
+        Calendar presentTime = getPresentTime(chatId);
 
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK),
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK),
                 RAA_QUIT_FROM_CHANGE_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();

@@ -1,36 +1,23 @@
-package xao.develop.service.admin;
+package xao.develop.service.user;
 
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import xao.develop.config.enums.TypeOfAppStatus;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class AdminMsgOpenArc extends AdminMessage {
+public class UserMsgAlreadyRenting extends UserMessage {
 
     @Override
     protected InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        int selectedApp = persistence.selectTempAdminSettings(chatId).getSelectedApplication();
-
-        if (!getStatusOfApp(selectedApp).equals(TypeOfAppStatus.FINISHED.getType())) {
-            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_RETURN),
-                    RETURN_APP + X + selectedApp));
-            keyboard.add(msgBuilder.buildIKRow(buttons));
-            buttons.clear();
-        }
-
-        initBtChat(chatId, keyboard, buttons);
-
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), QUIT_FROM_ARC));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), BACK_TO_START));
         keyboard.add(msgBuilder.buildIKRow(buttons));
-        buttons.clear();
 
         return InlineKeyboardMarkup
                 .builder()

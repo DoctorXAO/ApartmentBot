@@ -23,37 +23,37 @@ public class UserMsgChooseCheckDate extends UserDate {
         log.debug("The next user from UserCalendar deleted: {}", service.getChatId(update));
     }
 
-    public boolean checkIsAlreadyExistRent(Update update) {
+    public boolean checkIsAlreadyExistRent(long chatId) {
         List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(TypeOfAppStatus.WAITING);
         bookingCards.addAll(persistence.selectBookingCardByStatus(TypeOfAppStatus.ACCEPTED));
 
         for (BookingCard bookingCard : bookingCards)
-            if (bookingCard.getChatId() == service.getChatId(update))
+            if (bookingCard.getChatId() == chatId)
                 return true;
 
         return false;
     }
 
     @Override
-    public InlineKeyboardMarkup getIKMarkup(Update update) {
+    public InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        Calendar presentTime = getPresentTime(update);
-        Calendar selectedTime = getSelectedTime(update);
+        Calendar presentTime = getPresentTime(chatId);
+        Calendar selectedTime = getSelectedTime(chatId);
 
         int maxPresentDaysOfMonth = getMaxDaysOfMonth(selectedTime, 0);
         int firstDayOfWeekInMonth = getFirstDayOfWeekInMonth(selectedTime);
         int presentDayOfMonth = getPresentDayOfMonth(presentTime);
 
-        initHeaderIKMarkup(update, keyboard, buttons, presentTime, selectedTime);
+        initHeaderIKMarkup(chatId, keyboard, buttons, presentTime, selectedTime);
 
         // Добавляет недостающие дни недели из последних дней предыдущего месяца
         if (firstDayOfWeekInMonth != 1)
             for (int i = firstDayOfWeekInMonth - 2; i >= 0; i--)
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        boolean areDatesEquals = checkEqualsDate(update);
+        boolean areDatesEquals = checkEqualsDate(chatId);
 
         log.debug("areDatesEquals = {}", areDatesEquals);
 
@@ -87,7 +87,7 @@ public class UserMsgChooseCheckDate extends UserDate {
         }
 
         buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK), RAA_QUIT_FROM_CHOOSER_CHECK));
+                service.getLocaleMessage(chatId, GENERAL_BT_BACK), RAA_QUIT_FROM_CHOOSER_CHECK));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup
@@ -96,7 +96,7 @@ public class UserMsgChooseCheckDate extends UserDate {
                 .build();
     }
 
-    private void initHeaderIKMarkup(Update update,
+    private void initHeaderIKMarkup(long chatId,
                                     List<InlineKeyboardRow> keyboard,
                                     List<InlineKeyboardButton> buttons,
                                     Calendar today,
@@ -123,7 +123,7 @@ public class UserMsgChooseCheckDate extends UserDate {
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
         buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(service.getChatId(update), USER_BT_MONTH_ + (calendar.get(Calendar.MONTH) + 1)),
+                service.getLocaleMessage(chatId, USER_BT_MONTH_ + (calendar.get(Calendar.MONTH) + 1)),
                 RAA_CHANGE_CHECK_MONTH));
 
         if (calendar.get(Calendar.MONTH) < today.get(Calendar.MONTH) ||

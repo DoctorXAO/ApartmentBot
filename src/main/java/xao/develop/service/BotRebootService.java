@@ -7,10 +7,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.chat.Chat;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -20,7 +16,6 @@ import xao.develop.config.UserCommand;
 import xao.develop.config.UserMessageLink;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
-import xao.develop.service.admin.AdminService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,13 +76,14 @@ public class BotRebootService implements UserCommand, UserMessageLink {
 
     private void editMessage(TempBotMessage tempBotMessage) {
         try {
-            Update update = initUpdate(tempBotMessage.getChatId(), START);
+            long chatId = tempBotMessage.getChatId();
+            int msgId = tempBotMessage.getMsgId();
 
             botConfig.getTelegramClient().execute(
-                    service.editMessageText(update,
-                            tempBotMessage.getMsgId(),
-                            service.getLocaleMessage(service.getChatId(update), USER_MSG_START),
-                            getStartIKMarkup(update)));
+                    service.editMessageText(chatId,
+                            msgId,
+                            service.getLocaleMessage(chatId, USER_MSG_START),
+                            getStartIKMarkup(chatId)));
 
             log.debug("User {} message {} edited", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
         } catch (TelegramApiException ex) {
@@ -117,43 +113,24 @@ public class BotRebootService implements UserCommand, UserMessageLink {
         }
     }
 
-    private Update initUpdate(long chatId, String data) {
-        Update update = new Update();
-
-        CallbackQuery callbackQuery = new CallbackQuery();
-        Message message = new Message();
-        Chat chat = new Chat(chatId, "null");
-
-        callbackQuery.setData(data);
-        message.setChat(chat);
-
-        update.setCallbackQuery(callbackQuery);
-        update.getCallbackQuery().setMessage(message);
-
-        return update;
-    }
-
-    private InlineKeyboardMarkup getStartIKMarkup(Update update) {
+    private InlineKeyboardMarkup getStartIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(service.getChatId(update), USER_BT_CHOOSE_CHECK_IN_DATE), RAA_CHOOSE_CHECK_DATE));
+                service.getLocaleMessage(chatId, USER_BT_CHOOSE_CHECK_IN_DATE), CHOOSE_CHECK_DATE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(service.getChatId(update), USER_BT_ABOUT_US), ABOUT_US));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, USER_BT_ABOUT_US), ABOUT_US));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(service.getChatId(update), USER_BT_CONTACTS), CONTACTS));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, USER_BT_CONTACTS), CONTACTS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(service.getChatId(update), USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

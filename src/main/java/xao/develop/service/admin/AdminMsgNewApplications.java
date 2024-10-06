@@ -1,7 +1,6 @@
 package xao.develop.service.admin;
 
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -14,14 +13,14 @@ import java.util.List;
 public class AdminMsgNewApplications extends AdminMessage {
 
     @Override
-    protected InlineKeyboardMarkup getIKMarkup(Update update) {
+    protected InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        initSelectorApps(update, keyboard, buttons, TypeOfApp.APP);
+        initSelectorApps(chatId, keyboard, buttons, TypeOfApp.APP);
 
         buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK), BACK_TO_START));
+                service.getLocaleMessage(chatId, GENERAL_BT_BACK), BACK_TO_START));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

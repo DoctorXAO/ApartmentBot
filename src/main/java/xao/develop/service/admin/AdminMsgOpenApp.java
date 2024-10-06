@@ -2,7 +2,6 @@ package xao.develop.service.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -15,22 +14,22 @@ import java.util.List;
 public class AdminMsgOpenApp extends AdminMessage {
 
     @Override
-    protected InlineKeyboardMarkup getIKMarkup(Update update) {
+    protected InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        int selectedApp = persistence.selectTempAdminSettings(service.getChatId(update)).getSelectedApplication();
+        int selectedApp = persistence.selectTempAdminSettings(chatId).getSelectedApplication();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), ADMIN_BT_REFUSE),
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_REFUSE),
                 REFUSE_APP + X + selectedApp));
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), ADMIN_BT_ACCEPT),
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_ACCEPT),
                 ACCEPT_APP + X + selectedApp));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        initBtChat(update, keyboard, buttons);
+        initBtChat(chatId, keyboard, buttons);
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK), QUIT_FROM_APP));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), QUIT_FROM_APP));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

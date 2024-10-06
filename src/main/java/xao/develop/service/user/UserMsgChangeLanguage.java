@@ -9,11 +9,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 public class UserMsgChangeLanguage extends UserMessage {
 
     @Override
-    public InlineKeyboardMarkup getIKMarkup(Update update) {
+    public InlineKeyboardMarkup getIKMarkup(long chatId) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(new InlineKeyboardRow(msgBuilder.buildIKButton(
-                        service.getLocaleMessage(service.getChatId(update), GENERAL_BT_BACK), BACK_TO_START)))
+                        service.getLocaleMessage(chatId, GENERAL_BT_BACK), BACK_TO_START)))
                 .keyboardRow(new InlineKeyboardRow(
                         msgBuilder.buildIKButton("\uD83C\uDDF9\uD83C\uDDF7 Türkçe", TR)))
                 .keyboardRow(new InlineKeyboardRow(

@@ -10,7 +10,7 @@ public interface UserCommand {
     String CARD_CONTACTS = "/contacts";
 
     String RAA = "raa_";
-    String RAA_CHOOSE_CHECK_DATE = RAA + "choose_check_date";
+    String CHOOSE_CHECK_DATE = "choose_check_date";
     String RAA_CHANGE_CHECK_MONTH = RAA + "change_check_month";
     String RAA_NEXT_CHECK_YEAR_CM = RAA + "next_check_year_cm";
     String RAA_PREVIOUS_CHECK_YEAR_CM = RAA + "previous_check_year_cm";

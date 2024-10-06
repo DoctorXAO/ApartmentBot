@@ -1,6 +1,5 @@
 package xao.develop.service.admin;
 
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -29,20 +28,18 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         return persistence.selectBookingCardByStatus(TypeOfAppStatus.WAITING).size();
     }
 
-    public Object[] getAppParameters(Update update, int idOfCard) {
+    public Object[] getAppParameters(long chatId, int idOfCard) {
         BookingCard bookingCard = persistence.selectBookingCard(idOfCard);
 
         String status;
-            if (bookingCard.getStatus().equals(TypeOfAppStatus.WAITING.getType()))
-                status = service.getLocaleMessage(service.getChatId(update), ADMIN_MSG_STATUS_WAITING);
-            else if (bookingCard.getStatus().equals(TypeOfAppStatus.ACCEPTED.getType()))
-                status = service.getLocaleMessage(service.getChatId(update), ADMIN_MSG_STATUS_ACCEPTED);
-            else if (bookingCard.getStatus().equals(TypeOfAppStatus.DENIED.getType()))
-                status = service.getLocaleMessage(service.getChatId(update), ADMIN_MSG_STATUS_DENIED);
-            else if (bookingCard.getStatus().equals(TypeOfAppStatus.FINISHED.getType()))
-                status = service.getLocaleMessage(service.getChatId(update), ADMIN_MSG_STATUS_FINISHED);
-            else
-                status = "null";
+
+        switch (bookingCard.getStatus()) {
+            case WAITING -> status = service.getLocaleMessage(chatId, ADMIN_MSG_STATUS_WAITING);
+            case ACCEPTED -> status = service.getLocaleMessage(chatId, ADMIN_MSG_STATUS_ACCEPTED);
+            case DENIED -> status = service.getLocaleMessage(chatId, ADMIN_MSG_STATUS_DENIED);
+            case FINISHED -> status = service.getLocaleMessage(chatId, ADMIN_MSG_STATUS_FINISHED);
+            default -> status = "null";
+        }
 
         return new Object[]{
                 bookingCard.getId(),
@@ -93,7 +90,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     // init
 
-    protected void initSelectorApps(Update update,
+    protected void initSelectorApps(long chatId,
                                  List<InlineKeyboardRow> keyboard,
                                  List<InlineKeyboardButton> buttons,
                                  TypeOfApp type) {
@@ -110,18 +107,18 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
             data = ARC + X;
         }
 
-        TempAdminSettings adminSettings = persistence.selectTempAdminSettings(service.getChatId(update));
+        TempAdminSettings adminSettings = persistence.selectTempAdminSettings(chatId);
 
         if (bookingCards.size() > botConfig.getCountOfApps()) {
             if (adminSettings.getSelectedPage() - botConfig.getCountOfApps() >= 0)
                 buttons.add(msgBuilder.buildIKButton(
-                        service.getLocaleMessage(service.getChatId(update), "◀️"), PREVIOUS_PAGE_OF_ARCHIVE));
+                        service.getLocaleMessage(chatId, "◀️"), PREVIOUS_PAGE_OF_ARCHIVE));
             else
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
             if (adminSettings.getSelectedPage() + botConfig.getCountOfApps() < bookingCards.size())
                 buttons.add(msgBuilder.buildIKButton(
-                        service.getLocaleMessage(service.getChatId(update), "▶️"), NEXT_PAGE_OF_ARCHIVE));
+                        service.getLocaleMessage(chatId, "▶️"), NEXT_PAGE_OF_ARCHIVE));
             else
                 buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
@@ -139,22 +136,21 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
                 String statusIcon = getStatusIcon(bookingCard.getStatus());
 
-                buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(service.getChatId(update),
-                                GENERAL_BT_APP,
-                                bookingCard.getId(),
-                                statusIcon),
-                        data + bookingCard.getId()));
+                buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId,
+                        GENERAL_BT_APP,
+                        bookingCard.getId(),
+                        statusIcon), data + bookingCard.getId()));
                 keyboard.add(msgBuilder.buildIKRow(buttons));
                 buttons.clear();
             }
     }
 
-    protected void initBtChat(Update update,
+    protected void initBtChat(long chatId,
                            List<InlineKeyboardRow> keyboard,
                            List<InlineKeyboardButton> buttons) {
 
         buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(service.getChatId(update), ADMIN_BT_CHAT), OPEN_CHAT));
+                service.getLocaleMessage(chatId, ADMIN_BT_CHAT), OPEN_CHAT));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
     }
