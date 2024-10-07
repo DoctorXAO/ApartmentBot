@@ -8,6 +8,10 @@ public interface AdminMessageLink {
 
     String ADMIN_MSG_APP = "admin.msg.app";
 
+    String ADMIN_MSG_CHAT = "admin.msg.chat";
+    String ADMIN_MSG_CHATTING_ADMIN = "admin.msg.chatting-admin";
+    String ADMIN_MSG_SENT_SUCCESSFULLY = "admin.msg.sent-successfully";
+
     String ADMIN_BT_NEW_APPLICATIONS = "admin.bt.new-applications";
     String ADMIN_BT_ARCHIVE = "admin.bt.archive";
     String ADMIN_BT_SETTINGS = "admin.bt.settings";

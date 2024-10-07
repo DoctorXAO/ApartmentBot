@@ -67,7 +67,7 @@ public class UserMsgChooseCheckDate extends UserDate {
         }
 
         buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(chatId, GENERAL_BT_BACK), RAA_QUIT_FROM_CHOOSER_CHECK));
+                service.getLocaleMessage(chatId, GENERAL_BT_BACK), QUIT_FROM_CHOOSER_CHECK));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup
@@ -83,14 +83,14 @@ public class UserMsgChooseCheckDate extends UserDate {
                                     Calendar calendar) {
 
         if (today.get(Calendar.YEAR) < calendar.get(Calendar.YEAR))
-            buttons.add(msgBuilder.buildIKButton("◀️", RAA_PREVIOUS_CHECK_YEAR));
+            buttons.add(msgBuilder.buildIKButton("◀️", PREVIOUS_CHECK_YEAR));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        buttons.add(msgBuilder.buildIKButton(getSelectedYear(calendar), RAA_CHANGE_CHECK_YEAR));
+        buttons.add(msgBuilder.buildIKButton(getSelectedYear(calendar), CHANGE_CHECK_YEAR));
 
         if (calendar.get(Calendar.YEAR) < today.get(Calendar.YEAR) + MAX_YEAR)
-            buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_YEAR));
+            buttons.add(msgBuilder.buildIKButton("▶️", NEXT_CHECK_YEAR));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
@@ -98,17 +98,17 @@ public class UserMsgChooseCheckDate extends UserDate {
         buttons.clear();
 
         if (today.get(Calendar.MONTH) < calendar.get(Calendar.MONTH) || today.get(Calendar.YEAR) < calendar.get(Calendar.YEAR))
-            buttons.add(msgBuilder.buildIKButton("◀️", RAA_PREVIOUS_CHECK_MONTH));
+            buttons.add(msgBuilder.buildIKButton("◀️", PREVIOUS_CHECK_MONTH));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
         buttons.add(msgBuilder.buildIKButton(
                 service.getLocaleMessage(chatId, USER_BT_MONTH_ + (calendar.get(Calendar.MONTH) + 1)),
-                RAA_CHANGE_CHECK_MONTH));
+                CHANGE_CHECK_MONTH));
 
         if (calendar.get(Calendar.MONTH) < today.get(Calendar.MONTH) ||
                 calendar.get(Calendar.YEAR) < today.get(Calendar.YEAR) + MAX_YEAR)
-            buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_MONTH));
+            buttons.add(msgBuilder.buildIKButton("▶️", NEXT_CHECK_MONTH));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 

@@ -149,36 +149,13 @@ public class BotService {
         log.trace("Method 'deleteOldMessage' finished for userID: {}", chatId);
     }
 
-    public void deleteLastMessage(long chatId, int msgId) {
-        log.trace("Method deleteLastMessage(Update) started for userID: {}", chatId);
-
+    public void deleteMessage(long chatId, int msgId) {
         try {
             botConfig.getTelegramClient().execute(DeleteMessage
                     .builder()
                     .chatId(chatId)
                     .messageId(msgId)
                     .build());
-
-            log.debug("Last messageID {} deleted", msgId);
-        } catch (TelegramApiException ex) {
-            log.warn("""
-                    Can't delete messageId {} with userID {}
-                    Exception: {}""",
-                    msgId, chatId, ex.getMessage());
-        }
-
-        log.trace("Method deleteLastMessage(Update) finished for userID: {}", chatId);
-    }
-
-    public void deleteMessage(long chatId, int msgId) {
-        try {
-            DeleteMessage deleteMessage = DeleteMessage
-                    .builder()
-                    .chatId(chatId)
-                    .messageId(msgId)
-                    .build();
-
-            botConfig.getTelegramClient().execute(deleteMessage);
 
             persistence.deleteMessageTempBotMessage(chatId, msgId);
 
@@ -229,10 +206,10 @@ public class BotService {
                 .build();
     }
 
-    public void sendMessageAdminUserUpdatedStatus(long chatId,
-                                                  String msgLink,
-                                                  InlineKeyboardMarkup markup,
-                                                  Object... args) throws TelegramApiException {
+    public void sendMessageAdminUser(long chatId,
+                                     String msgLink,
+                                     InlineKeyboardMarkup markup,
+                                     Object... args) throws TelegramApiException {
 
         botConfig.getTelegramClient().execute(sendMessage(
                 chatId,

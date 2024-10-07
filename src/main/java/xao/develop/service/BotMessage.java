@@ -7,6 +7,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.config.GeneralCommand;
@@ -135,5 +137,33 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
         Arrays.sort(files, Comparator.comparing(File::getName));
 
         return files;
+    }
+
+    // markups
+
+    public InlineKeyboardMarkup getIKMarkupUpdatedStatus(long chatId) {
+        List<InlineKeyboardRow> keyboard = new ArrayList<>();
+        List<InlineKeyboardButton> buttons = new ArrayList<>();
+
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_OK), DELETE));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
+
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboard(keyboard)
+                .build();
+    }
+
+    public InlineKeyboardMarkup getIKMarkupChat(long chatId) {
+        List<InlineKeyboardRow> keyboard = new ArrayList<>();
+        List<InlineKeyboardButton> buttons = new ArrayList<>();
+
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_OK), DELETE));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
+
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboard(keyboard)
+                .build();
     }
 }

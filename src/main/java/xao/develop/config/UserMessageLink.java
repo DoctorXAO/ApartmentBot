@@ -54,6 +54,7 @@ public interface UserMessageLink {
     String USER_MSG_SIMPLE_INCORRECT_GENDER = "user.msg.simple.incorrect-gender";
     String USER_MSG_SIMPLE_INCORRECT_AGE = "user.msg.simple.incorrect-age";
     String USER_MSG_SIMPLE_INCORRECT_COUNT = "user.msg.simple.incorrect-count";
+    String USER_MSG_SIMPLE_INCORRECT_CONTACTS = "user.msg.simple.incorrect-contacts";
     String USER_MSG_SIMPLE_DOWNLOADING = "user.msg.simple.downloading";
     String USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN = "user.msg.simple.send-message-to-admin";
 }

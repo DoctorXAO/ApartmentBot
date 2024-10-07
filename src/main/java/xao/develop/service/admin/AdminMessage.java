@@ -1,6 +1,5 @@
 package xao.develop.service.admin;
 
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import xao.develop.config.AdminCommand;
@@ -12,7 +11,6 @@ import xao.develop.config.enums.TypeOfApp;
 import xao.develop.config.enums.TypeOfAppStatus;
 import xao.develop.service.BotMessage;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AdminMessage extends BotMessage implements AdminCommand, AdminMessageLink, GeneralCommand {
@@ -65,6 +63,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     public long getUserId(int numOfApp) {
         return persistence.selectBookingCard(numOfApp).getChatId();
+    }
+
+    public int getSelectedApp(long chatId) {
+        return persistence.selectTempAdminSettings(chatId).getSelectedApplication();
     }
 
     // creates
@@ -147,11 +149,13 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     }
 
     protected void initBtChat(long chatId,
-                           List<InlineKeyboardRow> keyboard,
-                           List<InlineKeyboardButton> buttons) {
+                              List<InlineKeyboardRow> keyboard,
+                              List<InlineKeyboardButton> buttons) {
+
+        int selectedApp = persistence.selectTempAdminSettings(chatId).getSelectedApplication();
 
         buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(chatId, ADMIN_BT_CHAT), OPEN_CHAT));
+                service.getLocaleMessage(chatId, ADMIN_BT_CHAT), OPEN_CHAT + X + selectedApp));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
     }
@@ -171,17 +175,4 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     }
 
     // markups
-
-    public InlineKeyboardMarkup getIKMarkupUpdatedStatus(long chatId) {
-        List<InlineKeyboardRow> keyboard = new ArrayList<>();
-        List<InlineKeyboardButton> buttons = new ArrayList<>();
-
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_OK), DELETE));
-        keyboard.add(msgBuilder.buildIKRow(buttons));
-
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboard(keyboard)
-                .build();
-    }
 }

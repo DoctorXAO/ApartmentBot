@@ -2,9 +2,6 @@ package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import xao.develop.config.UserCommand;
 import xao.develop.config.UserMessageLink;
 import xao.develop.config.enums.Selector;
@@ -17,7 +14,6 @@ import xao.develop.service.BotMessage;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -38,12 +34,12 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
 
     // getters
 
-    private int getSelectedApartment(long chatId) {
-        return persistence.selectTempApartmentSelector(chatId).getNumberOfApartment();
+    public int getSelectorOfCurrentApartment(long chatId) {
+        return persistence.selectTempApartmentSelector(chatId).getSelector();
     }
 
     public int getCurrentApartment(long chatId) {
-        int selector = persistence.selectTempApartmentSelector(chatId).getSelector();
+        int selector = getSelectorOfCurrentApartment(chatId);
         List<Apartment> apartments = persistence.selectAllFreeApartments(chatId);
 
         log.debug("Size of the list of apartment is {}", apartments.size());
@@ -51,6 +47,10 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
         log.debug("Current number of apartment is {}", apartments.get(selector).getNumber());
 
         return apartments.get(selector).getNumber();
+    }
+
+    public int getCountOfFreeApartments(long chatId) {
+        return persistence.selectAllFreeApartments(chatId).size();
     }
 
     public long getBookingUserIdApartment(long chatId) {
@@ -66,25 +66,10 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
 
         StringBuilder amenities = getAmenities(chatId, apartment);
 
-        return new Object[]{apartment.getArea(), amenities};
-    }
+        int currentSelectorOfApartment = getSelectorOfCurrentApartment(chatId) + 1;
+        int maxFreeApartments = getCountOfFreeApartments(chatId);
 
-    private StringBuilder getAmenities(long chatId, Apartment apartment) {
-        StringBuilder amenities = new StringBuilder();
-
-        if (apartment.getAmenities() != null) {
-            String[] amenitiesArray = apartment.getAmenities().split("\\$");
-            Arrays.sort(amenitiesArray);
-
-            for (String code : amenitiesArray) {
-                Amenity amenity = persistence.selectAmenity(Integer.parseInt(code));
-
-                amenities.append(service.getLocaleMessage(chatId, amenity.getLink())).append("\n");
-            }
-        } else
-            amenities.append("nothing");
-
-        return amenities;
+        return new Object[]{apartment.getArea(), amenities, currentSelectorOfApartment, maxFreeApartments};
     }
 
     public int getTotalRent(long checkIn, long checkOut, int countOfPeople) {
@@ -144,6 +129,28 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
         };
     }
 
+    private int getSelectedApartment(long chatId) {
+        return persistence.selectTempApartmentSelector(chatId).getNumberOfApartment();
+    }
+
+    private StringBuilder getAmenities(long chatId, Apartment apartment) {
+        StringBuilder amenities = new StringBuilder();
+
+        if (apartment.getAmenities() != null) {
+            String[] amenitiesArray = apartment.getAmenities().split("\\$");
+            Arrays.sort(amenitiesArray);
+
+            for (String code : amenitiesArray) {
+                Amenity amenity = persistence.selectAmenity(Integer.parseInt(code));
+
+                amenities.append(service.getLocaleMessage(chatId, amenity.getLink())).append("\n");
+            }
+        } else
+            amenities.append("nothing");
+
+        return amenities;
+    }
+
     // boolean
 
     public boolean isAlreadyExistRent(long chatId) {
@@ -181,13 +188,13 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
     }
 
     public void changeSelector(long chatId, Selector type) {
-        int selector = persistence.selectTempApartmentSelector(chatId).getSelector();
+        int selector = getSelectorOfCurrentApartment(chatId);
 
         switch (type) {
             case NEXT -> {
                 selector += 1;
 
-                if (selector < persistence.selectAllFreeApartments(chatId).size())
+                if (selector < getCountOfFreeApartments(chatId))
                     updateSelector(chatId, selector);
                 else
                     log.debug("Method changeSelector(Update): can't up selector because {} is max!", selector);
@@ -256,17 +263,4 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
     }
 
     // markups
-
-    public InlineKeyboardMarkup getIKMarkupGotNewApp(long chatId) {
-        List<InlineKeyboardRow> keyboard = new ArrayList<>();
-        List<InlineKeyboardButton> buttons = new ArrayList<>();
-
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_OK), DELETE));
-        keyboard.add(msgBuilder.buildIKRow(buttons));
-
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboard(keyboard)
-                .build();
-    }
 }

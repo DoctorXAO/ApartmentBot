@@ -36,7 +36,7 @@ public class UserMsgChangeCheckMonth extends UserDate {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK),
-                RAA_QUIT_FROM_CHANGE_CHECK_MONTH));
+                QUIT_FROM_CHANGE_CHECK_MONTH));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
@@ -50,14 +50,14 @@ public class UserMsgChangeCheckMonth extends UserDate {
         int mMonth = maxCalendar.get(Calendar.MONTH);
 
         if (pYear < selectedTime.get(Calendar.YEAR))
-            buttons.add(msgBuilder.buildIKButton("◀️", RAA_PREVIOUS_CHECK_YEAR_CM));
+            buttons.add(msgBuilder.buildIKButton("◀️", PREVIOUS_CHECK_YEAR_CM));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 
-        buttons.add(msgBuilder.buildIKButton(getSelectedYear(selectedTime), RAA_CHANGE_CHECK_YEAR));
+        buttons.add(msgBuilder.buildIKButton(getSelectedYear(selectedTime), CHANGE_CHECK_YEAR));
 
         if (selectedTime.get(Calendar.YEAR) < mYear)
-            buttons.add(msgBuilder.buildIKButton("▶️", RAA_NEXT_CHECK_YEAR_CM));
+            buttons.add(msgBuilder.buildIKButton("▶️", NEXT_CHECK_YEAR_CM));
         else
             buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
 

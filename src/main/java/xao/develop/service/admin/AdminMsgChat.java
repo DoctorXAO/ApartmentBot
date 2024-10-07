@@ -1,4 +1,4 @@
-package xao.develop.service.user;
+package xao.develop.service.admin;
 
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -6,31 +6,18 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 @Service
-public class UserMsgChangeCheckYear extends UserDate {
+public class AdminMsgChat extends AdminMessage {
 
     @Override
-    public InlineKeyboardMarkup getIKMarkup(long chatId) {
-        Calendar presentTime = getPresentTime(chatId);
-
+    protected InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK),
-                QUIT_FROM_CHANGE_CHECK_MONTH));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), BACK_TO_START));
         keyboard.add(msgBuilder.buildIKRow(buttons));
-        buttons.clear();
-
-        for (int i = 0; i <= MAX_YEAR; i++) {
-            String year = String.valueOf(presentTime.get(Calendar.YEAR) + i);
-            buttons.add(msgBuilder.buildIKButton(year, RAA_SET_YEAR + year));
-
-            keyboard.add(msgBuilder.buildIKRow(buttons));
-            buttons.clear();
-        }
 
         return InlineKeyboardMarkup
                 .builder()

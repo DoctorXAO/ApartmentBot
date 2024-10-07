@@ -12,4 +12,6 @@ public interface GeneralMessageLink {
 
     String GENERAL_BT_BACK = "general.bt.back";
     String GENERAL_BT_OK = "general.bt.ok";
+
+    String GENERAL_BT_ANSWER = "general.bt.answer";
 }

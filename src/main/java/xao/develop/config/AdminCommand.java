@@ -2,6 +2,7 @@ package xao.develop.config;
 
 public interface AdminCommand {
     String START = "/start";
+    String CHAT = "/chat";
 
     String NEW_APPLICATIONS = "new_applications";
     String ARCHIVE = "archive";
@@ -9,7 +10,6 @@ public interface AdminCommand {
 
     String QUIT_FROM_APP = "quit_from_app";
     String QUIT_FROM_ARC = "quit_from_arc";
-    String BACK_TO_START = "back_to_start";
 
     String PREVIOUS_PAGE_OF_ARCHIVE = "previous_page_of_archive";
     String NEXT_PAGE_OF_ARCHIVE = "next_page_of_archive";

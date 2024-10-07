@@ -9,21 +9,19 @@ public interface UserCommand {
     String CARD_COUNT = "/count";
     String CARD_CONTACTS = "/contacts";
 
-    String RAA = "raa_";
     String CHOOSE_CHECK_DATE = "choose_check_date";
-    String RAA_CHANGE_CHECK_MONTH = RAA + "change_check_month";
-    String RAA_NEXT_CHECK_YEAR_CM = RAA + "next_check_year_cm";
-    String RAA_PREVIOUS_CHECK_YEAR_CM = RAA + "previous_check_year_cm";
-    String RAA_QUIT_FROM_CHANGE_CHECK_MONTH = RAA + "quit_from_change_check_month";
-    String RAA_CHANGE_CHECK_YEAR = RAA + "change_check_year";
-    String RAA_NEXT_CHECK_YEAR = RAA + "next_check_year";
-    String RAA_PREVIOUS_CHECK_YEAR = RAA + "previous_check_year";
-    String RAA_NEXT_CHECK_MONTH = RAA + "next_check_month";
-    String RAA_PREVIOUS_CHECK_MONTH = RAA + "previous_check_month";
-    String RAA_QUIT_FROM_CHOOSER_CHECK = RAA + "quit_from_chooser_check";
+    String CHANGE_CHECK_MONTH = "change_check_month";
+    String NEXT_CHECK_YEAR_CM = "next_check_year_cm";
+    String PREVIOUS_CHECK_YEAR_CM = "previous_check_year_cm";
+    String QUIT_FROM_CHANGE_CHECK_MONTH = "quit_from_change_check_month";
+    String CHANGE_CHECK_YEAR = "change_check_year";
+    String NEXT_CHECK_YEAR = "next_check_year";
+    String PREVIOUS_CHECK_YEAR = "previous_check_year";
+    String NEXT_CHECK_MONTH = "next_check_month";
+    String PREVIOUS_CHECK_MONTH = "previous_check_month";
+    String QUIT_FROM_CHOOSER_CHECK = "quit_from_chooser_check";
 
-    String RAA_CHOOSE_CHECK_OUT_DATE = RAA + "choose_check_out_date";
-
+    String RAA = "raa_";
     String RAA_CHOOSE_AN_APARTMENT = RAA + "choose_an_apartment";
     String RAA_NEXT_APARTMENT = RAA + "next_apartment";
     String RAA_PREVIOUS_APARTMENT = RAA + "previous_apartment";
@@ -43,7 +41,6 @@ public interface UserCommand {
     String CONTACTS = "contacts";
 
     String BACK = "back";
-    String BACK_TO_START = "back_to_start";
     String NEXT = "next";
     String SEND = "send";
 

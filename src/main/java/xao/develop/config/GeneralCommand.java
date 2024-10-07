@@ -8,6 +8,8 @@ public interface GeneralCommand {
 
     String APP = "app";
 
+    String BACK_TO_START = "back_to_start";
+
     String DELETE = "delete";
 
     String X = " ";
@@ -16,4 +18,6 @@ public interface GeneralCommand {
     String ACCEPTED = "accepted";
     String DENIED = "denied";
     String FINISHED = "finished";
+
+    String ANSWER = "answer";
 }

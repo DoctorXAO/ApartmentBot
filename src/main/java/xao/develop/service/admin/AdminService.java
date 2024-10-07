@@ -42,10 +42,13 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     @Autowired
     AdminMsgChangeLanguage adminMsgChangeLanguage;
 
+    @Autowired
+    AdminMsgChat adminMsgChat;
+
     public void execute(Update update) {
         log.trace("Method execute(Update, String) started");
 
-        String[] data = service.getData(update).split(X);
+        String[] data = service.getData(update).split(X, 2);
 
         for (String d : data)
             log.debug("data: {}", d);
@@ -58,7 +61,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
         try {
             if (update.hasMessage())
-                processingMessage(chatId, msgId, user, messages, data[0]);
+                processingMessage(chatId, msgId, user, messages, data);
             else if (update.hasCallbackQuery())
                 processingCallbackQuery(chatId, msgId, user, messages, data);
             else
@@ -77,13 +80,14 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
                                    int msgId,
                                    User user,
                                    List<Integer> messages,
-                                   String data) throws TelegramApiException {
-        if (data.equals(START))
-            start(chatId, user, messages, true);
-        else
-            log.info("Unknown message data: {}", data);
+                                   String[] data) throws TelegramApiException {
+        switch (data[0]) {
+            case START -> start(chatId, user, messages, true);
+            case CHAT -> chat(chatId, data[1]);
+            default -> log.info("Unknown message data: {}", data[0]);
+        }
 
-        service.deleteLastMessage(chatId, msgId);
+        deleteMessage(chatId, msgId);
     }
 
     private void processingCallbackQuery(long chatId,
@@ -108,6 +112,8 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case ACCEPT_APP -> performActionStatement(chatId, messages, data[1], TypeOfAppStatus.ACCEPTED);
             case RETURN_APP -> performActionStatement(chatId, messages, data[1], TypeOfAppStatus.WAITING);
 
+            case OPEN_CHAT -> openChat(chatId, messages, data[1]);
+
             case QUIT_FROM_APP -> openListOfApps(chatId, messages, TypeOfApp.APP, true);
             case QUIT_FROM_ARC -> openListOfApps(chatId, messages, TypeOfApp.ARC, true);
 
@@ -121,7 +127,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         }
     }
 
-    private void start(long chatId, User user, List<Integer> messages, boolean isInit) throws TelegramApiException {
+    private void start(long chatId,
+                       User user,
+                       List<Integer> messages,
+                       boolean isInit) throws TelegramApiException {
         if (isInit)
             service.authorization(chatId, user);
 
@@ -186,8 +195,14 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             default -> status = "null";
         }
 
-        service.sendMessageAdminUserUpdatedStatus(userId, GENERAL_MSG_UPDATED_STATUS,
+        service.sendMessageAdminUser(userId, GENERAL_MSG_UPDATED_STATUS,
                 adminMsgStart.getIKMarkupUpdatedStatus(chatId), status);
+    }
+
+    private void openChat(long chatId, List<Integer> messages, String data) throws TelegramApiException {
+        int numOfApp = Integer.parseInt(data);
+
+        messages.add(adminMsgChat.editMessage(chatId, ADMIN_MSG_CHAT, adminMsgStart.getAppParameters(chatId, numOfApp)));
     }
 
     private void openApp(long chatId, List<Integer> messages, String data, TypeOfApp type) throws TelegramApiException {
@@ -201,9 +216,20 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             messages.add(adminMsgOpenArc.editMessage(chatId, ADMIN_MSG_APP, adminMsgStart.getAppParameters(chatId, numOfApp)));
     }
 
-    private void changeLanguage(long chatId, User user, List<Integer> messages, String data) throws TelegramApiException {
+    private void changeLanguage(long chatId,
+                                User user,
+                                List<Integer> messages,
+                                String data) throws TelegramApiException {
         service.setLanguage(chatId, data);
         start(chatId, user, messages, false);
+    }
+
+    private void chat(long chatId, String data) throws TelegramApiException {
+        long userId = adminMsgStart.getUserId(adminMsgStart.getSelectedApp(chatId));
+
+        service.sendMessageAdminUser(userId, ADMIN_MSG_CHATTING_ADMIN, adminMsgStart.getIKMarkupChat(userId), data);
+
+        service.sendMessageAdminUser(chatId, ADMIN_MSG_SENT_SUCCESSFULLY, adminMsgStart.getIKMarkupChat(chatId), data);
     }
 
     private void deleteMessage(long chatId, int msgId) {

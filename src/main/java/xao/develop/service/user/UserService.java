@@ -11,6 +11,7 @@ import xao.develop.config.GeneralMessageLink;
 import xao.develop.config.UserCommand;
 import xao.develop.config.UserMessageLink;
 import xao.develop.config.enums.Card;
+import xao.develop.config.enums.CheckDate;
 import xao.develop.config.enums.Month;
 import xao.develop.config.enums.Selector;
 import xao.develop.service.BotService;
@@ -102,23 +103,19 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                                    List<Integer> messages,
                                    String[] data) throws TelegramApiException {
 
-        if (data.length == 2 && chatId == userMsgStart.getBookingUserIdApartment(chatId)) {
             switch (data[0]) {
-                case CARD_NAME -> cardDataProcessing(chatId, msgId, messages, data[1], Card.NAME);
-                case CARD_SURNAME -> cardDataProcessing(chatId, msgId, messages, data[1], Card.SURNAME);
-                case CARD_GENDER -> cardDataProcessing(chatId, msgId, messages, data[1], Card.GENDER);
-                case CARD_AGE -> cardDataProcessing(chatId, msgId, messages, data[1], Card.AGE);
-                case CARD_COUNT -> cardDataProcessing(chatId, msgId, messages, data[1], Card.COUNT);
-                case CARD_CONTACTS -> cardDataProcessing(chatId, msgId, messages, data[1], Card.CONTACTS);
+                case START -> start(chatId, user, messages);
+                case CARD_NAME -> cardDataProcessing(chatId, msgId, messages, data, Card.NAME);
+                case CARD_SURNAME -> cardDataProcessing(chatId, msgId, messages, data, Card.SURNAME);
+                case CARD_GENDER -> cardDataProcessing(chatId, msgId, messages, data, Card.GENDER);
+                case CARD_AGE -> cardDataProcessing(chatId, msgId, messages, data, Card.AGE);
+                case CARD_COUNT -> cardDataProcessing(chatId, msgId, messages, data, Card.COUNT);
+                case CARD_CONTACTS -> cardDataProcessing(chatId, msgId, messages, data, Card.CONTACTS);
+                default -> {
+                    deleteMessage(chatId, msgId);
+                    log.info("Unknown message data: {}", data[0]);
+                }
             }
-        } else {
-            if (data[0].equals(START)) {
-                start(chatId, user, messages, true);
-            } else
-                log.info("Unknown message data: {}", data[0]);
-
-            service.deleteLastMessage(chatId, msgId);
-        }
     }
 
     private void processingCallbackQueryRAA(long chatId,
@@ -129,51 +126,13 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
             processingRAA_SET(chatId, messages, data);
         } else
             switch (data) {
-                case RAA_CHANGE_CHECK_YEAR -> messages.add(userMsgChangeCheckYear.editMessage(chatId,
-                        USER_MSG_CHANGE_CHECK_YEAR));
-                case RAA_CHANGE_CHECK_MONTH -> messages.add(userMsgChangeCheckMonth.editMessage(chatId,
-                        USER_MSG_CHANGE_CHECK_MONTH));
-                case RAA_NEXT_CHECK_YEAR_CM -> {
-                    userMsgChooseCheckDate.nextYear(chatId);
-                    messages.add(userMsgChangeCheckMonth.editMessage(chatId, USER_MSG_CHANGE_CHECK_MONTH));
-                }
-                case RAA_PREVIOUS_CHECK_YEAR_CM -> {
-                    userMsgChooseCheckDate.previousYear(chatId);
-                    messages.add(userMsgChangeCheckMonth.editMessage(chatId, USER_MSG_CHANGE_CHECK_MONTH));
-                }
-                case RAA_QUIT_FROM_CHANGE_CHECK_MONTH -> openMsgChooseCheckDate(chatId, messages);
-                case RAA_NEXT_CHECK_YEAR -> {
-                    userMsgChooseCheckDate.nextYear(chatId);
-                    openMsgChooseCheckDate(chatId, messages);
-                }
-                case RAA_PREVIOUS_CHECK_YEAR -> {
-                    userMsgChooseCheckDate.previousYear(chatId);
-                    openMsgChooseCheckDate(chatId, messages);
-                }
-                case RAA_NEXT_CHECK_MONTH -> {
-                    userMsgChooseCheckDate.nextMonth(chatId);
-                    openMsgChooseCheckDate(chatId, messages);
-                }
-                case RAA_PREVIOUS_CHECK_MONTH -> {
-                    userMsgChooseCheckDate.previousMonth(chatId);
-                    openMsgChooseCheckDate(chatId, messages);
-                }
-                case RAA_QUIT_FROM_CHOOSER_CHECK -> {
-                    if (userMsgChooseCheckDate.isCheckInSet(chatId)) {
-                        userMsgChooseCheckDate.deleteCheckIn(chatId);
-                        messages.add(userMsgChooseCheckDate.editMessage(chatId, USER_MSG_CHOOSE_CHECK_IN_DATE));
-                    } else {
-                        userMsgChooseCheckDate.deleteUserFromTempBookingData(chatId);
-                        messages.add(userMsgStart.editMessage(chatId, USER_MSG_START));
-                    }
-                }
                 case RAA_NEXT_APARTMENT -> {
                     userMsgChooseAnApartment.changeSelector(chatId, Selector.NEXT);
-                    initMsgApartments(chatId, messages);
+                    openMsgApartments(chatId, messages);
                 }
                 case RAA_PREVIOUS_APARTMENT -> {
                     userMsgChooseAnApartment.changeSelector(chatId, Selector.PREVIOUS);
-                    initMsgApartments(chatId, messages);
+                    openMsgApartments(chatId, messages);
                 }
                 case RAA_QUIT_FROM_CHOOSER_AN_APARTMENT -> {
                     userMsgChooseAnApartment.deleteTempApartmentSelector(chatId);
@@ -191,12 +150,12 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                     userMsgChooseAnApartment.setIsBookingApartment(chatId, false);
                     userMsgChooseAnApartment.deleteTempApartmentSelector(chatId);
                     userMsgChooseAnApartment.addTempApartmentSelector(chatId);
-                    initMsgApartments(chatId, messages);
+                    openMsgApartments(chatId, messages);
                 }
                 case RAA_QUIT_CAN_NOT_BOOK -> {
                     userMsgChooseAnApartment.deleteTempApartmentSelector(chatId);
                     userMsgChooseAnApartment.addTempApartmentSelector(chatId);
-                    initMsgApartments(chatId, messages);
+                    openMsgApartments(chatId, messages);
                 }
                 case RAA_SHOW_PREVIEW -> messages.add(userMsgPreviewCard.editMessage(chatId, USER_MSG_SHOW_PREVIEW,
                         userMsgPreviewCard.getPackParameters(chatId)));
@@ -204,10 +163,10 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                 case RAA_SEND_BOOKING_TO_ADMIN -> {
                     userMsgPreviewCard.insertCardToBookingCard(chatId, user);
                     messages.add(userMsgStart.editMessage(chatId, USER_MSG_START));
-                    service.sendMessageAdminUserUpdatedStatus(service.getAdminId(), GENERAL_MSG_GOT_NEW_APP,
-                            userMsgStart.getIKMarkupGotNewApp(service.getAdminId()));
+                    service.sendMessageAdminUser(service.getAdminId(), GENERAL_MSG_GOT_NEW_APP,
+                            userMsgStart.getIKMarkupUpdatedStatus(service.getAdminId()));
                     int msgId = service.sendSimpleMessage(chatId, USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN);
-                    scheduled.schedule(() -> service.deleteLastMessage(chatId, msgId), 10, TimeUnit.SECONDS);
+                    scheduled.schedule(() -> deleteMessage(chatId, msgId), 10, TimeUnit.SECONDS);
                 }
 
                 default -> log.info("Unknown RAA data: {}", data);
@@ -220,12 +179,28 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                                          List<Integer> messages,
                                          String data) throws TelegramApiException {
         switch (data) {
+            case CHOOSE_CHECK_DATE -> openChooseCheckDate(chatId, user, messages, CheckDate.DATE);
+            case CHANGE_CHECK_YEAR -> openChooseCheckDate(chatId, user, messages, CheckDate.YEAR);
+            case CHANGE_CHECK_MONTH -> openChooseCheckDate(chatId, user, messages, CheckDate.MONTH);
+
+            case NEXT_CHECK_YEAR_CM -> changeDate(chatId, messages, CheckDate.YEAR, Selector.NEXT, CheckDate.MONTH);
+            case PREVIOUS_CHECK_YEAR_CM -> changeDate(chatId, messages, CheckDate.YEAR, Selector.PREVIOUS, CheckDate.MONTH);
+
+            case QUIT_FROM_CHANGE_CHECK_MONTH -> openMsgChooseCheckDate(chatId, messages);
+
+            case NEXT_CHECK_YEAR -> changeDate(chatId, messages, CheckDate.YEAR, Selector.NEXT, CheckDate.DATE);
+            case PREVIOUS_CHECK_YEAR -> changeDate(chatId, messages, CheckDate.YEAR, Selector.PREVIOUS, CheckDate.DATE);
+
+            case NEXT_CHECK_MONTH -> changeDate(chatId, messages, CheckDate.MONTH, Selector.NEXT, CheckDate.DATE);
+            case PREVIOUS_CHECK_MONTH -> changeDate(chatId, messages, CheckDate.MONTH, Selector.PREVIOUS, CheckDate.DATE);
+
+            case QUIT_FROM_CHOOSER_CHECK -> quitFromChooserCheck(chatId, messages);
+
             case ABOUT_US -> openAboutUs(chatId, messages);
             case CONTACTS -> openContacts(chatId, messages);
             case CHANGE_LANGUAGE -> openChangeLanguage(chatId, messages);
-            case BACK_TO_START -> start(chatId, user, messages, false);
-            case EN, TR, RU -> changeLanguage(chatId, user, messages, data);
-            case CHOOSE_CHECK_DATE -> chooseCheckDate(chatId, user, messages);
+            case EN, TR, RU -> changeLanguage(chatId, messages, data);
+            case BACK_TO_START -> start(chatId, messages);
             case DELETE -> deleteMessage(chatId, msgId);
             default -> log.info("Unknown callback query data: {}", data);
         }
@@ -237,12 +212,14 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
             openMsgChooseCheckDate(chatId, messages);
         } else if (data.startsWith(RAA_SET_DAY)) {
             if (!userMsgChooseCheckDate.isCheckInSet(chatId)) {
-                userMsgChooseCheckDate.setCheckIn(chatId, Integer.parseInt(data.replaceAll(RAA_SET_DAY, "")));
+                userMsgChooseCheckDate.setCheck(chatId,
+                        Integer.parseInt(data.replaceAll(RAA_SET_DAY, "")), CheckDate.IN);
                 messages.add(userMsgChooseCheckDate.editMessage(chatId, USER_MSG_CHOOSE_CHECK_OUT_DATE));
             } else {
-                userMsgChooseCheckDate.setCheckOut(chatId, Integer.parseInt(data.replaceAll(RAA_SET_DAY, "")));
+                userMsgChooseCheckDate.setCheck(chatId,
+                        Integer.parseInt(data.replaceAll(RAA_SET_DAY, "")), CheckDate.OUT);
                 userMsgChooseAnApartment.addTempApartmentSelector(chatId);
-                initMsgApartments(chatId, messages);
+                openMsgApartments(chatId, messages);
             }
         } else {
             switch (data) {
@@ -276,48 +253,61 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         messages.add(userMsgChangeLanguage.editMessage(chatId, GENERAL_MSG_CHANGE_LANGUAGE));
     }
 
+    private void changeLanguage(long chatId, List<Integer> messages, String data) throws TelegramApiException {
+        service.setLanguage(chatId, data);
+        start(chatId, messages);
+    }
+
     private void cardDataProcessing(long chatId,
                                     int msgId,
                                     List<Integer> messages,
-                                    String data,
+                                    String[] data,
                                     Card type) throws TelegramApiException {
-        switch (type) {
-            case NAME -> {
-                if (data.matches("[a-zA-Z]+"))
-                    correctInputCard(chatId, msgId, messages, data, type);
-                else
-                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_NAME);
+        if (chatId == userMsgStart.getBookingUserIdApartment(chatId))
+            switch (type) {
+                case NAME -> {
+                    if (data.length > 1 && data[1].matches("[a-zA-Z]+"))
+                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    else
+                        initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_NAME);
+                }
+                case SURNAME -> {
+                    if (data.length > 1 && data[1].matches("[a-zA-Z]+"))
+                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    else
+                        initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_SURNAME);
+                }
+                case GENDER -> {
+                    if (data.length > 1 && data[1].matches("[MW]"))
+                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    else
+                        initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_GENDER);
+                }
+                case AGE -> {
+                    if (data.length > 1 && data[1].matches("[0-9]+") &&
+                            Integer.parseInt(data[1]) >= 18 &&
+                            Integer.parseInt(data[1]) <= 95)
+                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    else
+                        initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_AGE);
+                }
+                case COUNT -> {
+                    if (data.length > 1 && data[1].matches("[0-9]+") &&
+                            Integer.parseInt(data[1]) >= 1 &&
+                            Integer.parseInt(data[1]) <= 5)
+                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    else
+                        initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_COUNT);
+                }
+                case CONTACTS -> {
+                    if (data.length > 1)
+                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    else
+                        initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_CONTACTS);
+                }
             }
-            case SURNAME -> {
-                if (data.matches("[a-zA-Z]+"))
-                    correctInputCard(chatId, msgId, messages, data, type);
-                else
-                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_SURNAME);
-            }
-            case GENDER -> {
-                if (data.matches("[MW]"))
-                    correctInputCard(chatId, msgId, messages, data, type);
-                else
-                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_GENDER);
-            }
-            case AGE -> {
-                if (data.matches("[0-9]+") &&
-                        Integer.parseInt(data) >= 18 &&
-                        Integer.parseInt(data) <= 95)
-                    correctInputCard(chatId, msgId, messages, data, type);
-                else
-                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_AGE);
-            }
-            case COUNT -> {
-                if (data.matches("[0-9]+") &&
-                        Integer.parseInt(data) >= 1 &&
-                        Integer.parseInt(data) <= 5)
-                    correctInputCard(chatId, msgId, messages, data, type);
-                else
-                    initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_COUNT);
-            }
-            case CONTACTS -> correctInputCard(chatId, msgId, messages, data, type);
-        }
+        else
+            deleteMessage(chatId, msgId);
     }
 
     private void correctInputCard(long chatId,
@@ -326,7 +316,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                                   String data,
                                   Card type) throws TelegramApiException {
 
-        service.deleteLastMessage(chatId, msgId);
+        deleteMessage(chatId, msgId);
 
         switch (type) {
             case NAME -> {
@@ -356,28 +346,64 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         }
     }
 
-    private void start(long chatId, User user, List<Integer> messages, boolean isInit) throws TelegramApiException {
-        if (isInit)
-            service.authorization(chatId, user);
+    private void start(long chatId, User user, List<Integer> messages) throws TelegramApiException {
+        service.authorization(chatId, user);
 
         messages.add(userMsgStart.editMessage(chatId, USER_MSG_START));
     }
 
-    private void changeLanguage(long chatId, User user, List<Integer> messages, String data) throws TelegramApiException {
-        service.setLanguage(chatId, data);
-        start(chatId, user, messages, false);
+    private void start(long chatId, List<Integer> messages) throws TelegramApiException {
+        messages.add(userMsgStart.editMessage(chatId, USER_MSG_START));
     }
 
     private void deleteMessage(long chatId, int msgId) {
         service.deleteMessage(chatId, msgId);
     }
 
-    private void chooseCheckDate(long chatId, User user, List<Integer> messages) throws TelegramApiException {
-        if (userMsgChooseCheckDate.isAlreadyExistRent(chatId)) {
+    private void openChooseCheckDate(long chatId,
+                                     User user,
+                                     List<Integer> messages,
+                                     CheckDate type) throws TelegramApiException {
+        switch (type) {
+            case DATE -> initSelectorCheckDate(chatId, user, messages);
+            case YEAR -> messages.add(userMsgChangeCheckYear.editMessage(chatId, USER_MSG_CHANGE_CHECK_YEAR));
+            case MONTH -> messages.add(userMsgChangeCheckMonth.editMessage(chatId, USER_MSG_CHANGE_CHECK_MONTH));
+        }
+    }
+
+    private void initSelectorCheckDate(long chatId, User user, List<Integer> messages) throws TelegramApiException {
+        if (userMsgChooseCheckDate.isAlreadyExistRent(chatId))
             messages.add(userMsgAlreadyRenting.editMessage(chatId, USER_MSG_ALREADY_EXIST_RENT));
-        } else {
+        else {
             userMsgChooseCheckDate.addNewUserToTempBookingData(chatId, user);
             messages.add(userMsgChooseCheckDate.editMessage(chatId, USER_MSG_CHOOSE_CHECK_IN_DATE));
+        }
+    }
+
+    private void changeDate(long chatId,
+                            List<Integer> messages,
+                            CheckDate date,
+                            Selector selector,
+                            CheckDate origin) throws TelegramApiException {
+        switch (origin) {
+            case MONTH -> {
+                userMsgChooseCheckDate.changeDate(chatId, date, selector);
+                messages.add(userMsgChangeCheckMonth.editMessage(chatId, USER_MSG_CHANGE_CHECK_MONTH));
+            }
+            case DATE -> {
+                userMsgChooseCheckDate.changeDate(chatId, date, selector);
+                openMsgChooseCheckDate(chatId, messages);
+            }
+        }
+    }
+
+    private void quitFromChooserCheck(long chatId, List<Integer> messages) throws TelegramApiException {
+        if (userMsgChooseCheckDate.isCheckInSet(chatId)) {
+            userMsgChooseCheckDate.deleteCheckIn(chatId);
+            messages.add(userMsgChooseCheckDate.editMessage(chatId, USER_MSG_CHOOSE_CHECK_IN_DATE));
+        } else {
+            userMsgChooseCheckDate.deleteUserFromTempBookingData(chatId);
+            start(chatId, messages);
         }
     }
 
@@ -388,7 +414,9 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         messages.add(userMsgChooseCheckDate.editMessage(chatId, message));
     }
 
-    private void initMsgApartments(long chatId, List<Integer> messages) throws TelegramApiException {
+
+
+    private void openMsgApartments(long chatId, List<Integer> messages) throws TelegramApiException {
         int msgId = service.sendSimpleMessage(chatId, USER_MSG_SIMPLE_DOWNLOADING);
 
         messages.addAll(userMsgChooseAnApartment.sendPhotos(chatId,
@@ -400,7 +428,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         else
             messages.add(userMsgNoFreeApartment.sendMessage(chatId, USER_MSG_NO_FREE_APARTMENTS));
 
-        service.deleteLastMessage(chatId, msgId);
+        deleteMessage(chatId, msgId);
     }
 
     private void initMsgBooking(long chatId, List<Integer> messages, String msgLink) throws TelegramApiException {
@@ -411,8 +439,8 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         try {
             int simpleMsgId = service.sendSimpleMessage(chatId, msgLink);
             scheduled.schedule(() -> {
-                service.deleteLastMessage(chatId, msgId);
-                service.deleteLastMessage(chatId, simpleMsgId);
+                deleteMessage(chatId, msgId);
+                deleteMessage(chatId, simpleMsgId);
                     }, 10, TimeUnit.SECONDS);
         } catch (TelegramApiException ex) {
             log.warn("""
