@@ -5,7 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import xao.develop.config.UserCommand;
 import xao.develop.config.UserMessageLink;
 import xao.develop.config.enums.Selector;
-import xao.develop.config.enums.TypeOfAppStatus;
+import xao.develop.config.enums.AppStatus;
 import xao.develop.model.Amenity;
 import xao.develop.model.Apartment;
 import xao.develop.model.BookingCard;
@@ -154,8 +154,8 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
     // boolean
 
     public boolean isAlreadyExistRent(long chatId) {
-        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(TypeOfAppStatus.WAITING);
-        bookingCards.addAll(persistence.selectBookingCardByStatus(TypeOfAppStatus.ACCEPTED));
+        List<BookingCard> bookingCards = persistence.selectBookingCardByStatus(AppStatus.WAITING);
+        bookingCards.addAll(persistence.selectBookingCardByStatus(AppStatus.ACCEPTED));
 
         for (BookingCard bookingCard : bookingCards)
             if (bookingCard.getChatId() == chatId)

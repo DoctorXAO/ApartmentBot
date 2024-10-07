@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import xao.develop.config.enums.TypeOfAppStatus;
+import xao.develop.config.enums.AppStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ public class AdminMsgOpenArc extends AdminMessage {
 
         int selectedApp = persistence.selectTempAdminSettings(chatId).getSelectedApplication();
 
-        if (!getStatusOfApp(selectedApp).equals(TypeOfAppStatus.FINISHED.getType())) {
+        if (!getStatusOfApp(selectedApp).equals(AppStatus.FINISHED.getType())) {
             buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_RETURN),
                     RETURN_APP + X + selectedApp));
             keyboard.add(msgBuilder.buildIKRow(buttons));

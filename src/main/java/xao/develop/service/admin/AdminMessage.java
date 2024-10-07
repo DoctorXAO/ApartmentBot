@@ -1,5 +1,6 @@
 package xao.develop.service.admin;
 
+import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import xao.develop.config.AdminCommand;
@@ -7,12 +8,16 @@ import xao.develop.config.AdminMessageLink;
 import xao.develop.config.GeneralCommand;
 import xao.develop.model.BookingCard;
 import xao.develop.model.TempAdminSettings;
-import xao.develop.config.enums.TypeOfApp;
-import xao.develop.config.enums.TypeOfAppStatus;
+import xao.develop.config.enums.App;
+import xao.develop.config.enums.AppStatus;
 import xao.develop.service.BotMessage;
 
+import java.io.File;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 public abstract class AdminMessage extends BotMessage implements AdminCommand, AdminMessageLink, GeneralCommand {
 
     // setters
@@ -24,7 +29,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     }
 
     public int getCountOfNewApps() {
-        return persistence.selectBookingCardByStatus(TypeOfAppStatus.WAITING).size();
+        return persistence.selectBookingCardByStatus(AppStatus.WAITING).size();
     }
 
     public Object[] getAppParameters(long chatId, int idOfCard) {
@@ -77,7 +82,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     // updates
 
-    public void updateBookingCardStatus(int idOfCard, TypeOfAppStatus status) {
+    public void updateBookingCardStatus(int idOfCard, AppStatus status) {
         persistence.updateBookingCard(idOfCard, status);
     }
 
@@ -94,43 +99,30 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     // init
 
     protected void initSelectorApps(long chatId,
-                                 List<InlineKeyboardRow> keyboard,
-                                 List<InlineKeyboardButton> buttons,
-                                 TypeOfApp type) {
+                                    App type,
+                                    List<InlineKeyboardRow> keyboard,
+                                    List<InlineKeyboardButton> buttons) {
 
         List<BookingCard> bookingCards = null;
-        String data = null;
-
-        if (type.equals(TypeOfApp.APP)) {
-            bookingCards = persistence.selectBookingCardByStatus(TypeOfAppStatus.WAITING);
-            data = APP + X;
-        }
-        else if (type.equals(TypeOfApp.ARC)) {
-            bookingCards = persistence.selectAllBookingCardExceptWaiting();
-            data = ARC + X;
-        }
+        String data = EMPTY;
 
         TempAdminSettings adminSettings = persistence.selectTempAdminSettings(chatId);
 
-        if (bookingCards.size() > botConfig.getCountOfApps()) {
-            if (adminSettings.getSelectedPage() - botConfig.getCountOfApps() >= 0)
-                buttons.add(msgBuilder.buildIKButton(
-                        service.getLocaleMessage(chatId, "◀️"), PREVIOUS_PAGE_OF_ARCHIVE));
-            else
-                buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
-
-            if (adminSettings.getSelectedPage() + botConfig.getCountOfApps() < bookingCards.size())
-                buttons.add(msgBuilder.buildIKButton(
-                        service.getLocaleMessage(chatId, "▶️"), NEXT_PAGE_OF_ARCHIVE));
-            else
-                buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
-
-            keyboard.add(msgBuilder.buildIKRow(buttons));
-            buttons.clear();
+        if (type.equals(App.APP)) {
+            bookingCards = persistence.selectBookingCardByStatus(AppStatus.WAITING);
+            data = APP + X;
+            initSelectorPanel(chatId, bookingCards.size(), botConfig.getCountOfAppsOnPage(), adminSettings,
+                    PREVIOUS_PAGE_OF_NEW_APPS, NEXT_PAGE_OF_NEW_APPS, keyboard, buttons);
+        }
+        else if (type.equals(App.ARC)) {
+            bookingCards = persistence.selectAllBookingCardExceptWaiting();
+            data = ARC + X;
+            initSelectorPanel(chatId, bookingCards.size(), botConfig.getCountOfAppsOnPage(), adminSettings,
+                    PREVIOUS_PAGE_OF_ARCHIVE, NEXT_PAGE_OF_ARCHIVE, keyboard, buttons);
         }
 
         if (!bookingCards.isEmpty())
-            for (int i = 0; i < botConfig.getCountOfApps(); i++) {
+            for (int i = 0; i < botConfig.getCountOfAppsOnPage(); i++) {
 
                 if (i >= bookingCards.size())
                     break;
@@ -148,9 +140,44 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
             }
     }
 
-    protected void initBtChat(long chatId,
-                              List<InlineKeyboardRow> keyboard,
-                              List<InlineKeyboardButton> buttons) {
+    protected void initSelectorApartments(long chatId,
+                                          List<InlineKeyboardRow> keyboard,
+                                          List<InlineKeyboardButton> buttons) {
+        try {
+            ClassLoader classLoader = getClass().getClassLoader();
+            URL resource = classLoader.getResource("img/apartments");
+
+            if (resource == null)
+                throw new Exception("Directory with photos isn't found!");
+
+            String[] fileNames = new File(resource.getFile()).list();
+
+            if (fileNames != null) {
+                Arrays.sort(fileNames, String::compareToIgnoreCase);
+
+                TempAdminSettings adminSettings = persistence.selectTempAdminSettings(chatId);
+
+                initSelectorPanel(chatId, fileNames.length, botConfig.getCountOfAppsOnPage(), adminSettings,
+                        PREVIOUS_PAGE_OF_APART, NEXT_PAGE_OF_APART, keyboard, buttons);
+
+                for (int i = 0; i < botConfig.getCountOfApartmentOnPage(); i++) {
+
+                    if (i >= fileNames.length)
+                        break;
+
+                    buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId,
+                            ADMIN_BT_APARTMENT,
+                            fileNames[i]), APARTMENT + X + fileNames[1]));
+                    keyboard.add(msgBuilder.buildIKRow(buttons));
+                    buttons.clear();
+                }
+            }
+        } catch (Exception ex) {
+            log.debug("initSelectorApartments exception: {}", ex.getMessage());
+        }
+    }
+
+    protected void initBtChat(long chatId, List<InlineKeyboardRow> keyboard, List<InlineKeyboardButton> buttons) {
 
         int selectedApp = persistence.selectTempAdminSettings(chatId).getSelectedApplication();
 
@@ -165,13 +192,42 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     public void nextPage(long chatId) {
         TempAdminSettings tempAdminSettings = persistence.selectTempAdminSettings(chatId);
         persistence.updateSelectedPageTempAdminSettings(chatId,
-                tempAdminSettings.getSelectedPage() + botConfig.getCountOfApps());
+                tempAdminSettings.getSelectedPage() + botConfig.getCountOfAppsOnPage());
     }
 
     public void previousPage(long chatId) {
         TempAdminSettings tempAdminSettings = persistence.selectTempAdminSettings(chatId);
         persistence.updateSelectedPageTempAdminSettings(chatId,
-                tempAdminSettings.getSelectedPage() - botConfig.getCountOfApps());
+                tempAdminSettings.getSelectedPage() - botConfig.getCountOfAppsOnPage());
+    }
+
+    // init
+
+    public void initSelectorPanel(long chatId,
+                                  int countOfEntityOnPage,
+                                  int maxCountOfEntityOnPage,
+                                  TempAdminSettings adminSettings,
+                                  String dataOfPrevious,
+                                  String dataOfNext,
+                                  List<InlineKeyboardRow> keyboard,
+                                  List<InlineKeyboardButton> buttons) {
+
+        if (countOfEntityOnPage > maxCountOfEntityOnPage) {
+            if (adminSettings.getSelectedPage() - maxCountOfEntityOnPage >= 0)
+                buttons.add(msgBuilder.buildIKButton(
+                        service.getLocaleMessage(chatId, "◀️"), dataOfPrevious));
+            else
+                buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
+
+            if (adminSettings.getSelectedPage() + maxCountOfEntityOnPage < countOfEntityOnPage)
+                buttons.add(msgBuilder.buildIKButton(
+                        service.getLocaleMessage(chatId, "▶️"), dataOfNext));
+            else
+                buttons.add(msgBuilder.buildIKButton("🛑", EMPTY));
+
+            keyboard.add(msgBuilder.buildIKRow(buttons));
+            buttons.clear();
+        }
     }
 
     // markups

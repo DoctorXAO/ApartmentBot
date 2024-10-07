@@ -10,9 +10,10 @@ import xao.develop.config.AdminCommand;
 import xao.develop.config.AdminMessageLink;
 import xao.develop.config.GeneralCommand;
 import xao.develop.config.GeneralMessageLink;
+import xao.develop.config.enums.Page;
 import xao.develop.config.enums.Selector;
-import xao.develop.config.enums.TypeOfApp;
-import xao.develop.config.enums.TypeOfAppStatus;
+import xao.develop.config.enums.App;
+import xao.develop.config.enums.AppStatus;
 import xao.develop.service.BotService;
 
 import java.util.*;
@@ -38,6 +39,12 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
     @Autowired
     AdminMsgOpenArc adminMsgOpenArc;
+
+    @Autowired
+    AdminMsgSettings adminMsgSettings;
+
+    @Autowired
+    AdminMsgListOfApartments adminMsgListOfApartments;
 
     @Autowired
     AdminMsgChangeLanguage adminMsgChangeLanguage;
@@ -96,26 +103,32 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
                                          List<Integer> messages,
                                          String[] data) throws TelegramApiException {
         switch (data[0]) {
-            case NEW_APPLICATIONS -> openListOfApps(chatId, messages, TypeOfApp.APP, false);
-            case ARCHIVE -> openListOfApps(chatId, messages, TypeOfApp.ARC, false);
+            case NEW_APPLICATIONS -> openListOfApps(chatId, messages, App.APP, false);
+            case ARCHIVE -> openListOfApps(chatId, messages, App.ARC, false);
+            case SETTINGS -> openSettings(chatId, messages, false);
             case CHANGE_LANGUAGE -> openChangeLanguage(chatId, messages);
 
-            case PREVIOUS_PAGE_OF_NEW_APPS -> changePage(chatId, messages, TypeOfApp.APP, Selector.PREVIOUS);
-            case NEXT_PAGE_OF_NEW_APPS -> changePage(chatId, messages, TypeOfApp.APP, Selector.NEXT);
-            case PREVIOUS_PAGE_OF_ARCHIVE -> changePage(chatId, messages, TypeOfApp.ARC, Selector.PREVIOUS);
-            case NEXT_PAGE_OF_ARCHIVE -> changePage(chatId, messages, TypeOfApp.ARC, Selector.NEXT);
+            case LIST_OF_APARTMENTS -> openListOfApartments(chatId, messages, false);
 
-            case APP -> openApp(chatId, messages, data[1], TypeOfApp.APP);
-            case ARC -> openApp(chatId, messages, data[1], TypeOfApp.ARC);
+            case PREVIOUS_PAGE_OF_NEW_APPS -> changePage(chatId, messages, Page.APP, Selector.PREVIOUS);
+            case NEXT_PAGE_OF_NEW_APPS -> changePage(chatId, messages, Page.APP, Selector.NEXT);
+            case PREVIOUS_PAGE_OF_ARCHIVE -> changePage(chatId, messages, Page.ARC, Selector.PREVIOUS);
+            case NEXT_PAGE_OF_ARCHIVE -> changePage(chatId, messages, Page.ARC, Selector.NEXT);
+            case PREVIOUS_PAGE_OF_APART -> changePage(chatId, messages, Page.APR, Selector.PREVIOUS);
+            case NEXT_PAGE_OF_APART -> changePage(chatId, messages, Page.APR, Selector.NEXT);
 
-            case REFUSE_APP -> performActionStatement(chatId, messages, data[1], TypeOfAppStatus.DENIED);
-            case ACCEPT_APP -> performActionStatement(chatId, messages, data[1], TypeOfAppStatus.ACCEPTED);
-            case RETURN_APP -> performActionStatement(chatId, messages, data[1], TypeOfAppStatus.WAITING);
+            case APP -> openApp(chatId, messages, data[1], App.APP);
+            case ARC -> openApp(chatId, messages, data[1], App.ARC);
+
+            case REFUSE_APP -> performActionStatement(chatId, messages, data[1], AppStatus.DENIED);
+            case ACCEPT_APP -> performActionStatement(chatId, messages, data[1], AppStatus.ACCEPTED);
+            case RETURN_APP -> performActionStatement(chatId, messages, data[1], AppStatus.WAITING);
 
             case OPEN_CHAT -> openChat(chatId, messages, data[1]);
 
-            case QUIT_FROM_APP -> openListOfApps(chatId, messages, TypeOfApp.APP, true);
-            case QUIT_FROM_ARC -> openListOfApps(chatId, messages, TypeOfApp.ARC, true);
+            case QUIT_FROM_APP -> openListOfApps(chatId, messages, App.APP, true);
+            case QUIT_FROM_ARC -> openListOfApps(chatId, messages, App.ARC, true);
+            case QUIT_FROM_LIST_OF_APARTMENTS -> openSettings(chatId, messages, true);
 
             case TR, EN, RU -> changeLanguage(chatId, user, messages, data[0]);
 
@@ -139,47 +152,61 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         messages.add(adminMsgStart.editMessage(chatId, ADMIN_MSG_START, user.getFirstName()));
     }
 
-    private void openListOfApps(long chatId, List<Integer> messages, TypeOfApp type, boolean isBack) throws TelegramApiException {
+    private void openListOfApps(long chatId, List<Integer> messages, App type, boolean isBack) throws TelegramApiException {
         if (!isBack)
             adminMsgStart.createAdminSettings(chatId);
 
-        if (type.equals(TypeOfApp.APP))
+        if (type.equals(App.APP))
             messages.add(adminMsgNewApplications.editMessage(chatId, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps()));
-        else if (type.equals(TypeOfApp.ARC))
+        else if (type.equals(App.ARC))
             messages.add(adminMsgArchive.editMessage(chatId, ADMIN_MSG_ARCHIVE, adminMsgStart.getCountOfArchive()));
+    }
+
+    private void openSettings(long chatId, List<Integer> messages, boolean isBack) throws TelegramApiException {
+        if (!isBack)
+            adminMsgStart.createAdminSettings(chatId);
+
+        messages.add(adminMsgSettings.editMessage(chatId, ADMIN_MSG_SETTINGS));
     }
 
     private void openChangeLanguage(long chatId, List<Integer> messages) throws TelegramApiException {
         messages.add(adminMsgChangeLanguage.editMessage(chatId, GENERAL_MSG_CHANGE_LANGUAGE));
     }
 
+    private void openListOfApartments(long chatId, List<Integer> messages, boolean isBack) throws TelegramApiException {
+        messages.add(adminMsgListOfApartments.editMessage(chatId, ADMIN_MSG_LIST_OF_APARTMENTS));
+    }
+
     private void changePage(long chatId,
                             List<Integer> messages,
-                            TypeOfApp typeOfApp,
+                            Page typeOfPage,
                             Selector typeOfSelector) throws TelegramApiException {
 
-        if (typeOfSelector.equals(Selector.PREVIOUS))
-            adminMsgStart.previousPage(chatId);
-        else if (typeOfSelector.equals(Selector.NEXT))
-            adminMsgStart.nextPage(chatId);
+        switch (typeOfSelector) {
+            case PREVIOUS -> adminMsgStart.previousPage(chatId);
+            case NEXT -> adminMsgStart.nextPage(chatId);
+        }
 
-        if (typeOfApp.equals(TypeOfApp.APP))
-            messages.add(adminMsgNewApplications.editMessage(chatId, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps()));
-        else if (typeOfApp.equals(TypeOfApp.ARC))
-            messages.add(adminMsgArchive.editMessage(chatId, ADMIN_MSG_ARCHIVE, adminMsgStart.getCountOfArchive()));
+        switch (typeOfPage) {
+            case APP -> messages.add(adminMsgNewApplications.editMessage(chatId, ADMIN_MSG_NEW_APPS,
+                    adminMsgStart.getCountOfNewApps()));
+            case ARC -> messages.add(adminMsgArchive.editMessage(chatId, ADMIN_MSG_ARCHIVE,
+                    adminMsgStart.getCountOfArchive()));
+            case APR -> messages.add(adminMsgSettings.editMessage(chatId, ADMIN_MSG_SETTINGS));
+        }
     }
 
     private void performActionStatement(long chatId,
                                         List<Integer> messages,
                                         String data,
-                                        TypeOfAppStatus typeOfAppStatus) throws TelegramApiException {
+                                        AppStatus appStatus) throws TelegramApiException {
 
         int numOfApp = Integer.parseInt(data);
 
-        adminMsgStart.updateBookingCardStatus(numOfApp, typeOfAppStatus);
+        adminMsgStart.updateBookingCardStatus(numOfApp, appStatus);
         adminMsgStart.updateAdminSettings(chatId, 0);
 
-        if (typeOfAppStatus.equals(TypeOfAppStatus.WAITING))
+        if (appStatus.equals(AppStatus.WAITING))
             messages.add(adminMsgArchive.editMessage(chatId, ADMIN_MSG_ARCHIVE, adminMsgStart.getCountOfArchive()));
         else
             messages.add(adminMsgNewApplications.editMessage(chatId, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps()));
@@ -187,7 +214,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         String status;
         long userId = adminMsgStart.getUserId(numOfApp);
 
-        switch (typeOfAppStatus) {
+        switch (appStatus) {
             case WAITING -> status = service.getLocaleMessage(userId, ADMIN_MSG_STATUS_WAITING);
             case ACCEPTED -> status = service.getLocaleMessage(userId, ADMIN_MSG_STATUS_ACCEPTED);
             case DENIED -> status = service.getLocaleMessage(userId, ADMIN_MSG_STATUS_DENIED);
@@ -205,14 +232,14 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         messages.add(adminMsgChat.editMessage(chatId, ADMIN_MSG_CHAT, adminMsgStart.getAppParameters(chatId, numOfApp)));
     }
 
-    private void openApp(long chatId, List<Integer> messages, String data, TypeOfApp type) throws TelegramApiException {
+    private void openApp(long chatId, List<Integer> messages, String data, App type) throws TelegramApiException {
         int numOfApp = Integer.parseInt(data);
 
         adminMsgStart.updateAdminSettings(chatId, numOfApp);
 
-        if (type.equals(TypeOfApp.APP))
+        if (type.equals(App.APP))
             messages.add(adminMsgOpenApp.editMessage(chatId, ADMIN_MSG_APP, adminMsgStart.getAppParameters(chatId, numOfApp)));
-        else if (type.equals(TypeOfApp.ARC))
+        else if (type.equals(App.ARC))
             messages.add(adminMsgOpenArc.editMessage(chatId, ADMIN_MSG_APP, adminMsgStart.getAppParameters(chatId, numOfApp)));
     }
 

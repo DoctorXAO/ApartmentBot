@@ -8,13 +8,18 @@ public interface AdminCommand {
     String ARCHIVE = "archive";
     String SETTINGS = "settings";
 
+    String LIST_OF_APARTMENTS = "list_of_apartments";
+
     String QUIT_FROM_APP = "quit_from_app";
     String QUIT_FROM_ARC = "quit_from_arc";
+    String QUIT_FROM_LIST_OF_APARTMENTS = "quit_from_list_of_apartments";
 
     String PREVIOUS_PAGE_OF_ARCHIVE = "previous_page_of_archive";
     String NEXT_PAGE_OF_ARCHIVE = "next_page_of_archive";
     String PREVIOUS_PAGE_OF_NEW_APPS = "previous_page_of_new_apps";
     String NEXT_PAGE_OF_NEW_APPS = "next_page_of_new_apps";
+    String PREVIOUS_PAGE_OF_APART = "previous_page_of_apartments";
+    String NEXT_PAGE_OF_APART = "next_page_of_apartments";
 
     String ARC = "arc";
     String ACCEPT_APP = "accept_app";
@@ -24,4 +29,6 @@ public interface AdminCommand {
     String OPEN_CHAT = "open_chat";
 
     String EMPTY = "empty";
+
+    String APARTMENT = "apartment";
 }

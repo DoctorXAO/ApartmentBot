@@ -4,25 +4,29 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import xao.develop.config.enums.App;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class AdminMsgArchive extends AdminMessage {
+public class AdminMsgSettings extends AdminMessage {
 
     @Override
     protected InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        initSelectorApps(chatId, App.ARC, keyboard, buttons);
-
-        buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(chatId, GENERAL_BT_BACK), BACK_TO_START));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_NEW_APARTMENT), EMPTY));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
+
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_LIST_OF_APARTMENTS),
+                LIST_OF_APARTMENTS));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
+        buttons.clear();
+
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), BACK_TO_START));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup
                 .builder()

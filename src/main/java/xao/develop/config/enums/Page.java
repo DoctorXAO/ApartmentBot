@@ -1,6 +1,7 @@
 package xao.develop.config.enums;
 
-public enum TypeOfApp {
+public enum Page {
     APP,
-    ARC
+    ARC,
+    APR
 }
