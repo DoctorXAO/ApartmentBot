@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter @Getter
 public class ServerStatus {
     @Id
-    String code;
+    private String code;
 
-    Long presentTime;
+    private Long presentTime;
 }

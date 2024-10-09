@@ -9,9 +9,11 @@ import lombok.Setter;
 @Setter @Getter
 public class TempAdminSettings {
     @Id
-    Long chatId;
+    private Long chatId;
 
-    int selectedApplication = 0;
+    private int selectedApplication = 0;
 
-    int selectedPage = 0;
+    private int selectedPage = 0;
+
+    private boolean isNewApartment = false;
 }

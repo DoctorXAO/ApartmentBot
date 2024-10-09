@@ -1,4 +1,4 @@
-package xao.develop.config;
+package xao.develop.command;
 
 public interface GeneralMessageLink {
     String GENERAL_MSG_CHANGE_LANGUAGE = "general.msg.change-language";

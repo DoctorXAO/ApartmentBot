@@ -1,10 +1,10 @@
 package xao.develop.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity(name = "Apartments")
 @Setter @Getter
@@ -15,7 +15,11 @@ public class Apartment {
     @Column(nullable = false)
     private Double area;
 
-    private String amenities;
+    @ManyToMany
+    @JoinTable(name = "apartment_amenity",
+            joinColumns = @JoinColumn(name = "number_apartment"),
+            inverseJoinColumns = @JoinColumn(name = "id_amenity"))
+    private List<Amenity> amenities;
 
     private Boolean isBooking = false;
 

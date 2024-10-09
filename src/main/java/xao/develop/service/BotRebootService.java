@@ -12,9 +12,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
-import xao.develop.config.GeneralCommand;
-import xao.develop.config.UserCommand;
-import xao.develop.config.UserMessageLink;
+import xao.develop.command.GeneralCommand;
+import xao.develop.command.UserCommand;
+import xao.develop.command.UserMessageLink;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
 

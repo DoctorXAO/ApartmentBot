@@ -11,11 +11,11 @@ import lombok.Setter;
 @Setter @Getter
 public class TempApartmentSelector {
     @Id
-    Long chatId;
+    private Long chatId;
 
     @Column(nullable = false)
-    int numberOfApartment;
+    private int numberOfApartment;
 
     @Column(nullable = false)
-    int selector;
+    private int selector;
 }

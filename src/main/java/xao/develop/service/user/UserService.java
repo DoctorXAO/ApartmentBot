@@ -6,14 +6,14 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import xao.develop.config.GeneralCommand;
-import xao.develop.config.GeneralMessageLink;
-import xao.develop.config.UserCommand;
-import xao.develop.config.UserMessageLink;
-import xao.develop.config.enums.Card;
-import xao.develop.config.enums.CheckDate;
-import xao.develop.config.enums.Month;
-import xao.develop.config.enums.Selector;
+import xao.develop.command.GeneralCommand;
+import xao.develop.command.GeneralMessageLink;
+import xao.develop.command.UserCommand;
+import xao.develop.command.UserMessageLink;
+import xao.develop.enums.Card;
+import xao.develop.enums.CheckDate;
+import xao.develop.enums.Month;
+import xao.develop.enums.Selector;
 import xao.develop.service.BotService;
 
 import java.util.ArrayList;
@@ -164,7 +164,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                     userMsgPreviewCard.insertCardToBookingCard(chatId, user);
                     messages.add(userMsgStart.editMessage(chatId, USER_MSG_START));
                     service.sendMessageAdminUser(service.getAdminId(), GENERAL_MSG_GOT_NEW_APP,
-                            userMsgStart.getIKMarkupUpdatedStatus(service.getAdminId()));
+                            userMsgStart.getIKMarkupOkToDelete(service.getAdminId()));
                     int msgId = service.sendSimpleMessage(chatId, USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN);
                     scheduled.schedule(() -> deleteMessage(chatId, msgId), 10, TimeUnit.SECONDS);
                 }
@@ -419,13 +419,13 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
     private void openMsgApartments(long chatId, List<Integer> messages) throws TelegramApiException {
         int msgId = service.sendSimpleMessage(chatId, USER_MSG_SIMPLE_DOWNLOADING);
 
-        messages.addAll(userMsgChooseAnApartment.sendPhotos(chatId,
-                "img/apartments/" + userMsgChooseAnApartment.getCurrentApartment(chatId)));
+        if (!userMsgStart.isApartmentsEmpty(chatId)) {
+            messages.addAll(userMsgChooseAnApartment.sendPhotos(chatId,
+                    "img/apartments/" + userMsgChooseAnApartment.getCurrentApartment(chatId)));
 
-        if (!userMsgStart.isApartmentsEmpty(chatId))
             messages.add(userMsgChooseAnApartment.sendMessage(chatId, USER_MSG_CHOOSE_AN_APARTMENT,
                     userMsgStart.getApartmentParameters(chatId)));
-        else
+        } else
             messages.add(userMsgNoFreeApartment.sendMessage(chatId, USER_MSG_NO_FREE_APARTMENTS));
 
         deleteMessage(chatId, msgId);

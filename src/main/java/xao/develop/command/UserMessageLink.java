@@ -1,4 +1,4 @@
-package xao.develop.config;
+package xao.develop.command;
 
 public interface UserMessageLink {
     String USER_MSG_START = "user.msg.start";

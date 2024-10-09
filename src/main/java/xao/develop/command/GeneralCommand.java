@@ -1,4 +1,4 @@
-package xao.develop.config;
+package xao.develop.command;
 
 public interface GeneralCommand {
     String CHANGE_LANGUAGE = "change_language";

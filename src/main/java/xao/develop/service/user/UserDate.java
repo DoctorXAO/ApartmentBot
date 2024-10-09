@@ -3,8 +3,8 @@ package xao.develop.service.user;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.meta.api.objects.User;
-import xao.develop.config.enums.CheckDate;
-import xao.develop.config.enums.Selector;
+import xao.develop.enums.CheckDate;
+import xao.develop.enums.Selector;
 import xao.develop.repository.Persistence;
 import xao.develop.service.BotService;
 

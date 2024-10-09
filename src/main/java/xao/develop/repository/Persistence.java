@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import xao.develop.model.*;
-import xao.develop.config.enums.AppStatus;
+import xao.develop.enums.AppStatus;
 
 import java.util.Calendar;
 import java.util.List;
@@ -41,6 +41,11 @@ public class Persistence {
     @Autowired
     private TempAdminSettingsRepository tempAdminSettingsRepository;
 
+    @Autowired
+    private TempNewApartmentRepository tempNewApartmentRepository;
+
+    // AccountStatuses
+
     public void insertAccountStatus(Long chatId,
                                     String language) {
         AccountStatus accountStatus = new AccountStatus();
@@ -63,6 +68,8 @@ public class Persistence {
 
         accountStatusRepository.save(accountStatus);
     }
+
+    // TempBotMessages
 
     public List<TempBotMessage> selectTempBotMessages(Long chatID) {
         return tempBotMessageRepository.findByChatId(chatID);
@@ -88,12 +95,29 @@ public class Persistence {
         tempBotMessageRepository.deleteByChatIdAndMsgId(chatId, msgId);
     }
 
+    // Apartment
+
+    public void insertApartment(int number, double area, String amenities) {
+        Apartment apartment = new Apartment();
+
+        apartment.setNumber(number);
+        apartment.setArea(area);
+
+        // todo amenities
+
+        apartmentRepository.save(apartment);
+    }
+
     public Apartment selectApartment(int number) {
         return apartmentRepository.getByNumber(number);
     }
 
+    public List<Apartment> selectAllApartmentsSortByNumber() {
+        return apartmentRepository.findAll(Sort.by(Sort.Direction.ASC, "number"));
+    }
+
     public List<Apartment> selectAllFreeApartments(long chatId) {
-        List<Apartment> apartments = apartmentRepository.findAll(Sort.by(Sort.Direction.ASC, "number"));
+        List<Apartment> apartments = selectAllApartmentsSortByNumber();
 
         apartments.removeIf(Apartment::getIsBooking);
 
@@ -139,6 +163,8 @@ public class Persistence {
 
         apartmentRepository.save(apartment);
     }
+
+    // BookingCard
 
     public void insertBookingCard(long chatId,
                                   String login,
@@ -192,6 +218,8 @@ public class Persistence {
 
         bookingCardRepository.save(bookingCard);
     }
+
+    // TempBookingData
 
     public void insertTempBookingData(long chatId, long selectedTime, String login) {
         TempBookingData tempBookingData = new TempBookingData();
@@ -367,9 +395,17 @@ public class Persistence {
         log.trace("Method deleteCheckOutInTempBookingData(long) finished");
     }
 
+    // Amenity
+
+    public List<Amenity> selectAllAmenities() {
+        return amenityRepository.findAll();
+    }
+
     public Amenity selectAmenity(int idAmenity) {
         return amenityRepository.getByIdAmenity(idAmenity);
     }
+
+    // TempApartmentSelector
 
     public void insertTempApartmentSelector(long chatId) {
         List<Apartment> apartments = selectAllFreeApartments(chatId);
@@ -403,6 +439,8 @@ public class Persistence {
     public void deleteTempApartmentSelector(long chatId) {
         tempApartmentSelectorRepository.deleteByChatId(chatId);
     }
+
+    // TempAdminSettings
 
     public void insertTempAdminSettings(long chatId) {
         TempAdminSettings tempAdminSettings = new TempAdminSettings();
@@ -442,9 +480,69 @@ public class Persistence {
         tempAdminSettingsRepository.save(tempAdminSettings);
     }
 
+    public void updateNewApartmentTempAdminSettings(long chatId, boolean isNewApartment) {
+        TempAdminSettings tempAdminSettings = tempAdminSettingsRepository.findById(chatId);
+
+        tempAdminSettings.setNewApartment(isNewApartment);
+
+        tempAdminSettingsRepository.save(tempAdminSettings);
+    }
+
     public void deleteTempAdminSettings(long chatId) {
         tempAdminSettingsRepository.deleteById(chatId);
     }
+
+    // TempNewApartment
+
+    public void insertTempNewApartment(long chatId) {
+        TempNewApartment tempNewApartment = new TempNewApartment();
+
+        tempNewApartment.setChatId(chatId);
+
+        tempNewApartmentRepository.save(tempNewApartment);
+    }
+
+    public TempNewApartment selectTempNewApartment(long chatId) {
+        return tempNewApartmentRepository.findByChatId(chatId);
+    }
+
+    public void updateNumberTempNewApartment(long chatId, int number) {
+        TempNewApartment tempNewApartment = selectTempNewApartment(chatId);
+
+        tempNewApartment.setNumber(number);
+
+        tempNewApartmentRepository.save(tempNewApartment);
+    }
+
+    public void updateCountOfPicturesTempNewApartment(long chatId, long countOfPictures) {
+        TempNewApartment tempNewApartment = selectTempNewApartment(chatId);
+
+        tempNewApartment.setCountOfPictures(countOfPictures);
+
+        tempNewApartmentRepository.save(tempNewApartment);
+    }
+
+    public void updateAreaTempNewApartment(long chatId, double area) {
+        TempNewApartment tempNewApartment = selectTempNewApartment(chatId);
+
+        tempNewApartment.setArea(area);
+
+        tempNewApartmentRepository.save(tempNewApartment);
+    }
+
+    public void updateLinksOfAmenitiesTempNewApartment(long chatId, String linksOfAmenities) {
+        TempNewApartment tempNewApartment = selectTempNewApartment(chatId);
+
+        tempNewApartment.setLinksOfAmenities(linksOfAmenities);
+
+        tempNewApartmentRepository.save(tempNewApartment);
+    }
+
+    public void deleteTempNewApartment(long chatId) {
+        tempNewApartmentRepository.deleteById(chatId);
+    }
+
+    // other
 
     public void setPresentTime() {
         Calendar presentDate = Calendar.getInstance();

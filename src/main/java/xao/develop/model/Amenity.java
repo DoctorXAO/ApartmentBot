@@ -4,16 +4,21 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity(name = "Amenities")
 @Setter @Getter
 public class Amenity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int idAmenity;
+    private int idAmenity;
+
+    @ManyToMany(mappedBy = "amenities")
+    private List<Apartment> apartments;
 
     @Column(nullable = false)
-    String link;
+    private String link;
 
     @Column(nullable = false)
-    int importance;
+    private int importance;
 }

@@ -1,4 +1,4 @@
-package xao.develop.config;
+package xao.develop.command;
 
 public interface UserCommand {
     String START = "/start";

@@ -1,7 +1,6 @@
 package xao.develop.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
@@ -11,12 +10,12 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
-import xao.develop.config.GeneralCommand;
-import xao.develop.config.GeneralMessageLink;
+import xao.develop.command.GeneralCommand;
+import xao.develop.command.GeneralMessageLink;
 import xao.develop.repository.Persistence;
+import xao.develop.toolbox.FileManager;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.net.URL;
 import java.util.*;
 
@@ -89,7 +88,7 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
 
             List<InputMediaPhoto> photos = new ArrayList<>();
 
-            File[] files = getSortedFiles(resource);
+            File[] files = FileManager.getSortedFiles(resource);
 
             for (File file : files)
                 photos.add(new InputMediaPhoto(file, file.getName()));
@@ -119,29 +118,9 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
 
     abstract protected InlineKeyboardMarkup getIKMarkup(long chatId);
 
-    private @NotNull File[] getSortedFiles(URL resource) throws Exception {
-        File directory = new File(resource.getFile());
-
-        FilenameFilter filter = (dir, name) ->
-                name.endsWith(".jpg") ||
-                        name.endsWith(".jpeg") ||
-                        name.endsWith(".png");
-
-        File[] files = directory.listFiles(filter);
-
-        if (!directory.isDirectory())
-            throw new Exception("Указанный путь не является директорией!");
-        else if (files == null)
-            throw new Exception("В директории нет изображений с необходимым расширением (.jpg/.jpeg./.png)!");
-
-        Arrays.sort(files, Comparator.comparing(File::getName));
-
-        return files;
-    }
-
     // markups
 
-    public InlineKeyboardMarkup getIKMarkupUpdatedStatus(long chatId) {
+    public InlineKeyboardMarkup getIKMarkupOkToDelete(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 

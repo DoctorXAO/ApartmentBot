@@ -1,4 +1,4 @@
-package xao.develop.config.enums;
+package xao.develop.enums;
 
 public enum Card {
     NAME,

@@ -2,14 +2,11 @@ package xao.develop.service.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.User;
-import xao.develop.config.UserCommand;
-import xao.develop.config.UserMessageLink;
-import xao.develop.config.enums.Selector;
-import xao.develop.config.enums.AppStatus;
-import xao.develop.model.Amenity;
-import xao.develop.model.Apartment;
-import xao.develop.model.BookingCard;
-import xao.develop.model.TempBookingData;
+import xao.develop.command.UserCommand;
+import xao.develop.command.UserMessageLink;
+import xao.develop.enums.Selector;
+import xao.develop.enums.AppStatus;
+import xao.develop.model.*;
 import xao.develop.service.BotMessage;
 
 import java.time.LocalDate;
@@ -35,18 +32,31 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
     // getters
 
     public int getSelectorOfCurrentApartment(long chatId) {
-        return persistence.selectTempApartmentSelector(chatId).getSelector();
+        TempApartmentSelector tempApartmentSelector = persistence.selectTempApartmentSelector(chatId);
+
+        if (tempApartmentSelector == null)
+            return 0;
+        else
+            return tempApartmentSelector.getSelector();
     }
 
     public int getCurrentApartment(long chatId) {
         int selector = getSelectorOfCurrentApartment(chatId);
         List<Apartment> apartments = persistence.selectAllFreeApartments(chatId);
 
-        log.debug("Size of the list of apartment is {}", apartments.size());
-        log.debug("Current selector is {}", selector);
-        log.debug("Current number of apartment is {}", apartments.get(selector).getNumber());
+        if (selector != 0) {
+            Integer numberOfApartment = apartments.get(selector).getNumber();
 
-        return apartments.get(selector).getNumber();
+            log.debug("Size of the list of apartment is {}", apartments.size());
+            log.debug("Current selector is {}", selector);
+            log.debug("Current number of apartment is {}", numberOfApartment);
+
+            return numberOfApartment;
+        } else {
+            log.debug("Selector equals {}", selector);
+
+            return 0;
+        }
     }
 
     public int getCountOfFreeApartments(long chatId) {
@@ -130,23 +140,30 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
     }
 
     private int getSelectedApartment(long chatId) {
-        return persistence.selectTempApartmentSelector(chatId).getNumberOfApartment();
+        TempApartmentSelector tempApartmentSelector = persistence.selectTempApartmentSelector(chatId);
+
+        if (tempApartmentSelector == null)
+            return 0;
+        else
+            return tempApartmentSelector.getNumberOfApartment();
     }
 
     private StringBuilder getAmenities(long chatId, Apartment apartment) {
         StringBuilder amenities = new StringBuilder();
 
-        if (apartment.getAmenities() != null) {
-            String[] amenitiesArray = apartment.getAmenities().split("\\$");
-            Arrays.sort(amenitiesArray);
+//        if (apartment.getAmenities() != null) {
+//            String[] amenitiesArray = apartment.getAmenities().split("\\$");
+//            Arrays.sort(amenitiesArray);
+//
+//            for (String code : amenitiesArray) {
+//                Amenity amenity = persistence.selectAmenity(Integer.parseInt(code));
+//
+//                amenities.append(service.getLocaleMessage(chatId, amenity.getLink())).append("\n");
+//            }
+//        } else
+//            amenities.append("nothing");
 
-            for (String code : amenitiesArray) {
-                Amenity amenity = persistence.selectAmenity(Integer.parseInt(code));
-
-                amenities.append(service.getLocaleMessage(chatId, amenity.getLink())).append("\n");
-            }
-        } else
-            amenities.append("nothing");
+        amenities.append("processing..."); // delete
 
         return amenities;
     }
@@ -178,11 +195,6 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
         log.trace("Method addTempApartmentSelector(Update) started");
 
         persistence.insertTempApartmentSelector(chatId);
-
-        log.debug("""
-                Method addTempApartmentSelector(Update): added the next user with parameters:
-                chatId = {}
-                current number of apartment = {}""", chatId, persistence.selectTempApartmentSelector(chatId));
 
         log.trace("Method addTempApartmentSelector(Update) finished");
     }

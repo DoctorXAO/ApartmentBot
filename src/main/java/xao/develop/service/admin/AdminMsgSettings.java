@@ -16,7 +16,7 @@ public class AdminMsgSettings extends AdminMessage {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_NEW_APARTMENT), EMPTY));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_NEW_APARTMENT), NEW_APARTMENT));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

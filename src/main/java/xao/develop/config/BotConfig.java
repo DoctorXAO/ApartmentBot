@@ -53,6 +53,8 @@ public class BotConfig {
     private int countOfAppsOnPage;
     @Value("${count.of.apartments-on-page}")
     private int countOfApartmentOnPage;
+    @Value("${count.of.amenities-on-page}")
+    private int countOfAmenitiesOnPage;
 
     public int getPerDay(int countOfPeople) {
         if (countOfPeople == 1)
