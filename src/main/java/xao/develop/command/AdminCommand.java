@@ -11,6 +11,7 @@ public interface AdminCommand {
     String SETTINGS = "settings";
 
     String NEW_APARTMENT = "new_apartment";
+    String BACK_TO_EDIT_NEW_APARTMENT = "back_to_edit_new_apartment";
     String LIST_OF_APARTMENTS = "list_of_apartments";
 
     String QUIT_FROM_APP = "quit_from_app";
@@ -30,6 +31,7 @@ public interface AdminCommand {
     String PREVIEW_APARTMENT = "preview_apartment";
     String CREATE_APARTMENT = "create_apartment";
     String SELECTED = "selected";
+    String AVAILABLE = "available";
 
     String ARC = "arc";
     String ACCEPT_APP = "accept_app";

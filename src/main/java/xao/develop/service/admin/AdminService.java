@@ -15,12 +15,12 @@ import xao.develop.command.GeneralMessageLink;
 import xao.develop.config.*;
 import xao.develop.enums.*;
 import xao.develop.model.TempNewApartment;
+import xao.develop.model.TempSelectedAmenity;
 import xao.develop.service.BotService;
 import xao.develop.toolbox.FileManager;
 import xao.develop.toolbox.TelegramFileManager;
 
 import java.io.File;
-import java.net.URL;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -67,7 +67,9 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     @Autowired
     AdminMsgNAAmenities adminMsgNAAmenities;
 
-    private final URL resource = getClass().getClassLoader().getResource("img/apartments/");
+    @Autowired
+    AdminMsgPreviewApartment adminMsgPreviewApartment;
+
     private final String tempFolderOfPhotos = "temp";
 
     public void execute(Update update) {
@@ -111,6 +113,14 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         log.trace("Method execute(Update, String) finished");
     }
 
+    public void dropData(long chatId) {
+        adminMsgStart.createAdminSettings(chatId);
+        adminMsgStart.deleteTempNewApartment(chatId);
+        adminMsgStart.deleteTempSelectedAmenities(chatId);
+
+        log.debug("Data dropped successfully!");
+    }
+
     private void processingPhoto(long chatId,
                                  int msgId,
                                  Message message,
@@ -125,8 +135,8 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
             String fileUrl = "https://api.telegram.org/file/bot" + botConfig.getToken() + "/" + filePath;
 
-            if (resource != null) {
-                String path = resource.getPath() + tempFolderOfPhotos;
+            if (service.resource != null) {
+                String path = service.resource.getPath() + tempFolderOfPhotos;
 
                 FileManager.downloadPhotoFromNetwork(path, fileUrl);
 
@@ -162,12 +172,13 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
                                          List<Integer> messages,
                                          String[] data) throws TelegramApiException {
         switch (data[0]) {
-            case NEW_APPLICATIONS -> openListOfApps(chatId, messages, App.APP, false);
-            case ARCHIVE -> openListOfApps(chatId, messages, App.ARC, false);
+            case NEW_APPLICATIONS, QUIT_FROM_APP -> openListOfApps(chatId, messages, App.APP);
+            case ARCHIVE, QUIT_FROM_ARC -> openListOfApps(chatId, messages, App.ARC);
             case SETTINGS -> openSettings(chatId, messages, false);
             case CHANGE_LANGUAGE -> openChangeLanguage(chatId, messages);
 
             case NEW_APARTMENT -> openNewApartment(chatId, messages, ADMIN_MSG_SET_NUMBER, true, true);
+            case BACK_TO_EDIT_NEW_APARTMENT -> openNewApartment(chatId, messages, ADMIN_MSG_SET_NUMBER, false, false);
             case LIST_OF_APARTMENTS -> openListOfApartments(chatId, messages);
 
             case PREVIOUS_PAGE_OF_NEW_APPS -> changePage(chatId, messages, Page.APP, Selector.PREVIOUS);
@@ -178,10 +189,13 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case NEXT_PAGE_OF_APART -> changePage(chatId, messages, Page.APR, Selector.NEXT);
 
             case CREATE_APARTMENT -> createApartment(chatId, messages);
+            case AVAILABLE -> changeListOfAmenities(chatId, messages, false);
+            case SELECTED -> changeListOfAmenities(chatId, messages, true);
+            case PREVIEW_APARTMENT -> previewApartment(chatId, messages);
 
             case APP -> openApp(chatId, messages, data[1], App.APP);
             case ARC -> openApp(chatId, messages, data[1], App.ARC);
-            case AMENITY -> selectAmenity(chatId, messages);
+            case AMENITY -> selectAmenity(chatId, messages, data[1]);
 
             case REFUSE_APP -> performActionStatement(chatId, messages, data[1], AppStatus.DENIED);
             case ACCEPT_APP -> performActionStatement(chatId, messages, data[1], AppStatus.ACCEPTED);
@@ -189,8 +203,6 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
             case OPEN_CHAT -> openChat(chatId, messages, data[1]);
 
-            case QUIT_FROM_APP -> openListOfApps(chatId, messages, App.APP, true);
-            case QUIT_FROM_ARC -> openListOfApps(chatId, messages, App.ARC, true);
             case QUIT_FROM_NEW_APARTMENT, QUIT_FROM_LIST_OF_APARTMENTS -> openSettings(chatId, messages, true);
 
             case TR, EN, RU -> changeLanguage(chatId, user, messages, data[0]);
@@ -209,14 +221,15 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
                        List<Integer> messages,
                        boolean isInit,
                        boolean isBack) throws TelegramApiException {
-        if (isInit)
+        if (isInit) {
             service.authorization(chatId, user);
-
-        if (isBack) {
-            adminMsgStart.updateSelectedAppAdminSettings(chatId, 0);
-            adminMsgNewApartment.updateSelectedPageAdminSettings(chatId, 0);
-            adminMsgStart.updateNewApartmentAdminSettings(chatId, false);
+            dropData(chatId);
         }
+
+        if (isBack)
+            dropData(chatId);
+        else
+            adminMsgStart.createAdminSettings(chatId);
 
         messages.add(adminMsgStart.editMessage(chatId, ADMIN_MSG_START, user.getFirstName()));
     }
@@ -250,10 +263,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
             switch (stage) {
                 case NUMBER -> {
-                    if (resource == null)
+                    if (service.resource == null)
                         service.sendMessageAdminUser(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE,
                                 adminMsgStart.getIKMarkupOkToDelete(chatId));
-                    else if (new File(resource.getPath() + parameter).exists())
+                    else if (new File(service.resource.getPath() + parameter).exists())
                         service.sendMessageAdminUser(chatId, ADMIN_ERR_APARTMENT_EXISTS,
                                 adminMsgStart.getIKMarkupOkToDelete(chatId));
                     else if (parameter.matches("[0-9]+")) {
@@ -271,15 +284,12 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         } else {
             switch (stage) {
                 case NUMBER -> openNewApartment(chatId, messages, ADMIN_MSG_SET_NUMBER, false, false);
-                case AREA -> openSelectAmenities(chatId, messages);
+                case AREA -> openNewApartment(chatId, messages, ADMIN_MSG_SET_AREA, false, false);
             }
         }
     }
 
-    private void openListOfApps(long chatId, List<Integer> messages, App type, boolean isBack) throws TelegramApiException {
-        if (!isBack)
-            adminMsgStart.createAdminSettings(chatId);
-
+    private void openListOfApps(long chatId, List<Integer> messages, App type) throws TelegramApiException {
         if (type.equals(App.APP))
             messages.add(adminMsgNewApplications.editMessage(chatId, ADMIN_MSG_NEW_APPS, adminMsgStart.getCountOfNewApps()));
         else if (type.equals(App.ARC))
@@ -287,13 +297,8 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     }
 
     private void openSettings(long chatId, List<Integer> messages, boolean isBack) throws TelegramApiException {
-        if (!isBack)
-            adminMsgStart.createAdminSettings(chatId);
-        else {
-            adminMsgStart.updateSelectedPageAdminSettings(chatId, 0);
-            adminMsgStart.updateNewApartmentAdminSettings(chatId, false);
-            adminMsgStart.deleteTempNewApartment(chatId);
-        }
+        if (isBack)
+            dropData(chatId);
 
         messages.add(adminMsgSettings.editMessage(chatId, ADMIN_MSG_SETTINGS));
     }
@@ -312,9 +317,9 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             adminMsgStart.createNewApartmentField(chatId);
         }
 
-        if (clearTemp && resource != null)
-            FileManager.deleteDirectory(Paths.get(resource.getPath() + tempFolderOfPhotos));
-        else if (resource == null)
+        if (clearTemp && service.resource != null)
+            FileManager.deleteDirectory(Paths.get(service.resource.getPath() + tempFolderOfPhotos));
+        else if (service.resource == null)
             service.sendMessageAdminUser(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
 
         messages.add(adminMsgNewApartment.editMessage(chatId, msgLink, adminMsgArchive.getTempNewApartmentParameters(chatId)));
@@ -349,22 +354,39 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     }
 
     private void createApartment(long chatId, List<Integer> messages) throws TelegramApiException {
-        if (resource != null) {
+        if (service.resource != null) {
             TempNewApartment newApartment = adminMsgStart.getTempNewApartment(chatId);
+            List<TempSelectedAmenity> selectedAmenity = adminMsgStart.getSelectedAmenities(chatId);
 
             int number = newApartment.getNumber();
             double area = newApartment.getArea();
-            String amenities = newApartment.getLinksOfAmenities();
 
             String nameFolder = String.valueOf(number);
 
-            FileManager.moveFiles(Paths.get(resource + tempFolderOfPhotos), Paths.get(resource + nameFolder));
+            FileManager.moveFiles(
+                    Paths.get(service.resource.getPath() + tempFolderOfPhotos + "/"),
+                    Paths.get(service.resource.getPath() + nameFolder + "/"));
 
-            adminMsgStart.createApartment(number, area, amenities);
+            adminMsgStart.insertApartment(number, area, selectedAmenity);
 
             openSettings(chatId, messages, true);
         } else
             service.sendMessageAdminUser(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
+    }
+
+    private void changeListOfAmenities(long chatId,
+                                       List<Integer> messages,
+                                       boolean isCheckingSelectedAmenities) throws TelegramApiException {
+        adminMsgStart.updateCheckingSelectedAmenitiesAdminSettings(chatId, isCheckingSelectedAmenities);
+
+        openSelectAmenities(chatId, messages);
+    }
+
+    private void previewApartment(long chatId, List<Integer> messages) throws TelegramApiException {
+        messages.addAll(adminMsgPreviewApartment.sendPhotos(chatId, service.resource + tempFolderOfPhotos));
+
+        messages.add(adminMsgPreviewApartment.sendMessage(chatId, ADMIN_MSG_PREVIEW_APARTMENT,
+                adminMsgStart.getPreviewApartmentParameters(chatId)));
     }
 
     private void performActionStatement(long chatId,
@@ -414,8 +436,13 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             messages.add(adminMsgOpenArc.editMessage(chatId, ADMIN_MSG_APP, adminMsgStart.getAppParameters(chatId, numOfApp)));
     }
 
-    private void selectAmenity(long chatId, List<Integer> messages) {
+    private void selectAmenity(long chatId, List<Integer> messages, String data) throws TelegramApiException {
+        if (!adminMsgStart.isCheckingSelectedAmenities(chatId))
+            adminMsgStart.insertTempSelectedAmenity(chatId, Integer.parseInt(data));
+        else
+            adminMsgStart.deleteTempSelectedAmenity(chatId, Integer.parseInt(data));
 
+        openSelectAmenities(chatId, messages);
     }
 
     private void changeLanguage(long chatId,

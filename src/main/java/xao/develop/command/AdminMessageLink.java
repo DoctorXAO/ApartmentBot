@@ -37,7 +37,9 @@ public interface AdminMessageLink {
     String ADMIN_BT_CANCEL = "admin.bt.cancel";
     String ADMIN_BT_PREVIEW = "admin.bt.preview";
     String ADMIN_BT_SELECTED = "admin.bt.selected";
+    String ADMIN_BT_AVAILABLE = "admin.bt.available";
     String ADMIN_BT_CREATE = "admin.bt.create";
+    String ADMIN_BT_EDIT = "admin.bt.edit";
 
     String ADMIN_BT_NEW_APARTMENT = "admin.bt.new-apartment";
     String ADMIN_BT_LIST_OF_APARTMENTS = "admin.bt.list-of-apartments";

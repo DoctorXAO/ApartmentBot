@@ -78,17 +78,14 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
         }
     }
 
-    public List<Integer> sendPhotos(long chatId, String patch) {
+    public List<Integer> sendPhotos(long chatId, String path) {
         try {
-            ClassLoader classLoader = getClass().getClassLoader();
-            URL resource = classLoader.getResource(patch);
-
-            if (resource == null)
+            if (path == null)
                 throw new Exception("Directory with photos isn't found!");
 
             List<InputMediaPhoto> photos = new ArrayList<>();
 
-            File[] files = FileManager.getSortedFiles(resource);
+            File[] files = FileManager.getSortedFiles(new URL(path));
 
             for (File file : files)
                 photos.add(new InputMediaPhoto(file, file.getName()));
@@ -111,7 +108,7 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
 
             return messages;
         } catch (Exception ex) {
-            log.error("sendPhotos: {}", ex.getMessage());
+            log.error("Impossible send photos. Path: {}\nException: {}", path, ex.getMessage());
             return new ArrayList<>();
         }
     }

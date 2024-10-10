@@ -49,19 +49,30 @@ public class FileManager {
 
     /** Move files from source to target **/
     public static void moveFiles(@NotNull Path sourceDir, @NotNull Path targetDir) {
+        log.debug("sourceDir: {}\ntargetDir: {}", sourceDir, targetDir);
+
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
-            if (Files.notExists(targetDir))
+            log.debug("EXTRA start");
+
+            if (Files.notExists(targetDir)) {
                 Files.createDirectories(targetDir);
+
+                log.debug("New directories created!");
+            } else {
+                log.debug("Directory already exists!");
+            }
 
             for (Path file : stream) {
                 Path targetPath = targetDir.resolve(file.getFileName());
 
                 Files.move(file, targetPath);
+
+                log.debug("The next file moved: {}", file.getFileName());
             }
 
             log.debug("All files moved successfully from {} to {}", sourceDir, targetDir);
         } catch (IOException ex) {
-            log.warn("Can't move files from {} to {}. Exception: {}", sourceDir, targetDir, ex.getMessage());
+            log.warn("Can't move files from {} to {}.\nException: {}", sourceDir, targetDir, ex.getMessage());
         }
     }
 

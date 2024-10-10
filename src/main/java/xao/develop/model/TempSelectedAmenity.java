@@ -12,5 +12,8 @@ public class TempSelectedAmenity {
     private int id;
 
     @Column(nullable = false)
+    private long chatId;
+
+    @Column(nullable = false)
     private int idOfAmenity;
 }

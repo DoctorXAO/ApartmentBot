@@ -4,11 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -18,6 +16,7 @@ import xao.develop.model.AccountStatus;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
 
+import java.net.URL;
 import java.util.*;
 
 @Slf4j
@@ -32,6 +31,8 @@ public class BotService {
 
     @Autowired
     MessageSource messageSource;
+
+    public final URL resource = getClass().getClassLoader().getResource("img/apartments/");
 
     // setters
 

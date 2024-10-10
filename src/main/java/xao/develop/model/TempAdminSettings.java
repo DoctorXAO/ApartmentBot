@@ -16,4 +16,6 @@ public class TempAdminSettings {
     private int selectedPage = 0;
 
     private boolean isNewApartment = false;
+    
+    private boolean isCheckingSelectedAmenities = false;
 }

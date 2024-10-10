@@ -16,6 +16,4 @@ public class TempNewApartment {
     private long countOfPictures;
 
     private double area;
-
-    private String linksOfAmenities;
 }

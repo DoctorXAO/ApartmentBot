@@ -4,11 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import xao.develop.model.*;
 import xao.develop.enums.AppStatus;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Repository
@@ -43,6 +45,9 @@ public class Persistence {
 
     @Autowired
     private TempNewApartmentRepository tempNewApartmentRepository;
+
+    @Autowired
+    private TempSelectedAmenityRepository tempSelectedAmenityRepository;
 
     // AccountStatuses
 
@@ -97,13 +102,12 @@ public class Persistence {
 
     // Apartment
 
-    public void insertApartment(int number, double area, String amenities) {
+    public void insertApartment(int number, double area, List<Amenity> amenities) {
         Apartment apartment = new Apartment();
 
         apartment.setNumber(number);
         apartment.setArea(area);
-
-        // todo amenities
+        apartment.setAmenities(amenities);
 
         apartmentRepository.save(apartment);
     }
@@ -488,8 +492,20 @@ public class Persistence {
         tempAdminSettingsRepository.save(tempAdminSettings);
     }
 
+    public void updateCheckingSelectedAmenitiesTempAdminSettings(long chatId, boolean isCheckingSelectedAmenities) {
+        TempAdminSettings tempAdminSettings = tempAdminSettingsRepository.findById(chatId);
+
+        tempAdminSettings.setCheckingSelectedAmenities(isCheckingSelectedAmenities);
+
+        tempAdminSettingsRepository.save(tempAdminSettings);
+    }
+
     public void deleteTempAdminSettings(long chatId) {
         tempAdminSettingsRepository.deleteById(chatId);
+    }
+
+    public void resetToDefaultTempAdminSettings() {
+        tempAdminSettingsRepository.resetToDefault();
     }
 
     // TempNewApartment
@@ -530,16 +546,37 @@ public class Persistence {
         tempNewApartmentRepository.save(tempNewApartment);
     }
 
-    public void updateLinksOfAmenitiesTempNewApartment(long chatId, String linksOfAmenities) {
-        TempNewApartment tempNewApartment = selectTempNewApartment(chatId);
-
-        tempNewApartment.setLinksOfAmenities(linksOfAmenities);
-
-        tempNewApartmentRepository.save(tempNewApartment);
-    }
-
     public void deleteTempNewApartment(long chatId) {
         tempNewApartmentRepository.deleteById(chatId);
+    }
+
+    // TempSelectedAmenity
+
+    public void insertTempSelectedAmenity(long chatId, int idOfAmenity) {
+        TempSelectedAmenity tempSelectedAmenity = new TempSelectedAmenity();
+
+        tempSelectedAmenity.setChatId(chatId);
+        tempSelectedAmenity.setIdOfAmenity(idOfAmenity);
+
+        tempSelectedAmenityRepository.save(tempSelectedAmenity);
+    }
+
+    public List<TempSelectedAmenity> selectAllSelectedAmenities(long chatId) {
+        return tempSelectedAmenityRepository.findAllByChatId(chatId);
+    }
+
+    public List<TempSelectedAmenity> selectAllSelectedAmenitiesExceptTheId(long chatId, int idOfAmenity) {
+        return tempSelectedAmenityRepository.findAllByChatIdAndIdOfAmenityNot(chatId, idOfAmenity);
+    }
+
+    public void deleteTempSelectedAmenity(long chatId, int idOfAmenity) {
+        tempSelectedAmenityRepository.deleteByIdOfAmenity(idOfAmenity);
+    }
+
+    public void deleteAllTempSelectedAmenity(long chatId) {
+        tempSelectedAmenityRepository.deleteAllByChatId(chatId);
+
+        log.debug("Selected amenities deleted!");
     }
 
     // other

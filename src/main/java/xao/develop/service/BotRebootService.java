@@ -11,10 +11,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import xao.develop.command.*;
 import xao.develop.config.BotConfig;
-import xao.develop.command.GeneralCommand;
-import xao.develop.command.UserCommand;
-import xao.develop.command.UserMessageLink;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
 
@@ -23,7 +21,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class BotRebootService implements UserCommand, UserMessageLink, GeneralCommand {
+public class BotRebootService implements UserCommand, UserMessageLink, GeneralCommand, GeneralMessageLink {
 
     @Autowired
     BotConfig botConfig;
@@ -52,16 +50,14 @@ public class BotRebootService implements UserCommand, UserMessageLink, GeneralCo
     @EventListener(ContextRefreshedEvent.class)
     public void clearTempDAO() {
         persistence.clearTempDAO();
+        persistence.resetToDefaultTempAdminSettings();
     }
 
     @EventListener(ContextRefreshedEvent.class)
     public void clearAllMessages() {
         List<Long> chatIds = persistence.selectDistinctChatIdsTempBotMessages();
+
         for (long chatId : chatIds) {
-
-            if (chatId == botConfig.getAdminId())
-                continue;
-
             List<TempBotMessage> tempBotMessages = persistence.selectTempBotMessages(chatId);
 
             for (int i = 0; i < tempBotMessages.size(); i++) {
@@ -83,13 +79,13 @@ public class BotRebootService implements UserCommand, UserMessageLink, GeneralCo
             botConfig.getTelegramClient().execute(
                     service.editMessageText(chatId,
                             msgId,
-                            service.getLocaleMessage(chatId, USER_MSG_START),
-                            getStartIKMarkup(chatId)));
+                            service.getLocaleMessage(chatId, GENERAL_MSG_REBOOTED),
+                            getRebootIKMarkup(chatId)));
 
-            log.debug("User {} message {} edited", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
+            log.debug("ChatId {} message {} edited", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
         } catch (TelegramApiException ex) {
             log.warn("""
-                                        [Reboot] Impossible to edit user {} message {}
+                                        [Reboot] Impossible to edit chatId {} message {}
                                         Exception: {}""",
                     tempBotMessage.getChatId(), tempBotMessage.getMsgId(), ex.getMessage());
         }
@@ -105,33 +101,20 @@ public class BotRebootService implements UserCommand, UserMessageLink, GeneralCo
 
             botConfig.getTelegramClient().execute(deleteMessage);
 
-            log.debug("User {} message {} deleted", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
+            log.debug("ChatId {} message {} deleted", tempBotMessage.getChatId(), tempBotMessage.getMsgId());
         } catch (TelegramApiException ex) {
             log.warn("""
-                                    [Reboot] Impossible to delete message {} for user {}
+                                    [Reboot] Impossible to delete message {} for chatId {}
                                     Exception: {}""",
                     tempBotMessage.getMsgId(), tempBotMessage.getChatId(), ex.getMessage());
         }
     }
 
-    private InlineKeyboardMarkup getStartIKMarkup(long chatId) {
+    private InlineKeyboardMarkup getRebootIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(
-                service.getLocaleMessage(chatId, USER_BT_CHOOSE_CHECK_IN_DATE), CHOOSE_CHECK_DATE));
-        keyboard.add(msgBuilder.buildIKRow(buttons));
-        buttons.clear();
-
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, USER_BT_ABOUT_US), ABOUT_US));
-        keyboard.add(msgBuilder.buildIKRow(buttons));
-        buttons.clear();
-
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, USER_BT_CONTACTS), CONTACTS));
-        keyboard.add(msgBuilder.buildIKRow(buttons));
-        buttons.clear();
-
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, USER_BT_CHANGE_LANGUAGE), CHANGE_LANGUAGE));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_START), BACK_TO_START));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

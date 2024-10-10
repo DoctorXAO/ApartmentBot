@@ -11,8 +11,8 @@ import xao.develop.service.BotMessage;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -44,19 +44,15 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
         int selector = getSelectorOfCurrentApartment(chatId);
         List<Apartment> apartments = persistence.selectAllFreeApartments(chatId);
 
-        if (selector != 0) {
-            Integer numberOfApartment = apartments.get(selector).getNumber();
+        Integer numberOfApartment = apartments.get(selector).getNumber();
 
-            log.debug("Size of the list of apartment is {}", apartments.size());
-            log.debug("Current selector is {}", selector);
-            log.debug("Current number of apartment is {}", numberOfApartment);
+        log.debug("Size of the list of apartment is {}", apartments.size());
+        log.debug("Current selector is {}", selector);
+        log.debug("Current number of apartment is {}", numberOfApartment);
 
-            return numberOfApartment;
-        } else {
-            log.debug("Selector equals {}", selector);
+        // todo Проверить функционал при отсутствии квартир, раньше выбивало ошибку и стоял чек на section = 0. Но он равен 0 по умолчанию, по этому либо менять секцион по умолчанию, либо чет делать
 
-            return 0;
-        }
+        return numberOfApartment;
     }
 
     public int getCountOfFreeApartments(long chatId) {
@@ -151,19 +147,14 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
     private StringBuilder getAmenities(long chatId, Apartment apartment) {
         StringBuilder amenities = new StringBuilder();
 
-//        if (apartment.getAmenities() != null) {
-//            String[] amenitiesArray = apartment.getAmenities().split("\\$");
-//            Arrays.sort(amenitiesArray);
-//
-//            for (String code : amenitiesArray) {
-//                Amenity amenity = persistence.selectAmenity(Integer.parseInt(code));
-//
-//                amenities.append(service.getLocaleMessage(chatId, amenity.getLink())).append("\n");
-//            }
-//        } else
-//            amenities.append("nothing");
+        List<Amenity> listOfAmenities = apartment.getAmenities();
+        listOfAmenities.sort(Comparator.comparingInt(Amenity::getImportance));
 
-        amenities.append("processing..."); // delete
+        if (listOfAmenities.isEmpty())
+            amenities.append("null");
+        else
+            for (Amenity amenity : listOfAmenities)
+                amenities.append(service.getLocaleMessage(chatId, amenity.getLink())).append("\n");
 
         return amenities;
     }
