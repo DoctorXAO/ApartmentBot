@@ -18,6 +18,9 @@ import xao.develop.repository.Persistence;
 
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -31,6 +34,8 @@ public class BotService {
 
     @Autowired
     MessageSource messageSource;
+
+    private final ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
 
     public final URL resource = getClass().getClassLoader().getResource("img/apartments/");
 
@@ -190,11 +195,11 @@ public class BotService {
         }
     }
 
-    public int sendSimpleMessage(long chatId, String msgLink) throws TelegramApiException {
+    public int sendSimpleMessage(long chatId, String msgLink, Object... args) throws TelegramApiException {
             return botConfig.getTelegramClient().execute(SendMessage
                     .builder()
                     .chatId(chatId)
-                    .text(getLocaleMessage(chatId, msgLink))
+                    .text(getLocaleMessage(chatId, msgLink, args))
                     .parseMode("HTML")
                     .build()).getMessageId();
     }
@@ -209,15 +214,24 @@ public class BotService {
                 .build();
     }
 
-    public void sendMessageAdminUser(long chatId,
-                                     String msgLink,
-                                     InlineKeyboardMarkup markup,
-                                     Object... args) throws TelegramApiException {
+    public void sendMessageInfo(long chatId,
+                                String msgLink,
+                                InlineKeyboardMarkup markup,
+                                Object... args) throws TelegramApiException {
 
         botConfig.getTelegramClient().execute(sendMessage(
                 chatId,
                 getLocaleMessage(chatId, msgLink, args),
                 markup));
+    }
+    
+    public void sendTempMessage(long chatId, String msgLink, int forTime) throws TelegramApiException {
+        int msgId = sendSimpleMessage(chatId, msgLink, forTime);
+        scheduled.schedule(() -> deleteMessage(chatId, msgId), forTime, TimeUnit.SECONDS);
+    }
+    
+    public void lateDeleteMessage(long chatId, int msgId, int forTime) {
+        scheduled.schedule(() -> deleteMessage(chatId, msgId), forTime, TimeUnit.SECONDS);
     }
 
     public EditMessageText editMessageText(long chatId, int msgId, String msg, InlineKeyboardMarkup markup) {

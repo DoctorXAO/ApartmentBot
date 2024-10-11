@@ -14,6 +14,8 @@ public interface AdminMessageLink {
     String ADMIN_MSG_PREVIEW_APARTMENT = "admin.msg.preview-apartment";
 
     String ADMIN_MSG_LIST_OF_APARTMENTS = "admin.msg.list-of-apartments";
+    String ADMIN_MSG_EDIT_APARTMENT = "admin.msg.edit-apartment";
+    String ADMIN_MSG_APPLY_DELETE_APARTMENT = "admin.msg.apply-delete-apartment";
 
     String ADMIN_MSG_APP = "admin.msg.app";
 
@@ -25,6 +27,13 @@ public interface AdminMessageLink {
     String ADMIN_MSG_STATUS_ACCEPTED = "admin.msg.status.accepted";
     String ADMIN_MSG_STATUS_DENIED = "admin.msg.status.denied";
     String ADMIN_MSG_STATUS_FINISHED = "admin.msg.status.finished";
+
+    String ADMIN_MSG_SIMPLE_NEW_APARTMENT_CREATED = "admin.msg.simple.new-apartment-created";
+    String ADMIN_MSG_SIMPLE_APARTMENT_DELETED = "admin.msg.simple.apartment-deleted";
+    String ADMIN_MSG_SIMPLE_PHOTO_EDITED = "admin.msg.simple.photo-edited";
+    String ADMIN_MSG_SIMPLE_NUMBER_EDITED = "admin.msg.simple.number-edited";
+    String ADMIN_MSG_SIMPLE_AREA_EDITED = "admin.msg.simple.area-edited";
+    String ADMIN_MSG_SIMPLE_AMENITIES_EDITED = "admin.msg.simple.amenities-edited";
 
     String ADMIN_BT_NEW_APPLICATIONS = "admin.bt.new-applications";
     String ADMIN_BT_ARCHIVE = "admin.bt.archive";
@@ -40,6 +49,12 @@ public interface AdminMessageLink {
     String ADMIN_BT_AVAILABLE = "admin.bt.available";
     String ADMIN_BT_CREATE = "admin.bt.create";
     String ADMIN_BT_EDIT = "admin.bt.edit";
+    String ADMIN_BT_EDIT_PHOTOS = "admin.bt.edit-photos-of-apartment";
+    String ADMIN_BT_EDIT_NUMBER = "admin.bt.edit-number-of-apartment";
+    String ADMIN_BT_EDIT_AREA = "admin.bt.edit-area-of-apartment";
+    String ADMIN_BT_EDIT_AMENITIES = "admin.bt.edit-amenities-of-apartment";
+    String ADMIN_BT_APPLY = "admin.bt.apply";
+    String ADMIN_BT_DELETE = "admin.bt.delete";
 
     String ADMIN_BT_NEW_APARTMENT = "admin.bt.new-apartment";
     String ADMIN_BT_LIST_OF_APARTMENTS = "admin.bt.list-of-apartments";
@@ -47,4 +62,5 @@ public interface AdminMessageLink {
 
     String ADMIN_ERR_DOWNLOAD_RESOURCE = "admin.err.download-resource";
     String ADMIN_ERR_APARTMENT_EXISTS = "admin.err.apartment-exists";
+    String ADMIN_ERR_DELETE_DIRECTORY = "admin.err.delete-directory";
 }

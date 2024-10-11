@@ -50,7 +50,7 @@ public class BotRebootService implements UserCommand, UserMessageLink, GeneralCo
     @EventListener(ContextRefreshedEvent.class)
     public void clearTempDAO() {
         persistence.clearTempDAO();
-        persistence.resetToDefaultTempAdminSettings();
+        persistence.resetToDefaultAdminSettings();
     }
 
     @EventListener(ContextRefreshedEvent.class)

@@ -4,13 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import xao.develop.model.*;
 import xao.develop.enums.AppStatus;
 
 import java.util.Calendar;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @Repository
@@ -41,7 +39,7 @@ public class Persistence {
     private AmenityRepository amenityRepository;
 
     @Autowired
-    private TempAdminSettingsRepository tempAdminSettingsRepository;
+    private AdminSettingsRepository adminSettingsRepository;
 
     @Autowired
     private TempNewApartmentRepository tempNewApartmentRepository;
@@ -166,6 +164,12 @@ public class Persistence {
             apartment.setUserId(null);
 
         apartmentRepository.save(apartment);
+    }
+
+    public void deleteApartment(int numberOfApartment) {
+        apartmentRepository.deleteByNumber(numberOfApartment);
+
+        log.debug("Apartment №{} deleted", numberOfApartment);
     }
 
     // BookingCard
@@ -444,68 +448,76 @@ public class Persistence {
         tempApartmentSelectorRepository.deleteByChatId(chatId);
     }
 
-    // TempAdminSettings
+    // AdminSettings
 
-    public void insertTempAdminSettings(long chatId) {
-        TempAdminSettings tempAdminSettings = new TempAdminSettings();
+    public void insertAdminSettings(long chatId) {
+        AdminSettings adminSettings = new AdminSettings();
 
-        tempAdminSettings.setChatId(chatId);
+        adminSettings.setChatId(chatId);
 
-        tempAdminSettingsRepository.save(tempAdminSettings);
+        adminSettingsRepository.save(adminSettings);
     }
 
-    public TempAdminSettings selectTempAdminSettings(long chatId) {
-        return tempAdminSettingsRepository.findById(chatId);
+    public AdminSettings selectAdminSettings(long chatId) {
+        return adminSettingsRepository.findById(chatId);
     }
 
-    public void updateSelectedAppTempAdminSettings(long chatId, int selectedApp) {
-        TempAdminSettings tempAdminSettings;
+    public void updateSelectedAppAdminSettings(long chatId, int selectedApp) {
+        AdminSettings adminSettings;
 
         try {
-            tempAdminSettings = tempAdminSettingsRepository.findById(chatId);
+            adminSettings = adminSettingsRepository.findById(chatId);
 
-            tempAdminSettings.setSelectedApplication(selectedApp);
+            adminSettings.setSelectedApplication(selectedApp);
         }
         catch (NullPointerException ex) {
-            tempAdminSettings = new TempAdminSettings();
+            adminSettings = new AdminSettings();
 
-            tempAdminSettings.setChatId(chatId);
-            tempAdminSettings.setSelectedApplication(selectedApp);
+            adminSettings.setChatId(chatId);
+            adminSettings.setSelectedApplication(selectedApp);
         }
 
-        tempAdminSettingsRepository.save(tempAdminSettings);
+        adminSettingsRepository.save(adminSettings);
     }
 
-    public void updateSelectedPageTempAdminSettings(long chatId, int selectedPage) {
-        TempAdminSettings tempAdminSettings = tempAdminSettingsRepository.findById(chatId);
+    public void updateSelectedApartmentAdminSettings(long chatId, int selectedApartment) {
+        AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
 
-        tempAdminSettings.setSelectedPage(selectedPage);
+        adminSettings.setSelectedApartment(selectedApartment);
 
-        tempAdminSettingsRepository.save(tempAdminSettings);
+        adminSettingsRepository.save(adminSettings);
     }
 
-    public void updateNewApartmentTempAdminSettings(long chatId, boolean isNewApartment) {
-        TempAdminSettings tempAdminSettings = tempAdminSettingsRepository.findById(chatId);
+    public void updateSelectedPageAdminSettings(long chatId, int selectedPage) {
+        AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
 
-        tempAdminSettings.setNewApartment(isNewApartment);
+        adminSettings.setSelectedPage(selectedPage);
 
-        tempAdminSettingsRepository.save(tempAdminSettings);
+        adminSettingsRepository.save(adminSettings);
     }
 
-    public void updateCheckingSelectedAmenitiesTempAdminSettings(long chatId, boolean isCheckingSelectedAmenities) {
-        TempAdminSettings tempAdminSettings = tempAdminSettingsRepository.findById(chatId);
+    public void updateNewApartmentAdminSettings(long chatId, boolean isNewApartment) {
+        AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
 
-        tempAdminSettings.setCheckingSelectedAmenities(isCheckingSelectedAmenities);
+        adminSettings.setNewApartment(isNewApartment);
 
-        tempAdminSettingsRepository.save(tempAdminSettings);
+        adminSettingsRepository.save(adminSettings);
     }
 
-    public void deleteTempAdminSettings(long chatId) {
-        tempAdminSettingsRepository.deleteById(chatId);
+    public void updateCheckingSelectedAmenitiesAdminSettings(long chatId, boolean isCheckingSelectedAmenities) {
+        AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
+
+        adminSettings.setCheckingSelectedAmenities(isCheckingSelectedAmenities);
+
+        adminSettingsRepository.save(adminSettings);
     }
 
-    public void resetToDefaultTempAdminSettings() {
-        tempAdminSettingsRepository.resetToDefault();
+    public void deleteAdminSettings(long chatId) {
+        adminSettingsRepository.deleteById(chatId);
+    }
+
+    public void resetToDefaultAdminSettings() {
+        adminSettingsRepository.resetToDefault();
     }
 
     // TempNewApartment

@@ -13,6 +13,9 @@ public interface ApartmentRepository extends CrudRepository<Apartment, Long> {
 
     Apartment getByNumber(int number);
 
+    @Transactional
+    void deleteByNumber(int number);
+
     @Modifying
     @Transactional
     @Query("UPDATE Apartments a SET a.isBooking = false, a.userId = null")

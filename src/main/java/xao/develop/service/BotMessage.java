@@ -1,8 +1,11 @@
 package xao.develop.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -16,6 +19,8 @@ import xao.develop.repository.Persistence;
 import xao.develop.toolbox.FileManager;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
@@ -78,39 +83,75 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
         }
     }
 
-    public List<Integer> sendPhotos(long chatId, String path) {
+    public List<Integer> sendPhotos(long chatId, @NotNull String path) {
         try {
-            if (path == null)
-                throw new Exception("Directory with photos isn't found!");
-
-            List<InputMediaPhoto> photos = new ArrayList<>();
-
             File[] files = FileManager.getSortedFiles(new URL(path));
 
-            for (File file : files)
-                photos.add(new InputMediaPhoto(file, file.getName()));
+            if (files.length == 1)
+                return sendSinglePhoto(chatId, new InputFile(files[0]));
+            else {
+                return sendSomePhotos(chatId,
+                        new ArrayList<>(Arrays.stream(files)
+                        .map(file -> new InputMediaPhoto(file, file.getName()))
+                        .toList()));
+            }
+        } catch (MalformedURLException ex) {
+            log.error("Can't download URL.\nException: {}", ex.getMessage());
 
-            if (photos.size() == 1)
-                throw new Exception("В процессе отправка одного фото..."); // todo доделать отправку одного фото
-            else if (photos.size() < 2) // todo Можно сделать циклом по 10 фото отправлять
-                throw new Exception("Current directory has less than two photos (*.jpg/*.png)");
+            return new ArrayList<>();
+        } catch (IOException ex) {
+            log.error("Can't sort files.\nException: {}", ex.getMessage());
 
-            List<Message> msgPhotos = botConfig.getTelegramClient().execute(SendMediaGroup
-                    .builder()
-                    .chatId(chatId)
-                    .medias(photos)
-                    .build());
-
-            List<Integer> messages = new ArrayList<>();
-
-            for (Message message : msgPhotos)
-                messages.add(message.getMessageId());
-
-            return messages;
-        } catch (Exception ex) {
-            log.error("Impossible send photos. Path: {}\nException: {}", path, ex.getMessage());
             return new ArrayList<>();
         }
+    }
+
+    private List<Integer> sendSinglePhoto(long chatId, InputFile photo) {
+        try {
+            return new ArrayList<>(botConfig.getTelegramClient().execute(SendPhoto
+                    .builder()
+                    .chatId(chatId)
+                    .photo(photo)
+                    .build()).getMessageId());
+        } catch (TelegramApiException ex) {
+            log.error("Can't send the single photo.\nException: {}", ex.getMessage());
+
+            return new ArrayList<>();
+        }
+    }
+
+    private List<Integer> sendSomePhotos(long chatId, List<InputMediaPhoto> photos) {
+        try {
+            List<Integer> msgIds = new ArrayList<>();
+            List<InputMediaPhoto> temp = new ArrayList<>();
+
+            for(InputMediaPhoto photo : photos) {
+                if (temp.size() >= 10) {
+                    msgIds.addAll(executeSomePhotos(chatId, temp));
+
+                    temp.clear();
+                }
+
+                temp.add(photo);
+            }
+
+            if (!temp.isEmpty())
+                msgIds.addAll(executeSomePhotos(chatId, temp));
+
+            return msgIds;
+        } catch (TelegramApiException ex) {
+            log.error("Can't send some photos.\nException: {}", ex.getMessage());
+
+            return new ArrayList<>();
+        }
+    }
+
+    private List<Integer> executeSomePhotos(long chatId, List<InputMediaPhoto> photos) throws TelegramApiException {
+        return botConfig.getTelegramClient().execute(SendMediaGroup
+                .builder()
+                .chatId(chatId)
+                .medias(photos)
+                .build()).stream().map(Message::getMessageId).toList();
     }
 
     abstract protected InlineKeyboardMarkup getIKMarkup(long chatId);

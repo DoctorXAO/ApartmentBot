@@ -70,6 +70,12 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     @Autowired
     AdminMsgPreviewApartment adminMsgPreviewApartment;
 
+    @Autowired
+    AdminMsgEditApartment adminMsgEditApartment;
+    
+    @Autowired
+    AdminMsgApplyDeleteApartment adminMsgApplyDeleteApartment;
+
     private final String tempFolderOfPhotos = "temp";
 
     public void execute(Update update) {
@@ -144,7 +150,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
                 newApartment(chatId, messages, data, NewApartment.PICTURES);
             } else
-                service.sendMessageAdminUser(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
+                service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
         }
 
         deleteMessage(chatId, msgId);
@@ -192,10 +198,14 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case AVAILABLE -> changeListOfAmenities(chatId, messages, false);
             case SELECTED -> changeListOfAmenities(chatId, messages, true);
             case PREVIEW_APARTMENT -> previewApartment(chatId, messages);
+            
+            case APPLY_DELETE_APARTMENT -> applyDeleteApartment(chatId, messages);
+            case DELETE_APARTMENT -> deleteApartment(chatId, messages);
 
             case APP -> openApp(chatId, messages, data[1], App.APP);
             case ARC -> openApp(chatId, messages, data[1], App.ARC);
             case AMENITY -> selectAmenity(chatId, messages, data[1]);
+            case APARTMENT -> editApartment(chatId, messages, data[1]);
 
             case REFUSE_APP -> performActionStatement(chatId, messages, data[1], AppStatus.DENIED);
             case ACCEPT_APP -> performActionStatement(chatId, messages, data[1], AppStatus.ACCEPTED);
@@ -237,9 +247,9 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     private void chat(long chatId, String data) throws TelegramApiException {
         long userId = adminMsgStart.getUserId(adminMsgStart.getSelectedApp(chatId));
 
-        service.sendMessageAdminUser(userId, ADMIN_MSG_CHATTING_ADMIN, adminMsgStart.getIKMarkupChat(userId), data);
+        service.sendMessageInfo(userId, ADMIN_MSG_CHATTING_ADMIN, adminMsgStart.getIKMarkupChat(userId), data);
 
-        service.sendMessageAdminUser(chatId, ADMIN_MSG_SENT_SUCCESSFULLY, adminMsgStart.getIKMarkupChat(chatId), data);
+        service.sendMessageInfo(chatId, ADMIN_MSG_SENT_SUCCESSFULLY, adminMsgStart.getIKMarkupChat(chatId), data);
     }
 
     private void newApartment(long chatId,
@@ -264,10 +274,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             switch (stage) {
                 case NUMBER -> {
                     if (service.resource == null)
-                        service.sendMessageAdminUser(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE,
+                        service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE,
                                 adminMsgStart.getIKMarkupOkToDelete(chatId));
                     else if (new File(service.resource.getPath() + parameter).exists())
-                        service.sendMessageAdminUser(chatId, ADMIN_ERR_APARTMENT_EXISTS,
+                        service.sendMessageInfo(chatId, ADMIN_ERR_APARTMENT_EXISTS,
                                 adminMsgStart.getIKMarkupOkToDelete(chatId));
                     else if (parameter.matches("[0-9]+")) {
                         adminMsgStart.updateNumberTempNewApartment(chatId, Integer.parseInt(parameter));
@@ -320,7 +330,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         if (clearTemp && service.resource != null)
             FileManager.deleteDirectory(Paths.get(service.resource.getPath() + tempFolderOfPhotos));
         else if (service.resource == null)
-            service.sendMessageAdminUser(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
+            service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
 
         messages.add(adminMsgNewApartment.editMessage(chatId, msgLink, adminMsgArchive.getTempNewApartmentParameters(chatId)));
     }
@@ -331,6 +341,8 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     }
 
     private void openListOfApartments(long chatId, List<Integer> messages) throws TelegramApiException {
+        adminMsgStart.updateSelectedApartment(chatId, 0);
+        
         messages.add(adminMsgListOfApartments.editMessage(chatId, ADMIN_MSG_LIST_OF_APARTMENTS));
     }
 
@@ -370,15 +382,18 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             adminMsgStart.insertApartment(number, area, selectedAmenity);
 
             openSettings(chatId, messages, true);
+            
+            service.sendTempMessage(chatId, ADMIN_MSG_SIMPLE_NEW_APARTMENT_CREATED, 5);
         } else
-            service.sendMessageAdminUser(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
+            service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
     }
 
     private void changeListOfAmenities(long chatId,
                                        List<Integer> messages,
                                        boolean isCheckingSelectedAmenities) throws TelegramApiException {
         adminMsgStart.updateCheckingSelectedAmenitiesAdminSettings(chatId, isCheckingSelectedAmenities);
-
+        // todo Сделать возможность быстро перейти к этапу редактирования новой квартиры. Сейчас если вернуться назад, мне нужно вводить площадь, чтобы попасть на удобства
+        // todo Сделать удобства по уменьшению важности. Сейчас они стоят в случайном порядке и добавляются в порядке добавления.
         openSelectAmenities(chatId, messages);
     }
 
@@ -389,6 +404,24 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
                 adminMsgStart.getPreviewApartmentParameters(chatId)));
     }
 
+    private void applyDeleteApartment(long chatId, List<Integer> messages) throws TelegramApiException {
+        messages.add(adminMsgApplyDeleteApartment.editMessage(chatId,
+                ADMIN_MSG_APPLY_DELETE_APARTMENT, adminMsgStart.getSelectedApartment(chatId)));
+    }
+    
+    private void deleteApartment(long chatId, List<Integer> messages) throws TelegramApiException {
+        int selectedApartment = adminMsgStart.getSelectedApartment(chatId);
+
+        if (service.resource != null)
+            FileManager.deleteAllFilesFromDirectory(Paths.get(service.resource.getPath() + selectedApartment));
+
+        adminMsgStart.deleteApartment(selectedApartment);
+        
+        openListOfApartments(chatId, messages);
+        
+        service.sendTempMessage(chatId, ADMIN_MSG_SIMPLE_APARTMENT_DELETED, 5);
+    }
+    
     private void performActionStatement(long chatId,
                                         List<Integer> messages,
                                         String data,
@@ -415,7 +448,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             default -> status = "null";
         }
 
-        service.sendMessageAdminUser(userId, GENERAL_MSG_UPDATED_STATUS,
+        service.sendMessageInfo(userId, GENERAL_MSG_UPDATED_STATUS,
                 adminMsgStart.getIKMarkupOkToDelete(chatId), status);
     }
 
@@ -443,6 +476,15 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             adminMsgStart.deleteTempSelectedAmenity(chatId, Integer.parseInt(data));
 
         openSelectAmenities(chatId, messages);
+    }
+
+    private void editApartment(long chatId, List<Integer> messages, String numberOfApartment) throws TelegramApiException {
+        adminMsgStart.updateSelectedApartment(chatId, Integer.parseInt(numberOfApartment));
+        
+        messages.addAll(adminMsgEditApartment.sendPhotos(chatId, service.resource + numberOfApartment));
+
+        messages.add(adminMsgEditApartment.sendMessage(chatId, ADMIN_MSG_EDIT_APARTMENT,
+                adminMsgStart.getEditApartmentParameters(chatId, numberOfApartment)));
     }
 
     private void changeLanguage(long chatId,

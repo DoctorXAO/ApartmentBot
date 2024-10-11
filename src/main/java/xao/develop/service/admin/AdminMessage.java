@@ -68,23 +68,29 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     }
 
     public int getSelectedApp(long chatId) {
-        return persistence.selectTempAdminSettings(chatId).getSelectedApplication();
+        return persistence.selectAdminSettings(chatId).getSelectedApplication();
     }
 
     public boolean isCheckingSelectedAmenities(long chatId) {
-        return persistence.selectTempAdminSettings(chatId).isCheckingSelectedAmenities();
+        return persistence.selectAdminSettings(chatId).isCheckingSelectedAmenities();
     }
 
     public Object[] getTempNewApartmentParameters(long chatId) {
         TempNewApartment newApartment = persistence.selectTempNewApartment(chatId);
 
-        StringBuilder amenities = new StringBuilder();
         List<TempSelectedAmenity> selectedAmenities = getSelectedAmenities(chatId);
 
-        for(TempSelectedAmenity selectedAmenity : selectedAmenities) {
-            String link = persistence.selectAmenity(selectedAmenity.getIdOfAmenity()).getLink();
-            amenities.append(service.getLocaleMessage(chatId, link)).append("\n");
-        }
+        StringBuilder amenities = convertAmenityLinksToString(chatId, selectedAmenities.stream()
+                .map(selected -> persistence.selectAmenity(selected.getIdOfAmenity()).getLink())
+                .toList());
+
+//        StringBuilder amenities = new StringBuilder();
+//        List<TempSelectedAmenity> selectedAmenities = getSelectedAmenities(chatId);
+//
+//        for(TempSelectedAmenity selectedAmenity : selectedAmenities) {
+//            String link = persistence.selectAmenity(selectedAmenity.getIdOfAmenity()).getLink();
+//            amenities.append(service.getLocaleMessage(chatId, link)).append("\n");
+//        }
 
         return new Object[]{
                 newApartment.getNumber(),
@@ -96,21 +102,39 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     public Object[] getPreviewApartmentParameters(long chatId) {
         TempNewApartment newApartment = persistence.selectTempNewApartment(chatId);
 
-        StringBuilder amenities = new StringBuilder();
         List<TempSelectedAmenity> selectedAmenities = getSelectedAmenities(chatId);
 
-        for(TempSelectedAmenity selectedAmenity : selectedAmenities) {
-            String link = persistence.selectAmenity(selectedAmenity.getIdOfAmenity()).getLink();
-            amenities.append(service.getLocaleMessage(chatId, link)).append("\n");
-        }
+        StringBuilder amenities = convertAmenityLinksToString(chatId, selectedAmenities.stream()
+                .map(selected -> persistence.selectAmenity(selected.getIdOfAmenity()).getLink())
+                .toList());
+//        StringBuilder amenities = new StringBuilder();
+//        List<TempSelectedAmenity> selectedAmenities = getSelectedAmenities(chatId);
+
+//        for(TempSelectedAmenity selectedAmenity : selectedAmenities) {
+//            String link = persistence.selectAmenity(selectedAmenity.getIdOfAmenity()).getLink();
+//            amenities.append(service.getLocaleMessage(chatId, link)).append("\n");
+//        }
 
         return new Object[]{
                 newApartment.getArea(),
                 amenities};
     }
 
+    public Object[] getEditApartmentParameters(long chatId, String numberOfApartment) {
+        Apartment apartment = persistence.selectApartment(Integer.parseInt(numberOfApartment));
+
+        StringBuilder amenities = convertAmenityLinksToString(chatId,
+                apartment.getAmenities().stream().map(Amenity::getLink).toList());
+
+        return new Object[]{
+                apartment.getNumber(),
+                apartment.getArea(),
+                amenities
+        };
+    }
+
     public boolean isNewApartment(long chatId) {
-        return persistence.selectTempAdminSettings(chatId).isNewApartment();
+        return persistence.selectAdminSettings(chatId).isNewApartment();
     }
 
     public TempNewApartment getTempNewApartment(long chatId) {
@@ -121,10 +145,14 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         return persistence.selectAllSelectedAmenities(chatId);
     }
 
+    public int getSelectedApartment(long chatId) {
+        return persistence.selectAdminSettings(chatId).getSelectedApartment();
+    }
+
     // creates
 
     public void createAdminSettings(long chatId) {
-        persistence.insertTempAdminSettings(chatId);
+        persistence.insertAdminSettings(chatId);
     }
 
     public void createNewApartmentField(long chatId) {
@@ -153,19 +181,19 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     }
 
     public void updateSelectedAppAdminSettings(long chatId, int selectedApp) {
-        persistence.updateSelectedAppTempAdminSettings(chatId, selectedApp);
+        persistence.updateSelectedAppAdminSettings(chatId, selectedApp);
     }
 
     public void updateSelectedPageAdminSettings(long chatId, int selectedPage) {
-        persistence.updateSelectedPageTempAdminSettings(chatId, selectedPage);
+        persistence.updateSelectedPageAdminSettings(chatId, selectedPage);
     }
 
     public void updateNewApartmentAdminSettings(long chatId, boolean isNewApartment) {
-        persistence.updateNewApartmentTempAdminSettings(chatId, isNewApartment);
+        persistence.updateNewApartmentAdminSettings(chatId, isNewApartment);
     }
 
     public void updateCheckingSelectedAmenitiesAdminSettings(long chatId, boolean isCheckingSelectedAmenities) {
-        persistence.updateCheckingSelectedAmenitiesTempAdminSettings(chatId, isCheckingSelectedAmenities);
+        persistence.updateCheckingSelectedAmenitiesAdminSettings(chatId, isCheckingSelectedAmenities);
     }
 
     public void updateNumberTempNewApartment(long chatId, int number) {
@@ -178,6 +206,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     public void updateAreaTempNewApartment(long chatId, double area) {
         persistence.updateAreaTempNewApartment(chatId, area);
+    }
+
+    public void updateSelectedApartment(long chatId, int selectedApartment) {
+        persistence.updateSelectedApartmentAdminSettings(chatId, selectedApartment);
     }
 
     // deletes
@@ -194,6 +226,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         persistence.deleteAllTempSelectedAmenity(chatId);
     }
 
+    public void deleteApartment(int numberOfApartment) {
+        persistence.deleteApartment(numberOfApartment);
+    }
+
     // init
 
     protected void initSelectorApps(long chatId,
@@ -204,7 +240,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         List<BookingCard> bookingCards = null;
         String data = EMPTY;
 
-        TempAdminSettings adminSettings = persistence.selectTempAdminSettings(chatId);
+        AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
 
         if (type.equals(App.APP)) {
             bookingCards = persistence.selectBookingCardByStatus(AppStatus.WAITING);
@@ -244,23 +280,26 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         try {
             List<Apartment> apartments = persistence.selectAllApartmentsSortByNumber();
 
-            for(Apartment apartment : apartments) {
-                TempAdminSettings adminSettings = persistence.selectTempAdminSettings(chatId);
+            log.debug("Size of the list of the apartments is {}", apartments.size());
 
-                initSelectorPanel(chatId, apartments.size(), botConfig.getCountOfApartmentOnPage(), adminSettings,
-                        PREVIOUS_PAGE_OF_APART, NEXT_PAGE_OF_APART, keyboard, buttons);
+            AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
 
-                for (int i = 0; i < botConfig.getCountOfApartmentOnPage(); i++) {
+            initSelectorPanel(chatId, apartments.size(), botConfig.getCountOfApartmentOnPage(), adminSettings,
+                    PREVIOUS_PAGE_OF_APART, NEXT_PAGE_OF_APART, keyboard, buttons);
 
-                    if (adminSettings.getSelectedPage() + i >= apartments.size())
-                        break;
+            for (int i = 0; i < botConfig.getCountOfApartmentOnPage(); i++) {
 
-                    buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId,
-                            ADMIN_BT_APARTMENT,
-                            apartment.getNumber()), APARTMENT + X + apartment.getNumber()));
-                    keyboard.add(msgBuilder.buildIKRow(buttons));
-                    buttons.clear();
-                }
+                if (adminSettings.getSelectedPage() + i >= apartments.size())
+                    break;
+
+                int number = adminSettings.getSelectedPage() + i;
+
+                buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId,
+                        ADMIN_BT_APARTMENT,
+                        apartments.get(number).getNumber()),
+                        APARTMENT + X + apartments.get(number).getNumber()));
+                keyboard.add(msgBuilder.buildIKRow(buttons));
+                buttons.clear();
             }
         } catch (Exception ex) {
             log.debug("initSelectorApartments exception: {}", ex.getMessage());
@@ -271,7 +310,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
                                          List<InlineKeyboardRow> keyboard,
                                          List<InlineKeyboardButton> buttons) {
 
-        TempAdminSettings adminSettings = persistence.selectTempAdminSettings(chatId);
+        AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
 
         if (adminSettings.isCheckingSelectedAmenities())
             initSelectorSelectedAmenities(chatId, adminSettings, keyboard, buttons);
@@ -280,7 +319,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     }
 
     private void initSelectorAvailableAmenities(long chatId,
-                                                TempAdminSettings adminSettings,
+                                                AdminSettings adminSettings,
                                                 List<InlineKeyboardRow> keyboard,
                                                 List<InlineKeyboardButton> buttons) {
 
@@ -310,7 +349,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     }
 
     private void initSelectorSelectedAmenities(long chatId,
-                                               TempAdminSettings adminSettings,
+                                               AdminSettings adminSettings,
                                                List<InlineKeyboardRow> keyboard,
                                                List<InlineKeyboardButton> buttons) {
 
@@ -339,7 +378,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     protected void initBtChat(long chatId, List<InlineKeyboardRow> keyboard, List<InlineKeyboardButton> buttons) {
 
-        int selectedApp = persistence.selectTempAdminSettings(chatId).getSelectedApplication();
+        int selectedApp = persistence.selectAdminSettings(chatId).getSelectedApplication();
 
         buttons.add(msgBuilder.buildIKButton(
                 service.getLocaleMessage(chatId, ADMIN_BT_CHAT), OPEN_CHAT + X + selectedApp));
@@ -365,7 +404,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     public void initSelectorPanel(long chatId,
                                   int countOfEntity,
                                   int maxCountOfEntityOnPage,
-                                  TempAdminSettings adminSettings,
+                                  AdminSettings adminSettings,
                                   String dataOfPrevious,
                                   String dataOfNext,
                                   List<InlineKeyboardRow> keyboard,
@@ -392,14 +431,27 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     // actions
 
     public void nextPage(long chatId) {
-        TempAdminSettings tempAdminSettings = persistence.selectTempAdminSettings(chatId);
-        persistence.updateSelectedPageTempAdminSettings(chatId,
-                tempAdminSettings.getSelectedPage() + botConfig.getCountOfAppsOnPage());
+        AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
+
+        int selectedPage = adminSettings.getSelectedPage() + botConfig.getCountOfAppsOnPage();
+
+        updateSelectedPageAdminSettings(chatId, selectedPage);
     }
 
     public void previousPage(long chatId) {
-        TempAdminSettings tempAdminSettings = persistence.selectTempAdminSettings(chatId);
-        persistence.updateSelectedPageTempAdminSettings(chatId,
-                tempAdminSettings.getSelectedPage() - botConfig.getCountOfAppsOnPage());
+        AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
+
+        int selectedPage = adminSettings.getSelectedPage() - botConfig.getCountOfAppsOnPage();
+
+        updateSelectedPageAdminSettings(chatId, selectedPage);
+    }
+
+    private StringBuilder convertAmenityLinksToString(long chatId, List<String> amenityLinks) {
+        StringBuilder amenities = new StringBuilder();
+
+        for(String link : amenityLinks)
+            amenities.append(service.getLocaleMessage(chatId, link)).append("\n");
+
+        return amenities;
     }
 }

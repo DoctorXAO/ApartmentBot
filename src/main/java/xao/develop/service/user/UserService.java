@@ -18,9 +18,6 @@ import xao.develop.service.BotService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -59,8 +56,6 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
 
     @Autowired
     UserMsgChangeLanguage userMsgChangeLanguage;
-
-    private final ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
 
     public void execute(Update update) {
         log.trace("Method execute(Update, String) started");
@@ -163,10 +158,10 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                 case RAA_SEND_BOOKING_TO_ADMIN -> {
                     userMsgPreviewCard.insertCardToBookingCard(chatId, user);
                     messages.add(userMsgStart.editMessage(chatId, USER_MSG_START));
-                    service.sendMessageAdminUser(service.getAdminId(), GENERAL_MSG_GOT_NEW_APP,
+                    service.sendMessageInfo(service.getAdminId(), GENERAL_MSG_GOT_NEW_APP,
                             userMsgStart.getIKMarkupOkToDelete(service.getAdminId()));
-                    int msgId = service.sendSimpleMessage(chatId, USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN);
-                    scheduled.schedule(() -> deleteMessage(chatId, msgId), 10, TimeUnit.SECONDS);
+                    
+                    service.sendTempMessage(chatId, USER_MSG_SIMPLE_SEND_MESSAGE_TO_ADMIN, 10);
                 }
 
                 default -> log.info("Unknown RAA data: {}", data);
@@ -437,11 +432,8 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
 
     private void initIncorrectEnterCard(long chatId, int msgId, String msgLink) {
         try {
-            int simpleMsgId = service.sendSimpleMessage(chatId, msgLink);
-            scheduled.schedule(() -> {
-                deleteMessage(chatId, msgId);
-                deleteMessage(chatId, simpleMsgId);
-                    }, 10, TimeUnit.SECONDS);
+            service.lateDeleteMessage(chatId, msgId, 10);
+            service.lateDeleteMessage(chatId, service.sendSimpleMessage(chatId, msgLink), 10);
         } catch (TelegramApiException ex) {
             log.warn("""
                     sendSimpleMessage(Update, String) can't send msgLink {} for user {}

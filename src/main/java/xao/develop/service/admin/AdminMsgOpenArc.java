@@ -17,7 +17,7 @@ public class AdminMsgOpenArc extends AdminMessage {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        int selectedApp = persistence.selectTempAdminSettings(chatId).getSelectedApplication();
+        int selectedApp = persistence.selectAdminSettings(chatId).getSelectedApplication();
 
         if (!getStatusOfApp(selectedApp).equals(AppStatus.FINISHED.getType())) {
             buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_RETURN),
