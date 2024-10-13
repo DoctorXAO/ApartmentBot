@@ -4,7 +4,9 @@ public interface AdminCommand {
     String START = "/start";
     String CHAT = "/chat";
     String NUMBER = "/number";
+    String PHOTOS = "/photos";
     String AREA = "/area";
+    String AMENITIES = "/amenities";
 
     String NEW_APPLICATIONS = "new_applications";
     String ARCHIVE = "archive";
@@ -46,6 +48,10 @@ public interface AdminCommand {
     String AMENITY = "amenity";
 
     String EDIT_PHOTOS = "edit_photos";
+    String OPEN_ADD_PHOTOS = "open_add_photos";
+    String ADD_PHOTOS = "add_photos";
+    String OPEN_REPLACE_PHOTOS = "open_replace_photos";
+    String REPLACE_PHOTOS = "replace_photos";
     String EDIT_NUMBER = "edit_number";
     String EDIT_AREA = "edit_area";
     String EDIT_AMENITIES = "edit_amenities";

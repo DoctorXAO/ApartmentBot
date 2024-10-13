@@ -20,4 +20,6 @@ public class AdminSettings {
     private boolean isNewApartment = false;
     
     private boolean isCheckingSelectedAmenities = false;
+
+    private boolean isEditingPhotos = false;
 }

@@ -14,6 +14,7 @@ public class TempSelectedAmenity {
     @Column(nullable = false)
     private long chatId;
 
-    @Column(nullable = false)
-    private int idOfAmenity;
+    @ManyToOne
+    @JoinColumn(name = "id_of_amenity")
+    private Amenity amenity;
 }

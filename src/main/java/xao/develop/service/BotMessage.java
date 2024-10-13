@@ -108,11 +108,15 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
 
     private List<Integer> sendSinglePhoto(long chatId, InputFile photo) {
         try {
-            return new ArrayList<>(botConfig.getTelegramClient().execute(SendPhoto
+            List<Integer> photoId = new ArrayList<>();
+
+            photoId.add(botConfig.getTelegramClient().execute(SendPhoto
                     .builder()
                     .chatId(chatId)
                     .photo(photo)
                     .build()).getMessageId());
+
+            return photoId;
         } catch (TelegramApiException ex) {
             log.error("Can't send the single photo.\nException: {}", ex.getMessage());
 

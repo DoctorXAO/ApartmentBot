@@ -15,44 +15,69 @@ import java.util.List;
 public class Persistence {
 
     @Autowired
-    private ServerStatusRepository serverStatusRepository;
+    private final ServerStatusRepository serverStatusRepository;
 
     @Autowired
-    private AccountStatusRepository accountStatusRepository;
+    private final AccountStatusRepository accountStatusRepository;
 
     @Autowired
-    private ApartmentRepository apartmentRepository;
+    private final ApartmentRepository apartmentRepository;
 
     @Autowired
-    private BookingCardRepository bookingCardRepository;
+    private final BookingCardRepository bookingCardRepository;
 
     @Autowired
-    private TempBotMessageRepository tempBotMessageRepository;
+    private final TempBotMessageRepository tempBotMessageRepository;
 
     @Autowired
-    private TempBookingDataRepository tempBookingDataRepository;
+    private final TempBookingDataRepository tempBookingDataRepository;
 
     @Autowired
-    private TempApartmentSelectorRepository tempApartmentSelectorRepository;
+    private final TempApartmentSelectorRepository tempApartmentSelectorRepository;
 
     @Autowired
-    private AmenityRepository amenityRepository;
+    private final AmenityRepository amenityRepository;
 
     @Autowired
-    private AdminSettingsRepository adminSettingsRepository;
+    private final AdminSettingsRepository adminSettingsRepository;
 
     @Autowired
-    private TempNewApartmentRepository tempNewApartmentRepository;
+    private final TempNewApartmentRepository tempNewApartmentRepository;
 
     @Autowired
-    private TempSelectedAmenityRepository tempSelectedAmenityRepository;
+    private final TempSelectedAmenityRepository tempSelectedAmenityRepository;
+
+    public Persistence(ServerStatusRepository serverStatusRepository,
+                       AccountStatusRepository accountStatusRepository,
+                       ApartmentRepository apartmentRepository,
+                       BookingCardRepository bookingCardRepository,
+                       TempBotMessageRepository tempBotMessageRepository,
+                       TempBookingDataRepository tempBookingDataRepository,
+                       TempApartmentSelectorRepository tempApartmentSelectorRepository,
+                       AmenityRepository amenityRepository,
+                       AdminSettingsRepository adminSettingsRepository,
+                       TempNewApartmentRepository tempNewApartmentRepository,
+                       TempSelectedAmenityRepository tempSelectedAmenityRepository) {
+
+        this.serverStatusRepository = serverStatusRepository;
+        this.accountStatusRepository = accountStatusRepository;
+        this.apartmentRepository = apartmentRepository;
+        this.bookingCardRepository = bookingCardRepository;
+        this.tempBotMessageRepository = tempBotMessageRepository;
+        this.tempBookingDataRepository = tempBookingDataRepository;
+        this.tempApartmentSelectorRepository = tempApartmentSelectorRepository;
+        this.amenityRepository = amenityRepository;
+        this.adminSettingsRepository = adminSettingsRepository;
+        this.tempNewApartmentRepository = tempNewApartmentRepository;
+        this.tempSelectedAmenityRepository = tempSelectedAmenityRepository;
+    }
 
     // AccountStatuses
 
     public void insertAccountStatus(Long chatId,
                                     String language) {
         AccountStatus accountStatus = new AccountStatus();
-
+        // todo Добавить в заявления поле, в котором будет указано, когда это заявление было отправлено администратору
         accountStatus.setChatId(chatId);
         accountStatus.setLanguage(language);
 
@@ -409,8 +434,8 @@ public class Persistence {
         return amenityRepository.findAll();
     }
 
-    public Amenity selectAmenity(int idAmenity) {
-        return amenityRepository.getByIdAmenity(idAmenity);
+    public Amenity selectAmenity(int idOfAmenity) {
+        return amenityRepository.getByIdAmenity(idOfAmenity);
     }
 
     // TempApartmentSelector
@@ -512,6 +537,14 @@ public class Persistence {
         adminSettingsRepository.save(adminSettings);
     }
 
+    public void updateEditingPhotosAdminSettings(long chatId, boolean isEditingPhotos) {
+        AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
+
+        adminSettings.setEditingPhotos(isEditingPhotos);
+
+        adminSettingsRepository.save(adminSettings);
+    }
+
     public void deleteAdminSettings(long chatId) {
         adminSettingsRepository.deleteById(chatId);
     }
@@ -564,25 +597,21 @@ public class Persistence {
 
     // TempSelectedAmenity
 
-    public void insertTempSelectedAmenity(long chatId, int idOfAmenity) {
+    public void insertTempSelectedAmenity(long chatId, Amenity amenity) {
         TempSelectedAmenity tempSelectedAmenity = new TempSelectedAmenity();
 
         tempSelectedAmenity.setChatId(chatId);
-        tempSelectedAmenity.setIdOfAmenity(idOfAmenity);
+        tempSelectedAmenity.setAmenity(amenity);
 
         tempSelectedAmenityRepository.save(tempSelectedAmenity);
     }
 
-    public List<TempSelectedAmenity> selectAllSelectedAmenities(long chatId) {
+    public List<Amenity> selectAllSelectedAmenities(long chatId) {
         return tempSelectedAmenityRepository.findAllByChatId(chatId);
     }
 
-    public List<TempSelectedAmenity> selectAllSelectedAmenitiesExceptTheId(long chatId, int idOfAmenity) {
-        return tempSelectedAmenityRepository.findAllByChatIdAndIdOfAmenityNot(chatId, idOfAmenity);
-    }
-
-    public void deleteTempSelectedAmenity(long chatId, int idOfAmenity) {
-        tempSelectedAmenityRepository.deleteByIdOfAmenity(idOfAmenity);
+    public void deleteTempSelectedAmenity(long chatId, Amenity amenity) {
+        tempSelectedAmenityRepository.deleteByChatIdAndAmenity(chatId, amenity);
     }
 
     public void deleteAllTempSelectedAmenity(long chatId) {

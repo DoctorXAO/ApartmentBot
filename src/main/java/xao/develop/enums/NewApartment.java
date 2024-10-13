@@ -2,7 +2,7 @@ package xao.develop.enums;
 
 public enum NewApartment {
     NUMBER,
-    PICTURES,
+    PHOTOS,
     AREA,
     AMENITIES
 }

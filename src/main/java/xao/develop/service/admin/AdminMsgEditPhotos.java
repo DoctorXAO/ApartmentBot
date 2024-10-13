@@ -9,15 +9,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class AdminMsgChat extends AdminMessage {
+public class AdminMsgEditPhotos extends AdminMessage {
 
     @Override
     protected InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_ADD_PHOTOS), ADD_PHOTOS));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
+        buttons.clear();
+
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_REPLACE_PHOTOS), REPLACE_PHOTOS));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
+        buttons.clear();
+
         buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK),
-                APP + X + getSelectedApp(chatId)));
+                APARTMENT + X + getSelectedApartment(chatId)));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

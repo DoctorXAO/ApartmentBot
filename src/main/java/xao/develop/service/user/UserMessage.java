@@ -50,9 +50,6 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
         log.debug("Current selector is {}", selector);
         log.debug("Current number of apartment is {}", numberOfApartment);
 
-        // todo new проверил, до вызова функции стоит проверка на пустой лист. Отработать функцию и убедиться, что нет ошибок
-        // todo Проверить функционал при отсутствии квартир, раньше выбивало ошибку и стоял чек на section = 0. Но он равен 0 по умолчанию, по этому либо менять секцион по умолчанию, либо чет делать
-
         return numberOfApartment;
     }
 

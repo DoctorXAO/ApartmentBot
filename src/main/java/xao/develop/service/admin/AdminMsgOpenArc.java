@@ -26,8 +26,6 @@ public class AdminMsgOpenArc extends AdminMessage {
             buttons.clear();
         }
 
-        initBtChat(chatId, keyboard, buttons);
-
         buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), QUIT_FROM_ARC));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();

@@ -99,8 +99,6 @@ public class BotService {
 
         Locale locale = new Locale(accountStatus.getLanguage());
 
-        log.debug("Method getLocaleMessage(Update, String) get the next value: {}", msgLink);
-
         try {
             return String.format(messageSource.getMessage(msgLink, null, locale), args);
         } catch (MissingFormatArgumentException | IndexOutOfBoundsException ex) {

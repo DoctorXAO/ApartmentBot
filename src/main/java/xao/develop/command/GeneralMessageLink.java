@@ -16,4 +16,6 @@ public interface GeneralMessageLink {
     String GENERAL_BT_OK = "general.bt.ok";
 
     String GENERAL_BT_START = "general.bt.start";
+
+    String GENERAL_MSG_SIMPLE_DOWNLOADING = "general.msg.simple.downloading";
 }

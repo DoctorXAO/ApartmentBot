@@ -52,8 +52,6 @@ public class FileManager {
         log.debug("sourceDir: {}\ntargetDir: {}", sourceDir, targetDir);
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
-            log.debug("EXTRA start");
-
             if (Files.notExists(targetDir)) {
                 Files.createDirectories(targetDir);
 
@@ -76,24 +74,65 @@ public class FileManager {
         }
     }
 
+    public static void moveFiles(@NotNull Path sourceDir, @NotNull Path targetDir, @NotNull String type) {
+        log.debug("""
+                Moving files
+                from sourceDir: {}
+                to targetDir: {}""", sourceDir, targetDir);
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
+            if (Files.notExists(targetDir)) {
+                Files.createDirectories(targetDir);
+
+                log.debug("1New directories created!");
+            } else {
+                log.debug("1Directory already exists!");
+            }
+
+            for (Path file : stream) {
+                if (file.getFileName().toString().toLowerCase().endsWith(type)) {
+                    long countOfFiles = getCountOfFiles(targetDir) + 1;
+
+                    Path targetPath = targetDir.resolve(countOfFiles + type);
+
+                    while (Files.exists(targetPath)) {
+                        countOfFiles += 1;
+                        targetPath = targetDir.resolve(countOfFiles + type);
+                        log.debug("Path to move updated, new path to move: {}", targetPath);
+                    }
+
+                    Files.move(file, targetPath);
+
+                    log.debug("The next {} file moved: {}", type, file.getFileName());
+                } else {
+                    log.debug("File not {}: {}", type, file.getFileName());
+                }
+            }
+
+            log.debug("All {} files moved successfully from {} to {}", type, sourceDir, targetDir);
+        } catch (IOException ex) {
+            log.warn("Can't move {} files from {} to {}.\nException: {}", type, sourceDir, targetDir, ex.getMessage());
+        }
+    }
+
     /** Download the photos from the Network by URL **/
-    public static void downloadPhotoFromNetwork(@NotNull String path, @NotNull String fileUrl) {
+    public static void downloadPhotoFromNetwork(@NotNull String path,
+                                                @NotNull String fileUrl) {
 
         File directory = new File(path);
 
         if (directory.mkdirs() || directory.exists()) {
             log.debug("New directory created or exists: {}", path);
 
-            long countOfFiles = 0;
-            Path pathToDirectory = Paths.get(directory.getPath());
+            long countOfFiles = getCountOfFiles(Paths.get(path)) + 1;
 
-            try (Stream<Path> paths = Files.list(pathToDirectory)) {
-                countOfFiles = paths.count();
-            } catch (IOException ex) {
-                log.warn("Can't get count of list files. Exception: {}", ex.getMessage());
+            String savePath = path + "/" + countOfFiles + ".jpg";
+
+            while (Files.exists(Paths.get(savePath))) {
+                countOfFiles += 1;
+                savePath = path + "/" + countOfFiles + ".jpg";
+                log.debug("Save path updated: {}", savePath);
             }
-
-            String savePath = path + "/" + (countOfFiles + 1) + ".jpg";
 
             try (BufferedInputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
                  FileOutputStream fileOutputStream = new FileOutputStream(savePath)) {

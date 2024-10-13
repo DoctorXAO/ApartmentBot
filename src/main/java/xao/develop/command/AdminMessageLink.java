@@ -10,11 +10,16 @@ public interface AdminMessageLink {
     String ADMIN_MSG_SET_PICTURES = "admin.msg.set-pictures";
     String ADMIN_MSG_SET_AREA = "admin.msg.set-area";
     String ADMIN_MSG_SET_AMENITIES = "admin.msg.set-amenities";
-    String ADMIN_MSG_NEW_APARTMENT = "admin.msg.new-apartment";
     String ADMIN_MSG_PREVIEW_APARTMENT = "admin.msg.preview-apartment";
 
     String ADMIN_MSG_LIST_OF_APARTMENTS = "admin.msg.list-of-apartments";
     String ADMIN_MSG_EDIT_APARTMENT = "admin.msg.edit-apartment";
+    String ADMIN_MSG_EDIT_PHOTOS = "admin.msg.edit-photos";
+    String ADMIN_MSG_ADD_PHOTOS = "admin.msg.add-photos";
+    String ADMIN_MSG_REPLACE_PHOTOS = "admin.msg.replace-photos";
+    String ADMIN_MSG_EDIT_NUMBER = "admin.msg.edit-number";
+    String ADMIN_MSG_EDIT_AREA = "admin.msg.edit-area";
+    String ADMIN_MSG_EDIT_AMENITIES = "admin.msg.edit-amenities";
     String ADMIN_MSG_APPLY_DELETE_APARTMENT = "admin.msg.apply-delete-apartment";
 
     String ADMIN_MSG_APP = "admin.msg.app";
@@ -50,6 +55,8 @@ public interface AdminMessageLink {
     String ADMIN_BT_CREATE = "admin.bt.create";
     String ADMIN_BT_EDIT = "admin.bt.edit";
     String ADMIN_BT_EDIT_PHOTOS = "admin.bt.edit-photos-of-apartment";
+    String ADMIN_BT_ADD_PHOTOS = "admin.bt.add-photos";
+    String ADMIN_BT_REPLACE_PHOTOS = "admin.bt.replace-photos";
     String ADMIN_BT_EDIT_NUMBER = "admin.bt.edit-number-of-apartment";
     String ADMIN_BT_EDIT_AREA = "admin.bt.edit-area-of-apartment";
     String ADMIN_BT_EDIT_AMENITIES = "admin.bt.edit-amenities-of-apartment";

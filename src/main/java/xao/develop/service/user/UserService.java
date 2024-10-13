@@ -412,7 +412,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
 
 
     private void openMsgApartments(long chatId, List<Integer> messages) throws TelegramApiException {
-        int msgId = service.sendSimpleMessage(chatId, USER_MSG_SIMPLE_DOWNLOADING);
+        int msgId = service.sendSimpleMessage(chatId, GENERAL_MSG_SIMPLE_DOWNLOADING);
 
         if (!userMsgStart.isApartmentsEmpty(chatId)) {
             messages.addAll(userMsgChooseAnApartment.sendPhotos(chatId,

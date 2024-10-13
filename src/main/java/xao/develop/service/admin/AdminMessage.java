@@ -11,7 +11,6 @@ import xao.develop.enums.App;
 import xao.develop.enums.AppStatus;
 import xao.develop.service.BotMessage;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -78,19 +77,11 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     public Object[] getTempNewApartmentParameters(long chatId) {
         TempNewApartment newApartment = persistence.selectTempNewApartment(chatId);
 
-        List<TempSelectedAmenity> selectedAmenities = getSelectedAmenities(chatId);
+        List<Amenity> selectedAmenities = getSelectedAmenities(chatId);
 
         StringBuilder amenities = convertAmenityLinksToString(chatId, selectedAmenities.stream()
-                .map(selected -> persistence.selectAmenity(selected.getIdOfAmenity()).getLink())
+                .map(Amenity::getLink)
                 .toList());
-
-//        StringBuilder amenities = new StringBuilder();
-//        List<TempSelectedAmenity> selectedAmenities = getSelectedAmenities(chatId);
-//
-//        for(TempSelectedAmenity selectedAmenity : selectedAmenities) {
-//            String link = persistence.selectAmenity(selectedAmenity.getIdOfAmenity()).getLink();
-//            amenities.append(service.getLocaleMessage(chatId, link)).append("\n");
-//        }
 
         return new Object[]{
                 newApartment.getNumber(),
@@ -102,18 +93,11 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     public Object[] getPreviewApartmentParameters(long chatId) {
         TempNewApartment newApartment = persistence.selectTempNewApartment(chatId);
 
-        List<TempSelectedAmenity> selectedAmenities = getSelectedAmenities(chatId);
+        List<Amenity> selectedAmenities = getSelectedAmenities(chatId);
 
         StringBuilder amenities = convertAmenityLinksToString(chatId, selectedAmenities.stream()
-                .map(selected -> persistence.selectAmenity(selected.getIdOfAmenity()).getLink())
+                .map(Amenity::getLink)
                 .toList());
-//        StringBuilder amenities = new StringBuilder();
-//        List<TempSelectedAmenity> selectedAmenities = getSelectedAmenities(chatId);
-
-//        for(TempSelectedAmenity selectedAmenity : selectedAmenities) {
-//            String link = persistence.selectAmenity(selectedAmenity.getIdOfAmenity()).getLink();
-//            amenities.append(service.getLocaleMessage(chatId, link)).append("\n");
-//        }
 
         return new Object[]{
                 newApartment.getArea(),
@@ -137,16 +121,24 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         return persistence.selectAdminSettings(chatId).isNewApartment();
     }
 
+    public boolean isEditingPhotos(long chatId) {
+        return persistence.selectAdminSettings(chatId).isEditingPhotos();
+    }
+
     public TempNewApartment getTempNewApartment(long chatId) {
         return persistence.selectTempNewApartment(chatId);
     }
 
-    public List<TempSelectedAmenity> getSelectedAmenities(long chatId) {
+    public List<Amenity> getSelectedAmenities(long chatId) {
         return persistence.selectAllSelectedAmenities(chatId);
     }
 
     public int getSelectedApartment(long chatId) {
         return persistence.selectAdminSettings(chatId).getSelectedApartment();
+    }
+
+    public Amenity getAmenityById(int idOfAmenity) {
+        return persistence.selectAmenity(idOfAmenity);
     }
 
     // creates
@@ -161,17 +153,12 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     // inserts
 
-    public void insertApartment(int number, double area, List<TempSelectedAmenity> selectedAmenities) {
-        List<Amenity> amenities = new ArrayList<>();
-
-        for(TempSelectedAmenity amenity : selectedAmenities)
-            amenities.add(persistence.selectAmenity(amenity.getIdOfAmenity()));
-
+    public void insertApartment(int number, double area, List<Amenity> amenities) {
         persistence.insertApartment(number, area, amenities);
     }
 
-    public void insertTempSelectedAmenity(long chatId, int idOfAmenity) {
-        persistence.insertTempSelectedAmenity(chatId, idOfAmenity);
+    public void insertTempSelectedAmenity(long chatId, Amenity amenity) {
+        persistence.insertTempSelectedAmenity(chatId, amenity);
     }
 
     // updates
@@ -196,6 +183,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         persistence.updateCheckingSelectedAmenitiesAdminSettings(chatId, isCheckingSelectedAmenities);
     }
 
+    public void updateEditingPhotosAdminSettings(long chatId, boolean isEditingPhotos) {
+        persistence.updateEditingPhotosAdminSettings(chatId, isEditingPhotos);
+    }
+
     public void updateNumberTempNewApartment(long chatId, int number) {
         persistence.updateNumberTempNewApartment(chatId, number);
     }
@@ -218,8 +209,8 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         persistence.deleteTempNewApartment(chatId);
     }
 
-    public void deleteTempSelectedAmenity(long chatId, int idOfAmenity) {
-        persistence.deleteTempSelectedAmenity(chatId, idOfAmenity);
+    public void deleteTempSelectedAmenity(long chatId, Amenity amenity) {
+        persistence.deleteTempSelectedAmenity(chatId, amenity);
     }
 
     public void deleteTempSelectedAmenities(long chatId) {
@@ -328,10 +319,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         buttons.clear();
 
         List<Amenity> amenities = persistence.selectAllAmenities();
-        List<TempSelectedAmenity> selectedAmenities = persistence.selectAllSelectedAmenities(chatId);
+        List<Amenity> selectedAmenities = persistence.selectAllSelectedAmenities(chatId);
 
-        for (TempSelectedAmenity selectedAmenity : selectedAmenities)
-            amenities.removeIf(amenity -> amenity.getIdAmenity() == selectedAmenity.getIdOfAmenity());
+        for (Amenity selectedAmenity : selectedAmenities)
+            amenities.removeIf(amenity -> amenity.getLink().equals(selectedAmenity.getLink()));
 
         initSelectorPanel(chatId, amenities.size(), botConfig.getCountOfAppsOnPage(), adminSettings,
                 PREVIOUS_PAGE_OF_AMENITIES, NEXT_PAGE_OF_AMENITIES, keyboard, buttons);
@@ -357,7 +348,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        List<TempSelectedAmenity> selectedAmenities = persistence.selectAllSelectedAmenities(chatId);
+        List<Amenity> selectedAmenities = persistence.selectAllSelectedAmenities(chatId);
 
         initSelectorPanel(chatId, selectedAmenities.size(), botConfig.getCountOfAppsOnPage(), adminSettings,
                 PREVIOUS_PAGE_OF_AMENITIES, NEXT_PAGE_OF_AMENITIES, keyboard, buttons);
@@ -367,10 +358,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
             if (adminSettings.getSelectedPage() + i >= selectedAmenities.size())
                 break;
 
-            Amenity amenity = persistence.selectAmenity(selectedAmenities.get(i).getIdOfAmenity());
+            Amenity amenity = selectedAmenities.get(i);
 
             buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, amenity.getLink()),
-                    AMENITY + X + selectedAmenities.get(i).getIdOfAmenity()));
+                    AMENITY + X + amenity.getIdAmenity()));
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();
         }
@@ -388,7 +379,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     protected void initBtPreview(long chatId, List<InlineKeyboardRow> keyboard, List<InlineKeyboardButton> buttons) {
         TempNewApartment tempNewApartment = persistence.selectTempNewApartment(chatId);
-        List<TempSelectedAmenity> selectedAmenities = persistence.selectAllSelectedAmenities(chatId);
+        List<Amenity> selectedAmenities = persistence.selectAllSelectedAmenities(chatId);
 
         if (tempNewApartment.getNumber() != 0 &&
                 tempNewApartment.getCountOfPictures() != 0 &&
