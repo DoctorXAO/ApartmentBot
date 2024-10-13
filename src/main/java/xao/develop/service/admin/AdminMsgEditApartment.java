@@ -16,19 +16,19 @@ public class AdminMsgEditApartment extends AdminMessage {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_EDIT_PHOTOS), EDIT_PHOTOS));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_EDIT_PHOTOS), OPEN_EDIT_PHOTOS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_EDIT_NUMBER), EDIT_NUMBER));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_EDIT_NUMBER), OPEN_EDIT_NUMBER));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_EDIT_AREA), EDIT_AREA));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_EDIT_AREA), OPEN_EDIT_AREA));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_EDIT_AMENITIES), EDIT_AMENITIES));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_EDIT_AMENITIES), OPEN_EDIT_AMENITIES));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

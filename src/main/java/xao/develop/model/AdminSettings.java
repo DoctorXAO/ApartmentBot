@@ -21,5 +21,7 @@ public class AdminSettings {
     
     private boolean isCheckingSelectedAmenities = false;
 
+    private boolean isEditingApartment = false;
+
     private boolean isEditingPhotos = false;
 }

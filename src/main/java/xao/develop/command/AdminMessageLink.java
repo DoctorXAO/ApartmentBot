@@ -70,4 +70,5 @@ public interface AdminMessageLink {
     String ADMIN_ERR_DOWNLOAD_RESOURCE = "admin.err.download-resource";
     String ADMIN_ERR_APARTMENT_EXISTS = "admin.err.apartment-exists";
     String ADMIN_ERR_DELETE_DIRECTORY = "admin.err.delete-directory";
+    String ADMIN_ERR_SET_AREA = "admin.err.set-area";
 }

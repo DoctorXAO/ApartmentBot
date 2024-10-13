@@ -78,6 +78,7 @@ public class Persistence {
                                     String language) {
         AccountStatus accountStatus = new AccountStatus();
         // todo Добавить в заявления поле, в котором будет указано, когда это заявление было отправлено администратору
+        // todo Добавить отображение статуса заявки в интерфейсе пользователя
         accountStatus.setChatId(chatId);
         accountStatus.setLanguage(language);
 
@@ -176,6 +177,24 @@ public class Persistence {
             log.debug("Apartment №{}: {} number of room", i, apartments.get(i).getNumber());
 
         return apartments;
+    }
+
+    public void updateNumberApartment(int number, int newNumber) {
+        Apartment apartment = apartmentRepository.getByNumber(number);
+
+        apartment.setNumber(newNumber);
+
+        apartmentRepository.save(apartment);
+
+        apartmentRepository.deleteByNumber(number);
+    }
+
+    public void updateAreaApartment(int number, double area) {
+        Apartment apartment = apartmentRepository.getByNumber(number);
+
+        apartment.setArea(area);
+
+        apartmentRepository.save(apartment);
     }
 
     public void updateIsBookingApartment(int number, boolean isBooking, long userId) {
@@ -533,6 +552,14 @@ public class Persistence {
         AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
 
         adminSettings.setCheckingSelectedAmenities(isCheckingSelectedAmenities);
+
+        adminSettingsRepository.save(adminSettings);
+    }
+
+    public void updateEditingApartmentAdminSettings(long chatId, boolean isEditingApartment) {
+        AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
+
+        adminSettings.setEditingApartment(isEditingApartment);
 
         adminSettingsRepository.save(adminSettings);
     }

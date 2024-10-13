@@ -7,6 +7,8 @@ public interface AdminCommand {
     String PHOTOS = "/photos";
     String AREA = "/area";
     String AMENITIES = "/amenities";
+    String SET_NUMBER = "/set_number";
+    String SET_AREA = "/set_area";
 
     String NEW_APPLICATIONS = "new_applications";
     String ARCHIVE = "archive";
@@ -47,14 +49,12 @@ public interface AdminCommand {
     String APARTMENT = "apartment";
     String AMENITY = "amenity";
 
-    String EDIT_PHOTOS = "edit_photos";
-    String OPEN_ADD_PHOTOS = "open_add_photos";
+    String OPEN_EDIT_NUMBER = "open_edit_number";
+    String OPEN_EDIT_PHOTOS = "open_edit_photos";
     String ADD_PHOTOS = "add_photos";
-    String OPEN_REPLACE_PHOTOS = "open_replace_photos";
     String REPLACE_PHOTOS = "replace_photos";
-    String EDIT_NUMBER = "edit_number";
-    String EDIT_AREA = "edit_area";
-    String EDIT_AMENITIES = "edit_amenities";
+    String OPEN_EDIT_AREA = "open_edit_area";
+    String OPEN_EDIT_AMENITIES = "open_edit_amenities";
     String APPLY_DELETE_APARTMENT = "apply_delete_apartment";
     String DELETE_APARTMENT = "delete_apartment";
     String APPLY_EDIT_APARTMENT = "apply_edit_apartment";

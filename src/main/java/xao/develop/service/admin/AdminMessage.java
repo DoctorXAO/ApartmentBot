@@ -125,6 +125,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         return persistence.selectAdminSettings(chatId).isEditingPhotos();
     }
 
+    public boolean isEditingApartments(long chatId) {
+        return persistence.selectAdminSettings(chatId).isEditingApartment();
+    }
+
     public TempNewApartment getTempNewApartment(long chatId) {
         return persistence.selectTempNewApartment(chatId);
     }
@@ -183,7 +187,11 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         persistence.updateCheckingSelectedAmenitiesAdminSettings(chatId, isCheckingSelectedAmenities);
     }
 
-    public void updateEditingPhotosAdminSettings(long chatId, boolean isEditingPhotos) {
+    public void updateEditingApartment(long chatId, boolean isEditingApartment) {
+        persistence.updateEditingApartmentAdminSettings(chatId, isEditingApartment);
+    }
+
+    public void updateEditingPhotos(long chatId, boolean isEditingPhotos) {
         persistence.updateEditingPhotosAdminSettings(chatId, isEditingPhotos);
     }
 
@@ -201,6 +209,14 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     public void updateSelectedApartment(long chatId, int selectedApartment) {
         persistence.updateSelectedApartmentAdminSettings(chatId, selectedApartment);
+    }
+
+    public void updateNumberApartment(int number, int newNumber) {
+        persistence.updateNumberApartment(number, newNumber);
+    }
+    
+    public void updateAreaApartment(int number, double area) {
+        persistence.updateAreaApartment(number, area);
     }
 
     // deletes
