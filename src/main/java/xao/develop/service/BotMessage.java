@@ -15,7 +15,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.config.BotConfig;
 import xao.develop.command.GeneralCommand;
 import xao.develop.command.GeneralMessageLink;
+import xao.develop.repository.AmenityPersistence;
 import xao.develop.repository.Persistence;
+import xao.develop.repository.TempNewAmenityPersistence;
 import xao.develop.toolbox.FileManager;
 
 import java.io.File;
@@ -39,7 +41,11 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
     @Autowired
     protected Persistence persistence;
 
-    // setters
+    @Autowired
+    protected AmenityPersistence amenityPersistence;
+
+    @Autowired
+    protected TempNewAmenityPersistence tempNewAmenityPersistence;
 
     // getters
 

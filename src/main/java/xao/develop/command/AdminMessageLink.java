@@ -15,12 +15,12 @@ public interface AdminMessageLink {
     String ADMIN_MSG_LIST_OF_APARTMENTS = "admin.msg.list-of-apartments";
     String ADMIN_MSG_EDIT_APARTMENT = "admin.msg.edit-apartment";
     String ADMIN_MSG_EDIT_PHOTOS = "admin.msg.edit-photos";
-    String ADMIN_MSG_ADD_PHOTOS = "admin.msg.add-photos";
-    String ADMIN_MSG_REPLACE_PHOTOS = "admin.msg.replace-photos";
     String ADMIN_MSG_EDIT_NUMBER = "admin.msg.edit-number";
     String ADMIN_MSG_EDIT_AREA = "admin.msg.edit-area";
     String ADMIN_MSG_EDIT_AMENITIES = "admin.msg.edit-amenities";
     String ADMIN_MSG_APPLY_DELETE_APARTMENT = "admin.msg.apply-delete-apartment";
+
+    String ADMIN_MSG_LIST_OF_AMENITIES = "admin.msg.list-of-amenities";
 
     String ADMIN_MSG_APP = "admin.msg.app";
 
@@ -65,10 +65,29 @@ public interface AdminMessageLink {
 
     String ADMIN_BT_NEW_APARTMENT = "admin.bt.new-apartment";
     String ADMIN_BT_LIST_OF_APARTMENTS = "admin.bt.list-of-apartments";
+    String ADMIN_BT_NEW_AMENITY = "admin.bt.new-amenity";
+    String ADMIN_BT_LIST_OF_AMENITIES = "admin.bt.list-of-amenities";
     String ADMIN_BT_APARTMENT = "admin.bt.apartment";
 
     String ADMIN_ERR_DOWNLOAD_RESOURCE = "admin.err.download-resource";
     String ADMIN_ERR_APARTMENT_EXISTS = "admin.err.apartment-exists";
     String ADMIN_ERR_DELETE_DIRECTORY = "admin.err.delete-directory";
     String ADMIN_ERR_SET_AREA = "admin.err.set-area";
+
+    // Create amenity
+
+    String ADMIN_MSG_SET_LINK = "admin.msg.set-link";
+    String ADMIN_MSG_SET_NAME_EN = "admin.msg.set-name-en";
+    String ADMIN_MSG_SET_NAME_TR = "admin.msg.set-name-tr";
+    String ADMIN_MSG_SET_NAME_RU = "admin.msg.set-name-ru";
+    String ADMIN_MSG_SET_IMPORTANCE = "admin.msg.set-importance";
+
+    String ADMIN_MSG_AMENITY_VIEW = "admin.msg.amenity-view";
+
+    String ADMIN_ERR_SET_LINK = "admin.err.set-link";
+    String ADMIN_ERR_SET_NAME_EN = "admin.err.set-name-en";
+    String ADMIN_ERR_SET_NAME_TR = "admin.err.set-name-tr";
+    String ADMIN_ERR_SET_NAME_RU = "admin.err.set-name-ru";
+    String ADMIN_ERR_SET_IMPORTANCE = "admin.err.set-importance";
+    String ADMIN_ERR_LINK_OF_AMENITY_IS_EXIST = "admin.err.link-of-amenity-is-exist";
 }

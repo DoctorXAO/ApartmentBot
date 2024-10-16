@@ -11,4 +11,6 @@ public interface AmenityRepository extends CrudRepository<Amenity, Integer> {
     @NotNull List<Amenity> findAll();
 
     Amenity getByIdAmenity(int idAmenity);
+
+    Amenity getByLink(String link);
 }

@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import xao.develop.model.TempNewApartment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +15,6 @@ public class AdminMsgNewApartment extends AdminMessage {
     protected InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
-
-        TempNewApartment tempNewApartment = persistence.selectTempNewApartment(chatId);
 
         initBtPreview(chatId, keyboard, buttons);
 

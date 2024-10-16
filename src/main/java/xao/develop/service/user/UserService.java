@@ -416,7 +416,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
 
         if (!userMsgStart.isApartmentsEmpty(chatId)) {
             messages.addAll(userMsgChooseAnApartment.sendPhotos(chatId,
-                    service.resource + String.valueOf(userMsgChooseAnApartment.getCurrentApartment(chatId))));
+                    service.resourceApartments + String.valueOf(userMsgChooseAnApartment.getCurrentApartment(chatId))));
 
             messages.add(userMsgChooseAnApartment.sendMessage(chatId, USER_MSG_CHOOSE_AN_APARTMENT,
                     userMsgStart.getApartmentParameters(chatId)));

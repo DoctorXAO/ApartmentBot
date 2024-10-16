@@ -74,6 +74,7 @@ public class FileManager {
         }
     }
 
+    /** Move files by type from source to target **/
     public static void moveFiles(@NotNull Path sourceDir, @NotNull Path targetDir, @NotNull String type) {
         log.debug("""
                 Moving files

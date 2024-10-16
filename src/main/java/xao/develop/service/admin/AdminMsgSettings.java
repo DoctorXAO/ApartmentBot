@@ -16,12 +16,19 @@ public class AdminMsgSettings extends AdminMessage {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_NEW_APARTMENT), NEW_APARTMENT));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_NEW_APARTMENT), OPEN_NEW_APARTMENT));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_LIST_OF_APARTMENTS),
-                LIST_OF_APARTMENTS));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_LIST_OF_APARTMENTS), LIST_OF_APARTMENTS));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
+        buttons.clear();
+
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_NEW_AMENITY), OPEN_NEW_AMENITY));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
+        buttons.clear();
+
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_LIST_OF_AMENITIES), LIST_OF_AMENITIES));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 

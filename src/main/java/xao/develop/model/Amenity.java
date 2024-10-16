@@ -16,7 +16,7 @@ public class Amenity {
     @ManyToMany(mappedBy = "amenities")
     private List<Apartment> apartments;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String link;
 
     @Column(nullable = false)

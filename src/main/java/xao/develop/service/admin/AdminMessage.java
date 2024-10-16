@@ -16,8 +16,6 @@ import java.util.List;
 @Slf4j
 public abstract class AdminMessage extends BotMessage implements AdminCommand, AdminMessageLink, GeneralCommand {
 
-    // setters
-
     // getters
 
     public int getCountOfArchive() {
@@ -90,6 +88,14 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
                 amenities};
     }
 
+    public StringBuilder getStringOfSelectedAmenities(long chatId) {
+        List<Amenity> selectedAmenities = getSelectedAmenities(chatId);
+
+        return convertAmenityLinksToString(chatId, selectedAmenities.stream()
+                .map(Amenity::getLink)
+                .toList());
+    }
+
     public Object[] getPreviewApartmentParameters(long chatId) {
         TempNewApartment newApartment = persistence.selectTempNewApartment(chatId);
 
@@ -142,7 +148,11 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     }
 
     public Amenity getAmenityById(int idOfAmenity) {
-        return persistence.selectAmenity(idOfAmenity);
+        return amenityPersistence.select(idOfAmenity);
+    }
+
+    public List<Amenity> getAmenitiesOfApartment(long chatId) {
+        return persistence.selectApartment(getSelectedApartment(chatId)).getAmenities();
     }
 
     // creates
@@ -161,7 +171,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         persistence.insertApartment(number, area, amenities);
     }
 
-    public void insertTempSelectedAmenity(long chatId, Amenity amenity) {
+    public void insertSelectedAmenity(long chatId, Amenity amenity) {
         persistence.insertTempSelectedAmenity(chatId, amenity);
     }
 
@@ -219,17 +229,21 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         persistence.updateAreaApartment(number, area);
     }
 
+    public void updateAmenitiesOfApartment(int number, List<Amenity> amenities) {
+        persistence.updateAmenitiesApartment(number, amenities);
+    }
+
     // deletes
 
     public void deleteTempNewApartment(long chatId) {
         persistence.deleteTempNewApartment(chatId);
     }
 
-    public void deleteTempSelectedAmenity(long chatId, Amenity amenity) {
+    public void deleteSelectedAmenity(long chatId, Amenity amenity) {
         persistence.deleteTempSelectedAmenity(chatId, amenity);
     }
 
-    public void deleteTempSelectedAmenities(long chatId) {
+    public void deleteSelectedAmenities(long chatId) {
         persistence.deleteAllTempSelectedAmenity(chatId);
     }
 
@@ -334,13 +348,13 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
-        List<Amenity> amenities = persistence.selectAllAmenities();
+        List<Amenity> amenities = amenityPersistence.select();
         List<Amenity> selectedAmenities = persistence.selectAllSelectedAmenities(chatId);
 
         for (Amenity selectedAmenity : selectedAmenities)
             amenities.removeIf(amenity -> amenity.getLink().equals(selectedAmenity.getLink()));
 
-        initSelectorPanel(chatId, amenities.size(), botConfig.getCountOfAppsOnPage(), adminSettings,
+        initSelectorPanel(chatId, amenities.size(), botConfig.getCountOfAmenitiesOnPage(), adminSettings,
                 PREVIOUS_PAGE_OF_AMENITIES, NEXT_PAGE_OF_AMENITIES, keyboard, buttons);
 
         for (int i = 0; i < botConfig.getCountOfAmenitiesOnPage(); i++) {
@@ -366,7 +380,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
         List<Amenity> selectedAmenities = persistence.selectAllSelectedAmenities(chatId);
 
-        initSelectorPanel(chatId, selectedAmenities.size(), botConfig.getCountOfAppsOnPage(), adminSettings,
+        initSelectorPanel(chatId, selectedAmenities.size(), botConfig.getCountOfAmenitiesOnPage(), adminSettings,
                 PREVIOUS_PAGE_OF_AMENITIES, NEXT_PAGE_OF_AMENITIES, keyboard, buttons);
 
         for (int i = 0; i < botConfig.getCountOfAmenitiesOnPage(); i++) {
@@ -378,6 +392,27 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
             buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, amenity.getLink()),
                     AMENITY + X + amenity.getIdAmenity()));
+            keyboard.add(msgBuilder.buildIKRow(buttons));
+            buttons.clear();
+        }
+    }
+
+    protected void initListOfAmenities(long chatId,
+                                     List<InlineKeyboardRow> keyboard,
+                                     List<InlineKeyboardButton> buttons) {
+        AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
+        List<Amenity> amenities = amenityPersistence.select();
+
+        initSelectorPanel(chatId, amenities.size(), botConfig.getCountOfAmenitiesOnPage(), adminSettings,
+                PREVIOUS_PAGE_OF_AMENITIES, NEXT_PAGE_OF_AMENITIES, keyboard, buttons);
+
+        for (int i = 0; i < botConfig.getCountOfAmenitiesOnPage(); i++) {
+
+            if (adminSettings.getSelectedPage() + i >= amenities.size())
+                break;
+
+            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, amenities.get(i).getLink()),
+                    AMENITY + X + amenities.get(i).getIdAmenity()));
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();
         }
@@ -403,6 +438,21 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
                 !selectedAmenities.isEmpty()) {
 
             buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_PREVIEW), PREVIEW_APARTMENT));
+            keyboard.add(msgBuilder.buildIKRow(buttons));
+            buttons.clear();
+        }
+    }
+
+    protected void initBtCreateNewAmenity(long chatId, List<InlineKeyboardRow> keyboard, List<InlineKeyboardButton> buttons) {
+        TempNewAmenity newAmenity = tempNewAmenityPersistence.select(chatId);
+
+        if (newAmenity.getLink() != null &&
+                newAmenity.getEn() != null &&
+                newAmenity.getTr() != null &&
+                newAmenity.getRu() != null &&
+                newAmenity.getImportance() != 0)
+        {
+            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_CREATE), CREATE_NEW_AMENITY));
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();
         }

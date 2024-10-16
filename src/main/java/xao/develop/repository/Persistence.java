@@ -197,6 +197,14 @@ public class Persistence {
         apartmentRepository.save(apartment);
     }
 
+    public void updateAmenitiesApartment(int number, List<Amenity> amenities) {
+        Apartment apartment = apartmentRepository.getByNumber(number);
+
+        apartment.setAmenities(amenities);
+
+        apartmentRepository.save(apartment);
+    }
+
     public void updateIsBookingApartment(int number, boolean isBooking, long userId) {
         Apartment apartment = selectApartment(number);
 
@@ -445,16 +453,6 @@ public class Persistence {
         tempBookingDataRepository.save(tempBookingData);
 
         log.trace("Method deleteCheckOutInTempBookingData(long) finished");
-    }
-
-    // Amenity
-
-    public List<Amenity> selectAllAmenities() {
-        return amenityRepository.findAll();
-    }
-
-    public Amenity selectAmenity(int idOfAmenity) {
-        return amenityRepository.getByIdAmenity(idOfAmenity);
     }
 
     // TempApartmentSelector

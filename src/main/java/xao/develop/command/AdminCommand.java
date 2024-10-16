@@ -3,10 +3,12 @@ package xao.develop.command;
 public interface AdminCommand {
     String START = "/start";
     String CHAT = "/chat";
+
     String NUMBER = "/number";
     String PHOTOS = "/photos";
     String AREA = "/area";
     String AMENITIES = "/amenities";
+
     String SET_NUMBER = "/set_number";
     String SET_AREA = "/set_area";
 
@@ -14,9 +16,11 @@ public interface AdminCommand {
     String ARCHIVE = "archive";
     String SETTINGS = "settings";
 
-    String NEW_APARTMENT = "new_apartment";
+    String OPEN_NEW_APARTMENT = "new_apartment";
     String BACK_TO_EDIT_NEW_APARTMENT = "back_to_edit_new_apartment";
     String LIST_OF_APARTMENTS = "list_of_apartments";
+    String BACK_TO_EDIT_NEW_AMENITY = "back_to_edit_new_amenity";
+    String LIST_OF_AMENITIES = "list_of_amenities";
 
     String QUIT_FROM_APP = "quit_from_app";
     String QUIT_FROM_ARC = "quit_from_arc";
@@ -55,7 +59,20 @@ public interface AdminCommand {
     String REPLACE_PHOTOS = "replace_photos";
     String OPEN_EDIT_AREA = "open_edit_area";
     String OPEN_EDIT_AMENITIES = "open_edit_amenities";
+    String EDIT_AMENITIES = "edit_amenities";
     String APPLY_DELETE_APARTMENT = "apply_delete_apartment";
     String DELETE_APARTMENT = "delete_apartment";
     String APPLY_EDIT_APARTMENT = "apply_edit_apartment";
+
+    // Create amenity
+
+    String SET_LINK = "/set_link";
+    String SET_NAME_EN = "/set_name_en";
+    String SET_NAME_TR = "/set_name_tr";
+    String SET_NAME_RU = "/set_name_ru";
+    String SET_IMPORTANCE = "/set_importance";
+
+    String OPEN_NEW_AMENITY = "open_new_amenity";
+    String CREATE_NEW_AMENITY = "create_new_amenity";
+    String QUIT_FROM_NEW_AMENITY = "quit_from_new_amenity";
 }

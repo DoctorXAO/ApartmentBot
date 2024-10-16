@@ -17,6 +17,8 @@ import xao.develop.enums.*;
 import xao.develop.model.Amenity;
 import xao.develop.model.TempNewApartment;
 import xao.develop.service.BotService;
+import xao.develop.service.admin.operation.createAmenity.CreateAmenity;
+import xao.develop.service.admin.operation.createAmenity.enums.AmenityStage;
 import xao.develop.toolbox.FileManager;
 import xao.develop.toolbox.TelegramFileManager;
 
@@ -33,6 +35,9 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
     @Autowired
     BotService service;
+
+    @Autowired
+    CreateAmenity createAmenity;
 
     @Autowired
     AdminMsgStart adminMsgStart;
@@ -57,6 +62,9 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
     @Autowired
     AdminMsgListOfApartments adminMsgListOfApartments;
+
+    @Autowired
+    AdminMsgListOfAmenities adminMsgListOfAmenities;
 
     @Autowired
     AdminMsgChangeLanguage adminMsgChangeLanguage;
@@ -134,9 +142,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     public void dropData(long chatId) {
         adminMsgStart.createAdminSettings(chatId);
         adminMsgStart.deleteTempNewApartment(chatId);
-        adminMsgStart.deleteTempSelectedAmenities(chatId);
+        adminMsgStart.deleteSelectedAmenities(chatId);
+        createAmenity.clearTempDAO(chatId);
 
-        log.debug("Data dropped successfully!");
+        log.debug("Data dropped successfully for user {}!", chatId);
     }
 
     private void processingPhoto(long chatId,
@@ -152,8 +161,8 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
         String fileUrl = "https://api.telegram.org/file/bot" + botConfig.getToken() + "/" + filePath;
 
-        if (service.resource != null) {
-            String path = service.resource.getPath() + tempFolderOfPhotos;
+        if (service.resourceApartments != null) {
+            String path = service.resourceApartments.getPath() + tempFolderOfPhotos;
 
             if (adminMsgStart.isNewApartment(chatId)) {
                 FileManager.downloadPhotoFromNetwork(path, fileUrl);
@@ -178,12 +187,27 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         switch (data[0]) {
             case START -> start(chatId, user, messages, true, false);
             case CHAT -> chat(chatId, data);
+
+            // Create apartment
+
             case NUMBER -> newApartment(chatId, messages, data, NewApartment.NUMBER);
             case PHOTOS -> newApartment(chatId, messages, data, NewApartment.PHOTOS);
             case AREA -> newApartment(chatId, messages, data, NewApartment.AREA);
             case AMENITIES -> newApartment(chatId, messages, data, NewApartment.AMENITIES);
+
+            // Edit apartment
+
             case SET_NUMBER -> editNumber(chatId, messages, data);
             case SET_AREA -> editArea(chatId, messages, data);
+
+            // Create amenity
+
+            case SET_LINK -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.LINK, false);
+            case SET_NAME_EN -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.EN, false);
+            case SET_NAME_TR -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.TR, false);
+            case SET_NAME_RU -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.RU, false);
+            case SET_IMPORTANCE -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.IMPORTANCE, false);
+
             default -> log.info("Unknown message data: {}", data[0]);
         }
 
@@ -201,9 +225,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case SETTINGS -> openSettings(chatId, messages, false);
             case CHANGE_LANGUAGE -> openChangeLanguage(chatId, messages);
 
-            case NEW_APARTMENT -> openNewApartment(chatId, messages, ADMIN_MSG_SET_NUMBER, true, true);
+            case OPEN_NEW_APARTMENT -> openNewApartment(chatId, messages, ADMIN_MSG_SET_NUMBER, true, true);
             case BACK_TO_EDIT_NEW_APARTMENT -> openNewApartment(chatId, messages, ADMIN_MSG_SET_NUMBER, false, false);
             case LIST_OF_APARTMENTS -> openListOfApartments(chatId, messages);
+            case LIST_OF_AMENITIES -> openListOfAmenities(chatId, messages);
 
             case PREVIOUS_PAGE_OF_NEW_APPS -> changePage(chatId, messages, Page.APP, Selector.PREVIOUS);
             case NEXT_PAGE_OF_NEW_APPS -> changePage(chatId, messages, Page.APP, Selector.NEXT);
@@ -230,6 +255,8 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case ADD_PHOTOS -> addPhotos(chatId, messages);
             case REPLACE_PHOTOS -> replacePhotos(chatId, messages);
             case OPEN_EDIT_AREA -> openEditArea(chatId, messages);
+            case OPEN_EDIT_AMENITIES -> openEditAmenities(chatId, messages, true);
+            case EDIT_AMENITIES -> editAmenities(chatId, messages, adminMsgStart.getSelectedApartment(chatId));
 
             case REFUSE_APP -> performActionStatement(chatId, messages, data[1], AppStatus.DENIED);
             case ACCEPT_APP -> performActionStatement(chatId, messages, data[1], AppStatus.ACCEPTED);
@@ -238,6 +265,14 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case OPEN_CHAT -> openChat(chatId, messages, data[1]);
 
             case QUIT_FROM_NEW_APARTMENT, QUIT_FROM_LIST_OF_APARTMENTS -> openSettings(chatId, messages, true);
+
+            // Create amenity
+
+            case OPEN_NEW_AMENITY -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.LINK, true);
+            case CREATE_NEW_AMENITY -> createAmenity.createNewAmenity(chatId, messages);
+            case QUIT_FROM_NEW_AMENITY -> createAmenity.quitFromNewAmenity(chatId, messages);
+
+            // Other
 
             case TR, EN, RU -> changeLanguage(chatId, user, messages, data[0]);
 
@@ -288,10 +323,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
                 switch (stage) {
                     case NUMBER -> {
-                        if (service.resource == null)
+                        if (service.resourceApartments == null)
                             service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE,
                                     adminMsgStart.getIKMarkupOkToDelete(chatId));
-                        else if (new File(service.resource.getPath() + parameter).exists())
+                        else if (new File(service.resourceApartments.getPath() + parameter).exists())
                             service.sendMessageInfo(chatId, ADMIN_ERR_APARTMENT_EXISTS,
                                     adminMsgStart.getIKMarkupOkToDelete(chatId));
                         else if (parameter.matches("[0-9]+")) {
@@ -345,9 +380,9 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             adminMsgStart.createNewApartmentField(chatId);
         }
 
-        if (clearTemp && service.resource != null)
-            FileManager.deleteDirectory(Paths.get(service.resource.getPath() + tempFolderOfPhotos));
-        else if (service.resource == null)
+        if (clearTemp && service.resourceApartments != null)
+            FileManager.deleteDirectory(Paths.get(service.resourceApartments.getPath() + tempFolderOfPhotos));
+        else if (service.resourceApartments == null)
             service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
 
         messages.add(adminMsgNewApartment.editMessage(chatId, msgLink, adminMsgArchive.getTempNewApartmentParameters(chatId)));
@@ -364,6 +399,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         adminMsgStart.updateEditingPhotos(chatId, false);
         
         messages.add(adminMsgListOfApartments.editMessage(chatId, ADMIN_MSG_LIST_OF_APARTMENTS));
+    }
+
+    private void openListOfAmenities(long chatId, List<Integer> messages) throws TelegramApiException {
+        messages.add(adminMsgListOfAmenities.editMessage(chatId, ADMIN_MSG_LIST_OF_AMENITIES));
     }
 
     private void changePage(long chatId,
@@ -386,7 +425,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     }
 
     private void createApartment(long chatId, List<Integer> messages) throws TelegramApiException {
-        if (service.resource != null) {
+        if (service.resourceApartments != null) {
             TempNewApartment newApartment = adminMsgStart.getTempNewApartment(chatId);
             List<Amenity> selectedAmenities = adminMsgStart.getSelectedAmenities(chatId);
 
@@ -396,8 +435,8 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             String nameFolder = String.valueOf(number);
 
             FileManager.moveFiles(
-                    Paths.get(service.resource.getPath() + tempFolderOfPhotos + "/"),
-                    Paths.get(service.resource.getPath() + nameFolder + "/"));
+                    Paths.get(service.resourceApartments.getPath() + tempFolderOfPhotos + "/"),
+                    Paths.get(service.resourceApartments.getPath() + nameFolder + "/"));
 
             adminMsgStart.insertApartment(number, area, selectedAmenities);
 
@@ -412,13 +451,17 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
                                        List<Integer> messages,
                                        boolean isCheckingSelectedAmenities) throws TelegramApiException {
         adminMsgStart.updateCheckingSelectedAmenitiesAdminSettings(chatId, isCheckingSelectedAmenities);
-        openSelectAmenities(chatId, messages);
+
+        if (!adminMsgStart.isEditingApartments(chatId))
+            openSelectAmenities(chatId, messages);
+        else
+            openEditAmenities(chatId, messages, false);
     }
 
     private void previewApartment(long chatId, List<Integer> messages) throws TelegramApiException {
         int msgId = service.sendSimpleMessage(chatId, GENERAL_MSG_SIMPLE_DOWNLOADING);
 
-        messages.addAll(adminMsgPreviewApartment.sendPhotos(chatId, service.resource + tempFolderOfPhotos));
+        messages.addAll(adminMsgPreviewApartment.sendPhotos(chatId, service.resourceApartments + tempFolderOfPhotos));
 
         messages.add(adminMsgPreviewApartment.sendMessage(chatId, ADMIN_MSG_PREVIEW_APARTMENT,
                 adminMsgStart.getPreviewApartmentParameters(chatId)));
@@ -434,8 +477,8 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     private void deleteApartment(long chatId, List<Integer> messages) throws TelegramApiException {
         int selectedApartment = adminMsgStart.getSelectedApartment(chatId);
 
-        if (service.resource != null)
-            FileManager.deleteAllFilesFromDirectory(Paths.get(service.resource.getPath() + selectedApartment));
+        if (service.resourceApartments != null)
+            FileManager.deleteAllFilesFromDirectory(Paths.get(service.resourceApartments.getPath() + selectedApartment));
 
         adminMsgStart.deleteApartment(selectedApartment);
         
@@ -493,11 +536,14 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
     private void selectAmenity(long chatId, List<Integer> messages, String data) throws TelegramApiException {
         if (!adminMsgStart.isCheckingSelectedAmenities(chatId))
-            adminMsgStart.insertTempSelectedAmenity(chatId, adminMsgStart.getAmenityById(Integer.parseInt(data)));
+            adminMsgStart.insertSelectedAmenity(chatId, adminMsgStart.getAmenityById(Integer.parseInt(data)));
         else
-            adminMsgStart.deleteTempSelectedAmenity(chatId, adminMsgStart.getAmenityById(Integer.parseInt(data)));
+            adminMsgStart.deleteSelectedAmenity(chatId, adminMsgStart.getAmenityById(Integer.parseInt(data)));
 
-        openSelectAmenities(chatId, messages);
+        if (!adminMsgStart.isEditingApartments(chatId))
+            openSelectAmenities(chatId, messages);
+        else
+            openEditAmenities(chatId, messages, false);
     }
 
     private void editApartment(long chatId, List<Integer> messages, String numberOfApartment) throws TelegramApiException {
@@ -506,7 +552,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
         int msgId = service.sendSimpleMessage(chatId, GENERAL_MSG_SIMPLE_DOWNLOADING);
 
-        messages.addAll(adminMsgEditApartment.sendPhotos(chatId, service.resource + numberOfApartment));
+        messages.addAll(adminMsgEditApartment.sendPhotos(chatId, service.resourceApartments + numberOfApartment));
 
         messages.add(adminMsgEditApartment.sendMessage(chatId, ADMIN_MSG_EDIT_APARTMENT,
                 adminMsgStart.getEditApartmentParameters(chatId, numberOfApartment)));
@@ -523,11 +569,11 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     private void openEditPhotos(long chatId, List<Integer> messages) throws TelegramApiException {
         int msgId = service.sendSimpleMessage(chatId, GENERAL_MSG_SIMPLE_DOWNLOADING);
 
-        if (service.resource != null) {
-            FileManager.deleteAllFilesFromDirectory(Paths.get(service.resource.getPath() + tempFolderOfPhotos));
+        if (service.resourceApartments != null) {
+            FileManager.deleteAllFilesFromDirectory(Paths.get(service.resourceApartments.getPath() + tempFolderOfPhotos));
 
             String numberOfApartment = String.valueOf(adminMsgStart.getSelectedApartment(chatId));
-            messages.addAll(adminMsgEditPhotos.sendPhotos(chatId, service.resource + numberOfApartment));
+            messages.addAll(adminMsgEditPhotos.sendPhotos(chatId, service.resourceApartments + numberOfApartment));
 
             messages.add(adminMsgEditPhotos.sendMessage(chatId, ADMIN_MSG_EDIT_PHOTOS));
 
@@ -539,10 +585,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     }
 
     private void addPhotos(long chatId, List<Integer> messages) throws TelegramApiException {
-        if (service.resource != null)
+        if (service.resourceApartments != null)
             FileManager.moveFiles(
-                    Paths.get(service.resource.getPath() + tempFolderOfPhotos + "/"),
-                    Paths.get(service.resource.getPath() + adminMsgStart.getSelectedApartment(chatId) + "/"),
+                    Paths.get(service.resourceApartments.getPath() + tempFolderOfPhotos + "/"),
+                    Paths.get(service.resourceApartments.getPath() + adminMsgStart.getSelectedApartment(chatId) + "/"),
                     ".jpg");
         else
             service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
@@ -551,13 +597,13 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     }
 
     private void replacePhotos(long chatId, List<Integer> messages) throws TelegramApiException {
-        if (service.resource != null) {
+        if (service.resourceApartments != null) {
             FileManager.deleteAllFilesFromDirectory(
-                    Paths.get(service.resource.getPath() + adminMsgStart.getSelectedApartment(chatId)));
+                    Paths.get(service.resourceApartments.getPath() + adminMsgStart.getSelectedApartment(chatId)));
 
             FileManager.moveFiles(
-                    Paths.get(service.resource.getPath() + tempFolderOfPhotos + "/"),
-                    Paths.get(service.resource.getPath() + adminMsgStart.getSelectedApartment(chatId) + "/"));
+                    Paths.get(service.resourceApartments.getPath() + tempFolderOfPhotos + "/"),
+                    Paths.get(service.resourceApartments.getPath() + adminMsgStart.getSelectedApartment(chatId) + "/"));
         }
         else
             service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
@@ -569,19 +615,38 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         messages.add(adminMsgEditArea.editMessage(chatId, ADMIN_MSG_EDIT_AREA));
     }
 
+    private void openEditAmenities(long chatId, List<Integer> messages, boolean isInit) throws TelegramApiException {
+        if (isInit) {
+            List<Amenity> amenities = adminMsgStart.getAmenitiesOfApartment(chatId);
+
+            amenities.forEach(amenity -> adminMsgStart.insertSelectedAmenity(chatId, amenity));
+        }
+
+        messages.add(adminMsgEditAmenities.editMessage(chatId, ADMIN_MSG_EDIT_AMENITIES,
+                adminMsgArchive.getStringOfSelectedAmenities(chatId)));
+    }
+
+    private void editAmenities(long chatId, List<Integer> messages, int numberOfApartment) throws TelegramApiException {
+        List<Amenity> amenities = adminMsgStart.getSelectedAmenities(chatId);
+
+        adminMsgStart.updateAmenitiesOfApartment(numberOfApartment, amenities);
+
+        editApartment(chatId, messages, String.valueOf(adminMsgStart.getSelectedApartment(chatId)));
+    }
+
     private void editNumber(long chatId, List<Integer> messages, String[] data) throws TelegramApiException {
         if (adminMsgStart.isEditingApartments(chatId) && data.length < 2)
             service.sendMessageInfo(chatId, ADMIN_ERR_SET_AREA, adminMsgStart.getIKMarkupOkToDelete(chatId));
-        if (service.resource != null) {
-            if (new File(service.resource.getPath() + data[1]).exists() && adminMsgStart.isEditingApartments(chatId))
+        if (service.resourceApartments != null) {
+            if (new File(service.resourceApartments.getPath() + data[1]).exists() && adminMsgStart.isEditingApartments(chatId))
                 service.sendMessageInfo(chatId, ADMIN_ERR_APARTMENT_EXISTS, adminMsgStart.getIKMarkupOkToDelete(chatId));
             else if (adminMsgStart.isEditingApartments(chatId)) {
                 FileManager.moveFiles(
-                        Paths.get(service.resource.getPath() + adminMsgStart.getSelectedApartment(chatId) + "/"),
-                        Paths.get(service.resource.getPath() + data[1] + "/"));
+                        Paths.get(service.resourceApartments.getPath() + adminMsgStart.getSelectedApartment(chatId) + "/"),
+                        Paths.get(service.resourceApartments.getPath() + data[1] + "/"));
 
                 FileManager.deleteAllFilesFromDirectory(
-                        Paths.get(service.resource.getPath() + adminMsgStart.getSelectedApartment(chatId)));
+                        Paths.get(service.resourceApartments.getPath() + adminMsgStart.getSelectedApartment(chatId)));
 
                 adminMsgStart.updateNumberApartment(adminMsgStart.getSelectedApartment(chatId), Integer.parseInt(data[1]));
                 adminMsgStart.updateSelectedApartment(chatId, Integer.parseInt(data[1]));
