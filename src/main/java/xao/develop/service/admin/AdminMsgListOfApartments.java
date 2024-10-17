@@ -18,7 +18,7 @@ public class AdminMsgListOfApartments extends AdminMessage {
 
         initSelectorApartments(chatId, keyboard, buttons);
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), QUIT_FROM_LIST_OF_APARTMENTS));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), QUIT_TO_SETTINGS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

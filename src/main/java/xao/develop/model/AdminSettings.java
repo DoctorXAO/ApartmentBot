@@ -15,6 +15,8 @@ public class AdminSettings {
 
     private int selectedApartment = 0;
 
+    private int selectedAmenity = 0;
+
     private int selectedPage = 0;
 
     private boolean isNewApartment = false;

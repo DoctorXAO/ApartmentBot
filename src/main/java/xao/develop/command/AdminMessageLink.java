@@ -85,9 +85,11 @@ public interface AdminMessageLink {
     String ADMIN_MSG_AMENITY_VIEW = "admin.msg.amenity-view";
 
     String ADMIN_ERR_SET_LINK = "admin.err.set-link";
-    String ADMIN_ERR_SET_NAME_EN = "admin.err.set-name-en";
-    String ADMIN_ERR_SET_NAME_TR = "admin.err.set-name-tr";
-    String ADMIN_ERR_SET_NAME_RU = "admin.err.set-name-ru";
     String ADMIN_ERR_SET_IMPORTANCE = "admin.err.set-importance";
     String ADMIN_ERR_LINK_OF_AMENITY_IS_EXIST = "admin.err.link-of-amenity-is-exist";
+
+    // Edit amenity
+
+    String ADMIN_MSG_EDIT_AMENITY = "admin.msg.edit-amenity";
+    String ADMIN_MSG_APPLY_DELETE_AMENITY = "admin.msg.apply-delete-amenity";
 }

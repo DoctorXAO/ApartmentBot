@@ -20,13 +20,7 @@ public class PropertiesManager {
         if (url != null) {
             String path = url.getPath();
 
-            try (FileInputStream inputStream = new FileInputStream(path)) {
-                properties.load(inputStream);
-
-                log.debug("Property loaded by path {} successfully!", path);
-            } catch (IOException ex) {
-                log.debug("Can't load property by path {}\nException: {}", path, ex.getMessage());
-            }
+            loadProperty(properties, path);
 
             properties.setProperty(key, value);
 
@@ -45,18 +39,32 @@ public class PropertiesManager {
     public static void removeProperty(String filePath, String key) {
         Properties properties = new Properties();
 
-        try (FileInputStream inputStream = new FileInputStream(filePath);
-             FileOutputStream outputStream = new FileOutputStream(filePath))
-        {
-            properties.load(inputStream);
+        URL url = PropertiesManager.class.getClassLoader().getResource(filePath);
+
+        if (url != null) {
+            String path = url.getPath();
+
+            loadProperty(properties, path);
 
             properties.remove(key);
 
-            properties.store(outputStream, null);
+            try (FileOutputStream outputStream = new FileOutputStream(path)) {
+                properties.store(outputStream, null);
 
-            log.debug("Property removed by key {} successfully!", key);
+                log.debug("Property removed by key {} successfully!", key);
+            } catch (IOException ex) {
+                log.error("Can't remove property by key {}\nException: {}", key, ex.getMessage());
+            }
+        }
+    }
+
+    private static void loadProperty(Properties properties, String path) {
+        try (FileInputStream inputStream = new FileInputStream(path)) {
+            properties.load(inputStream);
+
+            log.debug("Property loaded by path {} successfully!", path);
         } catch (IOException ex) {
-            log.error("Can't remove property by key {}\nException: {}", key, ex.getMessage());
+            log.debug("Can't load property by path {}\nException: {}", path, ex.getMessage());
         }
     }
 }

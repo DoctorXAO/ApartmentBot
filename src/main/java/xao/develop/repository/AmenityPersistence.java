@@ -50,4 +50,10 @@ public class AmenityPersistence {
 
         amenityRepository.save(amenity);
     }
+
+    public void delete(int idOfAmenity) {
+        amenityRepository.deleteById(idOfAmenity);
+
+        log.debug("Amenity {} deleted successfully!", idOfAmenity);
+    }
 }

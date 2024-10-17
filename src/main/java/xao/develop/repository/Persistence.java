@@ -36,9 +36,6 @@ public class Persistence {
     private final TempApartmentSelectorRepository tempApartmentSelectorRepository;
 
     @Autowired
-    private final AmenityRepository amenityRepository;
-
-    @Autowired
     private final AdminSettingsRepository adminSettingsRepository;
 
     @Autowired
@@ -54,7 +51,6 @@ public class Persistence {
                        TempBotMessageRepository tempBotMessageRepository,
                        TempBookingDataRepository tempBookingDataRepository,
                        TempApartmentSelectorRepository tempApartmentSelectorRepository,
-                       AmenityRepository amenityRepository,
                        AdminSettingsRepository adminSettingsRepository,
                        TempNewApartmentRepository tempNewApartmentRepository,
                        TempSelectedAmenityRepository tempSelectedAmenityRepository) {
@@ -66,7 +62,6 @@ public class Persistence {
         this.tempBotMessageRepository = tempBotMessageRepository;
         this.tempBookingDataRepository = tempBookingDataRepository;
         this.tempApartmentSelectorRepository = tempApartmentSelectorRepository;
-        this.amenityRepository = amenityRepository;
         this.adminSettingsRepository = adminSettingsRepository;
         this.tempNewApartmentRepository = tempNewApartmentRepository;
         this.tempSelectedAmenityRepository = tempSelectedAmenityRepository;
@@ -77,8 +72,7 @@ public class Persistence {
     public void insertAccountStatus(Long chatId,
                                     String language) {
         AccountStatus accountStatus = new AccountStatus();
-        // todo Добавить в заявления поле, в котором будет указано, когда это заявление было отправлено администратору
-        // todo Добавить отображение статуса заявки в интерфейсе пользователя
+
         accountStatus.setChatId(chatId);
         accountStatus.setLanguage(language);
 
@@ -530,6 +524,14 @@ public class Persistence {
         adminSettingsRepository.save(adminSettings);
     }
 
+    public void updateSelectedAmenityAdminSettings(long chatId, int selectedAmenity) {
+        AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
+
+        adminSettings.setSelectedAmenity(selectedAmenity);
+
+        adminSettingsRepository.save(adminSettings);
+    }
+
     public void updateSelectedPageAdminSettings(long chatId, int selectedPage) {
         AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
 
@@ -568,10 +570,6 @@ public class Persistence {
         adminSettings.setEditingPhotos(isEditingPhotos);
 
         adminSettingsRepository.save(adminSettings);
-    }
-
-    public void deleteAdminSettings(long chatId) {
-        adminSettingsRepository.deleteById(chatId);
     }
 
     public void resetToDefaultAdminSettings() {

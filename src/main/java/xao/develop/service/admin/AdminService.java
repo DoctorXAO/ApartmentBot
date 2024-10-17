@@ -19,6 +19,7 @@ import xao.develop.model.TempNewApartment;
 import xao.develop.service.BotService;
 import xao.develop.service.admin.operation.createAmenity.CreateAmenity;
 import xao.develop.service.admin.operation.createAmenity.enums.AmenityStage;
+import xao.develop.service.admin.operation.editAmenity.EditAmenity;
 import xao.develop.toolbox.FileManager;
 import xao.develop.toolbox.TelegramFileManager;
 
@@ -38,6 +39,9 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
     @Autowired
     CreateAmenity createAmenity;
+
+    @Autowired
+    EditAmenity editAmenity;
 
     @Autowired
     AdminMsgStart adminMsgStart;
@@ -264,7 +268,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
             case OPEN_CHAT -> openChat(chatId, messages, data[1]);
 
-            case QUIT_FROM_NEW_APARTMENT, QUIT_FROM_LIST_OF_APARTMENTS -> openSettings(chatId, messages, true);
+            case QUIT_TO_SETTINGS -> openSettings(chatId, messages, true);
 
             // Create amenity
 
@@ -272,7 +276,13 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case CREATE_NEW_AMENITY -> createAmenity.createNewAmenity(chatId, messages);
             case QUIT_FROM_NEW_AMENITY -> createAmenity.quitFromNewAmenity(chatId, messages);
 
-            // Other
+            // Edit amenity
+
+            case ED_AMENITY -> editAmenity.openEditAmenity(chatId, messages, data[1]);
+            case APPLY_DELETE_AMENITY -> editAmenity.openDeleteAmenity(chatId, messages);
+            case DELETE_AMENITY -> editAmenity.deleteAmenity(chatId, messages);
+
+            // Others
 
             case TR, EN, RU -> changeLanguage(chatId, user, messages, data[0]);
 

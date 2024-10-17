@@ -18,7 +18,7 @@ public class AdminMsgNewApartment extends AdminMessage {
 
         initBtPreview(chatId, keyboard, buttons);
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_CANCEL), QUIT_FROM_NEW_APARTMENT));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_CANCEL), QUIT_TO_SETTINGS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

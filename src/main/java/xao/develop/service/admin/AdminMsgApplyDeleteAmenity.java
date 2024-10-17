@@ -9,18 +9,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class AdminMsgNAAmenities extends AdminMessage {
+public class AdminMsgApplyDeleteAmenity extends AdminMessage {
 
     @Override
     protected InlineKeyboardMarkup getIKMarkup(long chatId) {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        initBtPreview(chatId, keyboard, buttons);
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_DELETE), DELETE_AMENITY));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
+        buttons.clear();
 
-        initSelectorAmenities(chatId, keyboard, buttons);
-
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_CANCEL), QUIT_TO_SETTINGS));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_CANCEL),
+                ED_AMENITY + X + getSelectedAmenity(chatId)));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

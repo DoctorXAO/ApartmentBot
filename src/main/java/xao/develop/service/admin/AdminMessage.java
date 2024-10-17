@@ -147,6 +147,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         return persistence.selectAdminSettings(chatId).getSelectedApartment();
     }
 
+    public int getSelectedAmenity(long chatId) {
+        return persistence.selectAdminSettings(chatId).getSelectedAmenity();
+    }
+
     public Amenity getAmenityById(int idOfAmenity) {
         return amenityPersistence.select(idOfAmenity);
     }
@@ -187,6 +191,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     public void updateSelectedPageAdminSettings(long chatId, int selectedPage) {
         persistence.updateSelectedPageAdminSettings(chatId, selectedPage);
+    }
+
+    public void updateSelectedAmenityAdminSettings(long chatId, int selectedAmenity) {
+        persistence.updateSelectedAmenityAdminSettings(chatId, selectedAmenity);
     }
 
     public void updateNewApartmentAdminSettings(long chatId, boolean isNewApartment) {
@@ -412,7 +420,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
                 break;
 
             buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, amenities.get(i).getLink()),
-                    AMENITY + X + amenities.get(i).getIdAmenity()));
+                    ED_AMENITY + X + amenities.get(i).getIdAmenity()));
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();
         }

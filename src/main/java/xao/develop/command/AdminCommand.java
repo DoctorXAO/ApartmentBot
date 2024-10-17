@@ -24,8 +24,7 @@ public interface AdminCommand {
 
     String QUIT_FROM_APP = "quit_from_app";
     String QUIT_FROM_ARC = "quit_from_arc";
-    String QUIT_FROM_NEW_APARTMENT = "quit_from_new_apartment";
-    String QUIT_FROM_LIST_OF_APARTMENTS = "quit_from_list_of_apartments";
+    String QUIT_TO_SETTINGS = "quit_to_settings";
 
     String PREVIOUS_PAGE_OF_ARCHIVE = "previous_page_of_archive";
     String NEXT_PAGE_OF_ARCHIVE = "next_page_of_archive";
@@ -62,7 +61,6 @@ public interface AdminCommand {
     String EDIT_AMENITIES = "edit_amenities";
     String APPLY_DELETE_APARTMENT = "apply_delete_apartment";
     String DELETE_APARTMENT = "delete_apartment";
-    String APPLY_EDIT_APARTMENT = "apply_edit_apartment";
 
     // Create amenity
 
@@ -75,4 +73,11 @@ public interface AdminCommand {
     String OPEN_NEW_AMENITY = "open_new_amenity";
     String CREATE_NEW_AMENITY = "create_new_amenity";
     String QUIT_FROM_NEW_AMENITY = "quit_from_new_amenity";
+
+    // Edit amenity
+
+    String ED_AMENITY = "ed_amenity";
+    String APPLY_DELETE_AMENITY = "apply_delete_amenity";
+
+    String DELETE_AMENITY = "delete_amenity";
 }
