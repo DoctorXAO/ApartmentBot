@@ -37,8 +37,7 @@ public class BotService {
 
     private final ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
 
-    public final URL resourceApartments = getClass().getClassLoader().getResource("img/apartments/");
-    public final URL resourceLanguages = getClass().getClassLoader().getResource("languages/");
+    public final URL resource = getClass().getClassLoader().getResource("img/apartments/");
 
     // setters
 

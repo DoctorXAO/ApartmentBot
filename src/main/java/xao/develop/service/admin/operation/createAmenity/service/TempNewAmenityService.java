@@ -9,7 +9,6 @@ import xao.develop.repository.AmenityPersistence;
 import xao.develop.repository.TempNewAmenityPersistence;
 import xao.develop.toolbox.PropertiesManager;
 
-import java.net.URL;
 import java.util.List;
 
 @Slf4j
@@ -48,12 +47,6 @@ public class TempNewAmenityService {
     }
 
     public void updateImportance(long chatId, int importance) {
-        if (isExist(importance))
-            amenityPersistence.select().forEach(amenity -> {
-                if (amenity.getImportance() >= importance)
-                    amenityPersistence.updateImportance(amenity.getLink(), amenity.getImportance() + 1);
-            });
-
         tempNewAmenityPersistence.updateImportance(chatId, importance);
     }
 
@@ -100,10 +93,21 @@ public class TempNewAmenityService {
     }
 
 
-    public void createAmenity(TempNewAmenity tempNewAmenity, URL resource) {
-        PropertiesManager.addOrUpdateProperty(resource + "amenity.properties", tempNewAmenity.getLink(), tempNewAmenity.getEn());
-        PropertiesManager.addOrUpdateProperty(resource + "amenity_tr.properties", tempNewAmenity.getLink(), tempNewAmenity.getTr());
-        PropertiesManager.addOrUpdateProperty(resource + "amenity_ru.properties", tempNewAmenity.getLink(), tempNewAmenity.getRu());
+    public void createAmenity(TempNewAmenity tempNewAmenity) {
+        int importance = tempNewAmenity.getImportance();
+
+        if (isExist(importance))
+            amenityPersistence.select().forEach(amenity -> {
+                if (amenity.getImportance() >= importance)
+                    amenityPersistence.updateImportance(amenity.getLink(), amenity.getImportance() + 1);
+            });
+
+        PropertiesManager.addOrUpdateProperty("languages/amenity.properties",
+                tempNewAmenity.getLink(), tempNewAmenity.getEn());
+        PropertiesManager.addOrUpdateProperty("languages/amenity_tr.properties",
+                tempNewAmenity.getLink(), tempNewAmenity.getTr());
+        PropertiesManager.addOrUpdateProperty("languages/amenity_ru.properties",
+                tempNewAmenity.getLink(), tempNewAmenity.getRu());
 
         amenityPersistence.insert(tempNewAmenity.getLink(), tempNewAmenity.getImportance());
     }

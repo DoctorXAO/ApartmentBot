@@ -94,9 +94,9 @@ public class CreateAmenity implements AdminMessageLink, AdminCommand {
     }
 
     public void createNewAmenity(long chatId, List<Integer> messages) throws TelegramApiException {
-        tempNewAmenityService.delete(chatId);
+        tempNewAmenityService.createAmenity(tempNewAmenityService.select(chatId));
 
-        tempNewAmenityService.createAmenity(tempNewAmenityService.select(chatId), service.resourceApartments);
+        tempNewAmenityService.delete(chatId);
 
         messages.add(adminMsgSettings.editMessage(chatId, ADMIN_MSG_SETTINGS));
     }
