@@ -23,7 +23,6 @@ import xao.develop.toolbox.FileManager;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 
 @Slf4j
@@ -91,7 +90,7 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
 
     public List<Integer> sendPhotos(long chatId, @NotNull String path) {
         try {
-            File[] files = FileManager.getSortedFiles(new URL(path));
+            File[] files = FileManager.getSortedFiles(new File(path));
 
             if (files.length == 1)
                 return sendSinglePhoto(chatId, new InputFile(files[0]));
@@ -103,8 +102,6 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
             }
         } catch (MalformedURLException ex) {
             log.error("Can't download URL.\nException: {}", ex.getMessage());
-
-            ex.printStackTrace();
 
             return new ArrayList<>();
         } catch (IOException ex) {

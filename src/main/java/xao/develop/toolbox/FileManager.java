@@ -17,9 +17,7 @@ public class FileManager {
     // getters
 
     /** Get sorted files **/
-    public static File[] getSortedFiles(@NotNull URL resource) throws IOException {
-        File directory = new File(resource.getFile());
-
+    public static File[] getSortedFiles(@NotNull File directory) throws IOException {
         FilenameFilter filter = (dir, name) -> name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png");
 
         File[] files = directory.listFiles(filter);

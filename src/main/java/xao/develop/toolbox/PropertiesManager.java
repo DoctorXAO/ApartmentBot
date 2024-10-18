@@ -3,7 +3,6 @@ package xao.develop.toolbox;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
@@ -31,22 +30,16 @@ public class PropertiesManager {
     public static void removeProperty(String filePath, String key) {
         Properties properties = new Properties();
 
-        URL url = PropertiesManager.class.getClassLoader().getResource(filePath);
+        loadProperty(properties, filePath);
 
-        if (url != null) {
-            String path = url.getPath();
+        properties.remove(key);
 
-            loadProperty(properties, path);
+        try (FileOutputStream outputStream = new FileOutputStream(filePath)) {
+            properties.store(outputStream, null);
 
-            properties.remove(key);
-
-            try (FileOutputStream outputStream = new FileOutputStream(path)) {
-                properties.store(outputStream, null);
-
-                log.debug("Property removed by key {} successfully!", key);
-            } catch (IOException ex) {
-                log.error("Can't remove property by key {}\nException: {}", key, ex.getMessage());
-            }
+            log.debug("Property removed by key {} successfully!", key);
+        } catch (IOException ex) {
+            log.error("Can't remove property by key {}\nException: {}", key, ex.getMessage());
         }
     }
 
