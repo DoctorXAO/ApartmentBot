@@ -104,6 +104,8 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
         } catch (MalformedURLException ex) {
             log.error("Can't download URL.\nException: {}", ex.getMessage());
 
+            ex.printStackTrace();
+
             return new ArrayList<>();
         } catch (IOException ex) {
             log.error("Can't sort files.\nException: {}", ex.getMessage());

@@ -92,7 +92,6 @@ public class TempNewAmenityService {
         };
     }
 
-
     public void createAmenity(TempNewAmenity tempNewAmenity) {
         int importance = tempNewAmenity.getImportance();
 
@@ -102,11 +101,11 @@ public class TempNewAmenityService {
                     amenityPersistence.updateImportance(amenity.getLink(), amenity.getImportance() + 1);
             });
 
-        PropertiesManager.addOrUpdateProperty("languages/amenity.properties",
+        PropertiesManager.addOrUpdateProperty("./config/languages/amenity.properties",
                 tempNewAmenity.getLink(), tempNewAmenity.getEn());
-        PropertiesManager.addOrUpdateProperty("languages/amenity_tr.properties",
+        PropertiesManager.addOrUpdateProperty("./config/languages/amenity_tr.properties",
                 tempNewAmenity.getLink(), tempNewAmenity.getTr());
-        PropertiesManager.addOrUpdateProperty("languages/amenity_ru.properties",
+        PropertiesManager.addOrUpdateProperty("./config/languages/amenity_ru.properties",
                 tempNewAmenity.getLink(), tempNewAmenity.getRu());
 
         amenityPersistence.insert(tempNewAmenity.getLink(), tempNewAmenity.getImportance());

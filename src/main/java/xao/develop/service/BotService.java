@@ -1,5 +1,6 @@
 package xao.develop.service;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -16,7 +17,6 @@ import xao.develop.model.AccountStatus;
 import xao.develop.model.TempBotMessage;
 import xao.develop.repository.Persistence;
 
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
+@Getter
 public class BotService {
 
     @Autowired
@@ -37,7 +38,7 @@ public class BotService {
 
     private final ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
 
-    public final URL resource = getClass().getClassLoader().getResource("img/apartments/");
+    private final String apartmentPath = "./config/img/";
 
     // setters
 

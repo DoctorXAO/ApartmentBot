@@ -2,10 +2,9 @@ package xao.develop.toolbox;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 @Slf4j
@@ -15,24 +14,17 @@ public class PropertiesManager {
     public static void addOrUpdateProperty(String filePath, String key, String value) {
         Properties properties = new Properties();
 
-        URL url = PropertiesManager.class.getClassLoader().getResource(filePath);
+        loadProperty(properties, filePath);
 
-        if (url != null) {
-            String path = url.getPath();
+        properties.setProperty(key, value);
 
-            loadProperty(properties, path);
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(filePath), StandardCharsets.UTF_8)) {
+            properties.store(writer, null);
 
-            properties.setProperty(key, value);
-
-            try (FileOutputStream outputStream = new FileOutputStream(path)) {
-                properties.store(outputStream, null);
-
-                log.debug("Property added or updated by key {} and value {} successfully!", key, value);
-            } catch (IOException ex) {
-                log.error("Can't add or update property by key {} and value {}.\nException: {}", key, value, ex.getMessage());
-            }
-        } else
-            log.error("Can't load resources by path {}", filePath);
+            log.debug("Property added or updated by key {} and value {} successfully!", key, value);
+        } catch (IOException ex) {
+            log.error("Can't add or update property by key {} and value {}.\nException: {}", key, value, ex.getMessage());
+        }
     }
 
     /** Remove property **/
@@ -59,8 +51,8 @@ public class PropertiesManager {
     }
 
     private static void loadProperty(Properties properties, String path) {
-        try (FileInputStream inputStream = new FileInputStream(path)) {
-            properties.load(inputStream);
+        try (Reader reader = new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8)) {
+            properties.load(reader);
 
             log.debug("Property loaded by path {} successfully!", path);
         } catch (IOException ex) {

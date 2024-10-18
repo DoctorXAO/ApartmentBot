@@ -49,9 +49,9 @@ public class CreateAmenity implements AdminMessageLink, AdminCommand {
 
             switch (stage) {
                 case LINK -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_LINK, parameters));
-                case EN -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_EN, parameters));
-                case TR -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_TR, parameters));
-                case RU -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_RU, parameters));
+                case EN -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_EN, tempNewAmenityService.getParameters(chatId)));
+                case TR -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_TR, tempNewAmenityService.getParameters(chatId)));
+                case RU -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_RU, tempNewAmenityService.getParameters(chatId)));
                 case IMPORTANCE -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_IMPORTANCE, parameters));
             }
         }
@@ -65,24 +65,28 @@ public class CreateAmenity implements AdminMessageLink, AdminCommand {
                     adminMsgNewAmenity.getIKMarkupOkToDelete(chatId), link);
         else if (link.matches("[a-zA-Z-]+")) {
             tempNewAmenityService.updateLink(chatId, link);
-            messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_EN, tempNewAmenityService.getParameters(chatId)));
+            messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_EN,
+                    tempNewAmenityService.getParameters(chatId)));
         } else
             service.sendMessageInfo(chatId, ADMIN_ERR_SET_LINK, adminMsgNewAmenity.getIKMarkupOkToDelete(chatId));
     }
 
     private void setEn(long chatId, List<Integer> messages, String en) throws TelegramApiException {
         tempNewAmenityService.updateEn(chatId, en);
-        messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_TR, tempNewAmenityService.getParameters(chatId)));
+        messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_TR,
+                tempNewAmenityService.getParameters(chatId)));
     }
 
     private void setTr(long chatId, List<Integer> messages, String tr) throws TelegramApiException {
         tempNewAmenityService.updateTr(chatId, tr);
-        messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_RU, tempNewAmenityService.getParameters(chatId)));
+        messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_RU,
+                tempNewAmenityService.getParameters(chatId)));
     }
 
     private void setRu(long chatId, List<Integer> messages, String ru) throws TelegramApiException {
         tempNewAmenityService.updateRu(chatId, ru);
-        messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_IMPORTANCE, tempNewAmenityService.getParameters(chatId)));
+        messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_IMPORTANCE,
+                tempNewAmenityService.getParameters(chatId)));
     }
 
     private void setImportance(long chatId, List<Integer> messages, String importance) throws TelegramApiException {

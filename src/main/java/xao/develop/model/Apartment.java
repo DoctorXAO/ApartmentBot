@@ -15,7 +15,7 @@ public class Apartment {
     @Column(nullable = false)
     private Double area;
 
-    @ManyToMany(fetch = FetchType.EAGER) // todo Сделать жадную загрузку только при запросе или внедрить транзакцию куда-то
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "apartment_amenity",
             joinColumns = @JoinColumn(name = "number_apartment"),
             inverseJoinColumns = @JoinColumn(name = "id_amenity"))
