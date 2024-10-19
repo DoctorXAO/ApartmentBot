@@ -22,7 +22,6 @@ import xao.develop.toolbox.FileManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.*;
 
 @Slf4j
@@ -100,10 +99,6 @@ public abstract class BotMessage implements GeneralMessageLink, GeneralCommand {
                         .map(file -> new InputMediaPhoto(file, file.getName()))
                         .toList()));
             }
-        } catch (MalformedURLException ex) {
-            log.error("Can't download URL.\nException: {}", ex.getMessage());
-
-            return new ArrayList<>();
         } catch (IOException ex) {
             log.error("Can't sort files.\nException: {}", ex.getMessage());
 

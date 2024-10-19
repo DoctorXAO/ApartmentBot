@@ -32,8 +32,16 @@ public interface AdminCommand {
     String NEXT_PAGE_OF_NEW_APPS = "next_page_of_new_apps";
     String PREVIOUS_PAGE_OF_APART = "previous_page_of_apartments";
     String NEXT_PAGE_OF_APART = "next_page_of_apartments";
-    String PREVIOUS_PAGE_OF_AMENITIES = "previous_page_of_amenities";
-    String NEXT_PAGE_OF_AMENITIES = "next_page_of_amenities";
+    String PREVIOUS_PAGE_OF_AV_AM = "previous_page_of_available_amenities";
+    String NEXT_PAGE_OF_AV_AM = "next_page_of_available_amenities";
+    String PREVIOUS_PAGE_OF_SL_AM = "previous_page_of_selected_amenities";
+    String NEXT_PAGE_OF_SL_AM = "next_page_of_selected_amenities";
+    String PREVIOUS_PAGE_OF_AV_EAM = "previous_page_of_available_edit_amenities";
+    String NEXT_PAGE_OF_AV_EAM = "next_page_of_available_edit_amenities";
+    String PREVIOUS_PAGE_OF_SL_EAM = "previous_page_of_selected_edit_amenities";
+    String NEXT_PAGE_OF_SL_EAM = "next_page_of_selected_edit_amenities";
+    String PREVIOUS_PAGE_OF_LS_AM = "previous_page_of_list_of_amenities";
+    String NEXT_PAGE_OF_LS_AM = "next_page_of_list_of_amenities";
 
     String PREVIEW_APARTMENT = "preview_apartment";
     String CREATE_APARTMENT = "create_apartment";
@@ -77,7 +85,12 @@ public interface AdminCommand {
     // Edit amenity
 
     String ED_AMENITY = "ed_amenity";
-    String APPLY_DELETE_AMENITY = "apply_delete_amenity";
 
+    String EDIT_NAME_EN = "/edit_name_en";
+    String EDIT_NAME_TR = "/edit_name_tr";
+    String EDIT_NAME_RU = "/edit_name_ru";
+    String EDIT_IMPORTANCE = "/edit_importance";
+
+    String APPLY_DELETE_AMENITY = "apply_delete_amenity";
     String DELETE_AMENITY = "delete_amenity";
 }

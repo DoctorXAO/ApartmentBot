@@ -36,8 +36,6 @@ public class BotService {
     @Autowired
     MessageSource messageSource;
 
-    private final ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
-
     private final String apartmentPath = "./config/img/";
 
     // setters
@@ -172,6 +170,8 @@ public class BotService {
                                     Impossible to delete message {} for user {}
                                     Exception: {}""",
                     msgId, chatId, ex.getMessage());
+
+            persistence.deleteMessageTempBotMessage(chatId, msgId);
         }
     }
 
@@ -226,10 +226,15 @@ public class BotService {
     
     public void sendTempMessage(long chatId, String msgLink, int forTime) throws TelegramApiException {
         int msgId = sendSimpleMessage(chatId, msgLink, forTime);
+
+        ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
+
         scheduled.schedule(() -> deleteMessage(chatId, msgId), forTime, TimeUnit.SECONDS);
     }
     
     public void lateDeleteMessage(long chatId, int msgId, int forTime) {
+        ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
+
         scheduled.schedule(() -> deleteMessage(chatId, msgId), forTime, TimeUnit.SECONDS);
     }
 

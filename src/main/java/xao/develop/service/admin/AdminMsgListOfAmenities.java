@@ -18,7 +18,7 @@ public class AdminMsgListOfAmenities extends AdminMessage {
 
         initListOfAmenities(chatId, keyboard, buttons);
 
-        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), SETTINGS));
+        buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, GENERAL_BT_BACK), QUIT_TO_SETTINGS));
         keyboard.add(msgBuilder.buildIKRow(buttons));
 
         return InlineKeyboardMarkup

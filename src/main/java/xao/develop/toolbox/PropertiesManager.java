@@ -9,6 +9,14 @@ import java.util.Properties;
 @Slf4j
 public class PropertiesManager {
 
+    public static String getPropertyValue(String filePath, String key) {
+        Properties properties = new Properties();
+
+        loadProperty(properties, filePath);
+
+        return properties.getProperty(key);
+    }
+
     /** Add or update property **/
     public static void addOrUpdateProperty(String filePath, String key, String value) {
         Properties properties = new Properties();

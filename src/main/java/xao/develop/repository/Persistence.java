@@ -572,6 +572,14 @@ public class Persistence {
         adminSettingsRepository.save(adminSettings);
     }
 
+    public void updateEditingAmenityAdminSettings(long chatId, boolean isEditingAmenity) {
+        AdminSettings adminSettings = adminSettingsRepository.findById(chatId);
+
+        adminSettings.setEditingAmenity(isEditingAmenity);
+
+        adminSettingsRepository.save(adminSettings);
+    }
+
     public void resetToDefaultAdminSettings() {
         adminSettingsRepository.resetToDefault();
     }

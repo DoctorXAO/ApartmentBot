@@ -10,8 +10,10 @@ import xao.develop.model.Amenity;
 import xao.develop.model.Apartment;
 import xao.develop.repository.AmenityPersistence;
 import xao.develop.repository.Persistence;
+import xao.develop.service.BotService;
 import xao.develop.service.admin.AdminMsgApplyDeleteAmenity;
-import xao.develop.service.admin.AdminMsgEditAmenity;
+import xao.develop.service.admin.operation.createAmenity.enums.AmenityStage;
+import xao.develop.service.admin.operation.editAmenity.msg.AdminMsgEditAmenity;
 import xao.develop.service.admin.AdminMsgListOfAmenities;
 import xao.develop.toolbox.PropertiesManager;
 
@@ -35,16 +37,72 @@ public class EditAmenity implements AdminMessageLink, AdminCommand {
     @Autowired
     AdminMsgListOfAmenities adminMsgListOfAmenities;
 
+    @Autowired
+    BotService service;
+
     public void openEditAmenity(long chatId, List<Integer> messages, String data) throws TelegramApiException {
         adminMsgEditAmenity.updateSelectedAmenityAdminSettings(chatId, Integer.parseInt(data));
+        adminMsgEditAmenity.updateEditingAmenity(chatId, true);
 
-        messages.add(adminMsgEditAmenity.editMessage(chatId, ADMIN_MSG_EDIT_AMENITY));
+        messages.add(adminMsgEditAmenity.editMessage(chatId, ADMIN_MSG_EDIT_AMENITY,
+                amenityPersistence.getParameters(adminMsgEditAmenity.getSelectedAmenity(chatId))));
     }
 
     public void openDeleteAmenity(long chatId, List<Integer> messages) throws TelegramApiException {
         Amenity amenity = amenityPersistence.select(adminMsgEditAmenity.getSelectedAmenity(chatId));
 
         messages.add(adminMsgApplyDeleteAmenity.editMessage(chatId, ADMIN_MSG_APPLY_DELETE_AMENITY, amenity.getLink()));
+    }
+
+    public void editParameters(long chatId,
+                               String[] data,
+                               List<Integer> messages,
+                               AmenityStage stage) throws TelegramApiException {
+        if (adminMsgEditAmenity.isEditingAmenity(chatId) && data.length > 1) {
+            String link = amenityPersistence.select(persistence.selectAdminSettings(chatId).getSelectedAmenity()).getLink();
+
+            switch (stage) {
+                case EN -> editEn(link, data[1]);
+                case TR -> editTr(link, data[1]);
+                case RU -> editRu(link, data[1]);
+            }
+
+            if (stage.equals(AmenityStage.IMPORTANCE)) {
+                editImportance(chatId, messages, link, data[1]);
+            } else
+                messages.add(adminMsgEditAmenity.editMessage(chatId, ADMIN_MSG_EDIT_AMENITY,
+                        amenityPersistence.getParameters(adminMsgEditAmenity.getSelectedAmenity(chatId))));
+        }
+    }
+
+    private void editEn(String link, String data) {
+        PropertiesManager.addOrUpdateProperty("./config/languages/amenity.properties", link, data);
+    }
+
+    private void editTr(String link, String data) {
+        PropertiesManager.addOrUpdateProperty("./config/languages/amenity_tr.properties", link, data);
+    }
+
+    private void editRu(String link, String data) {
+        PropertiesManager.addOrUpdateProperty("./config/languages/amenity_ru.properties", link, data);
+    }
+
+    private void editImportance(long chatId, List<Integer> messages, String link, String data) throws TelegramApiException {
+        if (data.matches("[0-9]+")) {
+            int importance = Integer.parseInt(data);
+
+            if (amenityPersistence.isExist(importance))
+                amenityPersistence.select().forEach(amenity -> {
+                    if (amenity.getImportance() >= importance)
+                        amenityPersistence.updateImportance(amenity.getLink(), amenity.getImportance() + 1);
+                });
+
+            amenityPersistence.updateImportance(link, Integer.parseInt(data));
+
+            messages.add(adminMsgEditAmenity.editMessage(chatId, ADMIN_MSG_EDIT_AMENITY,
+                    amenityPersistence.getParameters(adminMsgEditAmenity.getSelectedAmenity(chatId))));
+        } else
+            service.sendMessageInfo(chatId, ADMIN_ERR_SET_IMPORTANCE, adminMsgEditAmenity.getIKMarkupOkToDelete(chatId));
     }
 
     @Transactional
@@ -62,6 +120,7 @@ public class EditAmenity implements AdminMessageLink, AdminCommand {
         PropertiesManager.removeProperty("./config/languages/amenity_tr.properties", amenity.getLink());
         PropertiesManager.removeProperty("./config/languages/amenity_ru.properties", amenity.getLink());
 
-        messages.add(adminMsgListOfAmenities.editMessage(chatId, ADMIN_MSG_LIST_OF_AMENITIES));
+        messages.add(adminMsgListOfAmenities.editMessage(chatId, ADMIN_MSG_LIST_OF_AMENITIES,
+                adminMsgListOfAmenities.getListOfAmenitiesPages(chatId)));
     }
 }

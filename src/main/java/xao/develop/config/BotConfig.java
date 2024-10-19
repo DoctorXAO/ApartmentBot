@@ -49,12 +49,8 @@ public class BotConfig {
     @Value("${check.hours.out}")
     private int checkOutHours;
 
-    @Value("${count.of.apps-on-page}")
-    private int countOfAppsOnPage;
-    @Value("${count.of.apartments-on-page}")
-    private int countOfApartmentOnPage;
-    @Value("${count.of.amenities-on-page}")
-    private int countOfAmenitiesOnPage;
+    @Value("${count.of.entity-on-page}")
+    private int countOfEntityOnPage;
 
     public int getPerDay(int countOfPeople) {
         if (countOfPeople == 1)

@@ -3,13 +3,10 @@ package xao.develop.service.admin.operation.createAmenity.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import xao.develop.model.Amenity;
 import xao.develop.model.TempNewAmenity;
 import xao.develop.repository.AmenityPersistence;
 import xao.develop.repository.TempNewAmenityPersistence;
 import xao.develop.toolbox.PropertiesManager;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -54,32 +51,6 @@ public class TempNewAmenityService {
         tempNewAmenityPersistence.delete(chatId);
     }
 
-    public boolean isExist(String link) {
-        List<Amenity> amenities = amenityPersistence.select();
-
-        for(Amenity amenity : amenities) {
-            log.debug("Amenity link: {}\nCheck link: {}\nIs equals: {}",
-                    amenity.getLink(), link, amenity.getLink().equals(link));
-            if (amenity.getLink().equals(link))
-                return true;
-        }
-
-        return false;
-    }
-
-    public boolean isExist(int importance) {
-        List<Amenity> amenities = amenityPersistence.select();
-
-        for(Amenity amenity : amenities) {
-            log.debug("Amenity importance: {}\nCheck importance: {}\nIs equals: {}",
-                    amenity.getImportance(), importance, amenity.getImportance() == importance);
-            if (amenity.getImportance() == importance)
-                return true;
-        }
-
-        return false;
-    }
-
     public Object[] getParameters(long chatId) {
         TempNewAmenity tempNewAmenity = select(chatId);
 
@@ -95,7 +66,7 @@ public class TempNewAmenityService {
     public void createAmenity(TempNewAmenity tempNewAmenity) {
         int importance = tempNewAmenity.getImportance();
 
-        if (isExist(importance))
+        if (amenityPersistence.isExist(importance))
             amenityPersistence.select().forEach(amenity -> {
                 if (amenity.getImportance() >= importance)
                     amenityPersistence.updateImportance(amenity.getLink(), amenity.getImportance() + 1);

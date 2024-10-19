@@ -433,7 +433,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
     private void initIncorrectEnterCard(long chatId, int msgId, String msgLink) {
         try {
             service.lateDeleteMessage(chatId, msgId, 10);
-            service.lateDeleteMessage(chatId, service.sendSimpleMessage(chatId, msgLink), 10);
+            service.lateDeleteMessage(chatId, service.sendSimpleMessage(chatId, msgLink, 10), 10);
         } catch (TelegramApiException ex) {
             log.warn("""
                     sendSimpleMessage(Update, String) can't send msgLink {} for user {}

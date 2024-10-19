@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import xao.develop.command.AdminCommand;
 import xao.develop.command.AdminMessageLink;
+import xao.develop.repository.AmenityPersistence;
 import xao.develop.service.BotService;
 import xao.develop.service.admin.AdminMsgNewAmenity;
 import xao.develop.service.admin.AdminMsgSettings;
@@ -21,6 +22,9 @@ public class CreateAmenity implements AdminMessageLink, AdminCommand {
 
     @Autowired
     TempNewAmenityService tempNewAmenityService;
+
+    @Autowired
+    AmenityPersistence amenityPersistence;
 
     @Autowired
     AdminMsgSettings adminMsgSettings;
@@ -60,7 +64,7 @@ public class CreateAmenity implements AdminMessageLink, AdminCommand {
     private void setLink(long chatId, List<Integer> messages, String link) throws TelegramApiException {
         link = link.toLowerCase();
 
-        if (tempNewAmenityService.isExist("amenities." + link))
+        if (amenityPersistence.isExist("amenities." + link))
             service.sendMessageInfo(chatId, ADMIN_ERR_LINK_OF_AMENITY_IS_EXIST,
                     adminMsgNewAmenity.getIKMarkupOkToDelete(chatId), link);
         else if (link.matches("[a-zA-Z-]+")) {
@@ -103,6 +107,8 @@ public class CreateAmenity implements AdminMessageLink, AdminCommand {
         tempNewAmenityService.delete(chatId);
 
         messages.add(adminMsgSettings.editMessage(chatId, ADMIN_MSG_SETTINGS));
+
+        service.sendTempMessage(chatId, ADMIN_MSG_SIMPLE_AMENITY_CREATED, 5);
     }
 
     public void quitFromNewAmenity(long chatId, List<Integer> messages) throws TelegramApiException {

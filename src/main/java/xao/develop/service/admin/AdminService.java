@@ -212,6 +212,13 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case SET_NAME_RU -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.RU, false);
             case SET_IMPORTANCE -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.IMPORTANCE, false);
 
+            // Edit amenity
+
+            case EDIT_NAME_EN -> editAmenity.editParameters(chatId, data, messages, AmenityStage.EN);
+            case EDIT_NAME_TR -> editAmenity.editParameters(chatId, data, messages, AmenityStage.TR);
+            case EDIT_NAME_RU -> editAmenity.editParameters(chatId, data, messages, AmenityStage.RU);
+            case EDIT_IMPORTANCE -> editAmenity.editParameters(chatId, data, messages, AmenityStage.IMPORTANCE);
+
             default -> log.info("Unknown message data: {}", data[0]);
         }
 
@@ -234,12 +241,29 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case LIST_OF_APARTMENTS -> openListOfApartments(chatId, messages);
             case LIST_OF_AMENITIES -> openListOfAmenities(chatId, messages);
 
+
             case PREVIOUS_PAGE_OF_NEW_APPS -> changePage(chatId, messages, Page.APP, Selector.PREVIOUS);
             case NEXT_PAGE_OF_NEW_APPS -> changePage(chatId, messages, Page.APP, Selector.NEXT);
+
             case PREVIOUS_PAGE_OF_ARCHIVE -> changePage(chatId, messages, Page.ARC, Selector.PREVIOUS);
             case NEXT_PAGE_OF_ARCHIVE -> changePage(chatId, messages, Page.ARC, Selector.NEXT);
+
             case PREVIOUS_PAGE_OF_APART -> changePage(chatId, messages, Page.APR, Selector.PREVIOUS);
             case NEXT_PAGE_OF_APART -> changePage(chatId, messages, Page.APR, Selector.NEXT);
+
+            case PREVIOUS_PAGE_OF_AV_AM -> changePage(chatId, messages, Page.AAM, Selector.PREVIOUS);
+            case NEXT_PAGE_OF_AV_AM -> changePage(chatId, messages, Page.AAM, Selector.NEXT);
+            case PREVIOUS_PAGE_OF_SL_AM -> changePage(chatId, messages, Page.SAM, Selector.PREVIOUS);
+            case NEXT_PAGE_OF_SL_AM -> changePage(chatId, messages, Page.SAM, Selector.NEXT);
+
+            case PREVIOUS_PAGE_OF_AV_EAM -> changePage(chatId, messages, Page.EAM, Selector.PREVIOUS);
+            case NEXT_PAGE_OF_AV_EAM -> changePage(chatId, messages, Page.EAM, Selector.NEXT);
+            case PREVIOUS_PAGE_OF_SL_EAM -> changePage(chatId, messages, Page.ESM, Selector.PREVIOUS);
+            case NEXT_PAGE_OF_SL_EAM -> changePage(chatId, messages, Page.ESM, Selector.NEXT);
+
+            case PREVIOUS_PAGE_OF_LS_AM -> changePage(chatId, messages, Page.LAM, Selector.PREVIOUS);
+            case NEXT_PAGE_OF_LS_AM -> changePage(chatId, messages, Page.LAM, Selector.NEXT);
+
 
             case CREATE_APARTMENT -> createApartment(chatId, messages);
             case AVAILABLE -> changeListOfAmenities(chatId, messages, false);
@@ -352,12 +376,16 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
                     }
                 }
             } else {
+                int msgId = service.sendSimpleMessage(chatId, GENERAL_MSG_SIMPLE_DOWNLOADING);
+
                 switch (stage) {
                     case NUMBER -> openNewApartment(chatId, messages, ADMIN_MSG_SET_NUMBER, false, false);
                     case PHOTOS -> openNewApartment(chatId, messages, ADMIN_MSG_SET_PICTURES, false, false);
                     case AREA -> openNewApartment(chatId, messages, ADMIN_MSG_SET_AREA, false, false);
                     case AMENITIES -> openSelectAmenities(chatId, messages);
                 }
+
+                deleteMessage(chatId, msgId);
             }
         }
     }
@@ -400,7 +428,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
     private void openSelectAmenities(long chatId, List<Integer> messages) throws TelegramApiException {
         messages.add(adminMsgNAAmenities.editMessage(chatId, ADMIN_MSG_SET_AMENITIES,
-                adminMsgArchive.getTempNewApartmentParameters(chatId)));
+                adminMsgStart.getTempNewApartmentParameters(chatId)));
     }
 
     private void openListOfApartments(long chatId, List<Integer> messages) throws TelegramApiException {
@@ -412,7 +440,10 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     }
 
     private void openListOfAmenities(long chatId, List<Integer> messages) throws TelegramApiException {
-        messages.add(adminMsgListOfAmenities.editMessage(chatId, ADMIN_MSG_LIST_OF_AMENITIES));
+        adminMsgStart.updateEditingAmenity(chatId, false);
+
+        messages.add(adminMsgListOfAmenities.editMessage(chatId, ADMIN_MSG_LIST_OF_AMENITIES,
+                adminMsgStart.getListOfAmenitiesPages(chatId)));
     }
 
     private void changePage(long chatId,
@@ -430,7 +461,13 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
                     adminMsgStart.getCountOfNewApps()));
             case ARC -> messages.add(adminMsgArchive.editMessage(chatId, ADMIN_MSG_ARCHIVE,
                     adminMsgStart.getCountOfArchive()));
-            case APR -> messages.add(adminMsgSettings.editMessage(chatId, ADMIN_MSG_SETTINGS));
+            case APR -> messages.add(adminMsgListOfApartments.editMessage(chatId, ADMIN_MSG_LIST_OF_APARTMENTS));
+            case AAM, SAM -> messages.add(adminMsgNAAmenities.editMessage(chatId, ADMIN_MSG_SET_AMENITIES,
+                    adminMsgStart.getTempNewApartmentParameters(chatId)));
+            case EAM, ESM -> messages.add(adminMsgEditAmenities.editMessage(chatId, ADMIN_MSG_EDIT_AMENITIES,
+                    adminMsgStart.getStringOfSelectedAmenities(chatId)));
+            case LAM -> messages.add(adminMsgListOfAmenities.editMessage(chatId, ADMIN_MSG_LIST_OF_AMENITIES,
+                    adminMsgStart.getListOfAmenitiesPages(chatId)));
         }
     }
 
@@ -550,15 +587,20 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
         else
             adminMsgStart.deleteSelectedAmenity(chatId, adminMsgStart.getAmenityById(Integer.parseInt(data)));
 
+        adminMsgStart.updateSelectedPageAdminSettings(chatId, 0);
+
         if (!adminMsgStart.isEditingApartments(chatId))
             openSelectAmenities(chatId, messages);
-        else
+        else {
             openEditAmenities(chatId, messages, false);
+        }
     }
 
     private void editApartment(long chatId, List<Integer> messages, String numberOfApartment) throws TelegramApiException {
         adminMsgStart.updateSelectedApartment(chatId, Integer.parseInt(numberOfApartment));
         adminMsgStart.updateEditingApartment(chatId, true);
+        adminMsgStart.deleteSelectedAmenities(chatId);
+        adminMsgStart.updateSelectedPageAdminSettings(chatId, 0);
 
         int msgId = service.sendSimpleMessage(chatId, GENERAL_MSG_SIMPLE_DOWNLOADING);
 

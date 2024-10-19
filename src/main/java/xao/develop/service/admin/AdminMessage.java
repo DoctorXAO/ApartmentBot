@@ -123,6 +123,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         };
     }
 
+    public Object[] getListOfAmenitiesPages(long chatId) {
+        return new Object[]{getSelectedPage(chatId), getAmenities().size()};
+    }
+
     public boolean isNewApartment(long chatId) {
         return persistence.selectAdminSettings(chatId).isNewApartment();
     }
@@ -133,6 +137,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     public boolean isEditingApartments(long chatId) {
         return persistence.selectAdminSettings(chatId).isEditingApartment();
+    }
+
+    public boolean isEditingAmenity(long chatId) {
+        return persistence.selectAdminSettings(chatId).isEditingAmenity();
     }
 
     public TempNewApartment getTempNewApartment(long chatId) {
@@ -151,12 +159,20 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         return persistence.selectAdminSettings(chatId).getSelectedAmenity();
     }
 
+    public int getSelectedPage(long chatId) {
+        return persistence.selectAdminSettings(chatId).getSelectedPage();
+    }
+
     public Amenity getAmenityById(int idOfAmenity) {
         return amenityPersistence.select(idOfAmenity);
     }
 
     public List<Amenity> getAmenitiesOfApartment(long chatId) {
         return persistence.selectApartment(getSelectedApartment(chatId)).getAmenities();
+    }
+
+    public List<Amenity> getAmenities() {
+        return amenityPersistence.select();
     }
 
     // creates
@@ -211,6 +227,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     public void updateEditingPhotos(long chatId, boolean isEditingPhotos) {
         persistence.updateEditingPhotosAdminSettings(chatId, isEditingPhotos);
+    }
+
+    public void updateEditingAmenity(long chatId, boolean isEditingAmenity) {
+        persistence.updateEditingAmenityAdminSettings(chatId, isEditingAmenity);
     }
 
     public void updateNumberTempNewApartment(long chatId, int number) {
@@ -274,18 +294,18 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         if (type.equals(App.APP)) {
             bookingCards = persistence.selectBookingCardByStatus(AppStatus.WAITING);
             data = APP + X;
-            initSelectorPanel(chatId, bookingCards.size(), botConfig.getCountOfAppsOnPage(), adminSettings,
+            initSelectorPanel(chatId, bookingCards.size(), botConfig.getCountOfEntityOnPage(), adminSettings,
                     PREVIOUS_PAGE_OF_NEW_APPS, NEXT_PAGE_OF_NEW_APPS, keyboard, buttons);
         }
         else if (type.equals(App.ARC)) {
             bookingCards = persistence.selectAllBookingCardExceptWaiting();
             data = ARC + X;
-            initSelectorPanel(chatId, bookingCards.size(), botConfig.getCountOfAppsOnPage(), adminSettings,
+            initSelectorPanel(chatId, bookingCards.size(), botConfig.getCountOfEntityOnPage(), adminSettings,
                     PREVIOUS_PAGE_OF_ARCHIVE, NEXT_PAGE_OF_ARCHIVE, keyboard, buttons);
         }
 
         if (!bookingCards.isEmpty())
-            for (int i = 0; i < botConfig.getCountOfAppsOnPage(); i++) {
+            for (int i = 0; i < botConfig.getCountOfEntityOnPage(); i++) {
 
                 if (adminSettings.getSelectedPage() + i >= bookingCards.size())
                     break;
@@ -313,10 +333,10 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
             AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
 
-            initSelectorPanel(chatId, apartments.size(), botConfig.getCountOfApartmentOnPage(), adminSettings,
+            initSelectorPanel(chatId, apartments.size(), botConfig.getCountOfEntityOnPage(), adminSettings,
                     PREVIOUS_PAGE_OF_APART, NEXT_PAGE_OF_APART, keyboard, buttons);
 
-            for (int i = 0; i < botConfig.getCountOfApartmentOnPage(); i++) {
+            for (int i = 0; i < botConfig.getCountOfEntityOnPage(); i++) {
 
                 if (adminSettings.getSelectedPage() + i >= apartments.size())
                     break;
@@ -335,20 +355,34 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         }
     }
 
-    protected void initSelectorAmenities(long chatId,
-                                         List<InlineKeyboardRow> keyboard,
-                                         List<InlineKeyboardButton> buttons) {
+    protected void initNASelectorAmenities(long chatId,
+                                           List<InlineKeyboardRow> keyboard,
+                                           List<InlineKeyboardButton> buttons) {
 
         AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
 
         if (adminSettings.isCheckingSelectedAmenities())
-            initSelectorSelectedAmenities(chatId, adminSettings, keyboard, buttons);
+            initSelectorSelectedAmenities(chatId, adminSettings, PREVIOUS_PAGE_OF_SL_AM, NEXT_PAGE_OF_SL_AM, keyboard, buttons);
         else
-            initSelectorAvailableAmenities(chatId, adminSettings, keyboard, buttons);
+            initSelectorAvailableAmenities(chatId, adminSettings, PREVIOUS_PAGE_OF_AV_AM, NEXT_PAGE_OF_AV_AM, keyboard, buttons);
+    }
+
+    protected void initEditSelectorAmenities(long chatId,
+                                           List<InlineKeyboardRow> keyboard,
+                                           List<InlineKeyboardButton> buttons) {
+
+        AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
+
+        if (adminSettings.isCheckingSelectedAmenities())
+            initSelectorSelectedAmenities(chatId, adminSettings, PREVIOUS_PAGE_OF_SL_EAM, NEXT_PAGE_OF_SL_EAM, keyboard, buttons);
+        else
+            initSelectorAvailableAmenities(chatId, adminSettings, PREVIOUS_PAGE_OF_AV_EAM, NEXT_PAGE_OF_AV_EAM, keyboard, buttons);
     }
 
     private void initSelectorAvailableAmenities(long chatId,
                                                 AdminSettings adminSettings,
+                                                String dataOfPrevious,
+                                                String dataOfNext,
                                                 List<InlineKeyboardRow> keyboard,
                                                 List<InlineKeyboardButton> buttons) {
 
@@ -362,16 +396,17 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         for (Amenity selectedAmenity : selectedAmenities)
             amenities.removeIf(amenity -> amenity.getLink().equals(selectedAmenity.getLink()));
 
-        initSelectorPanel(chatId, amenities.size(), botConfig.getCountOfAmenitiesOnPage(), adminSettings,
-                PREVIOUS_PAGE_OF_AMENITIES, NEXT_PAGE_OF_AMENITIES, keyboard, buttons);
+        initSelectorPanel(chatId, amenities.size(), botConfig.getCountOfEntityOnPage(), adminSettings,
+                dataOfPrevious, dataOfNext, keyboard, buttons);
 
-        for (int i = 0; i < botConfig.getCountOfAmenitiesOnPage(); i++) {
+        for (int i = 0; i < botConfig.getCountOfEntityOnPage(); i++) {
 
             if (adminSettings.getSelectedPage() + i >= amenities.size())
                 break;
 
-            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, amenities.get(i).getLink()),
-                    AMENITY + X + amenities.get(i).getIdAmenity()));
+            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId,
+                            amenities.get(adminSettings.getSelectedPage() + i).getLink()),
+                    AMENITY + X + amenities.get(adminSettings.getSelectedPage() + i).getIdAmenity()));
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();
         }
@@ -379,6 +414,8 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
     private void initSelectorSelectedAmenities(long chatId,
                                                AdminSettings adminSettings,
+                                               String dataOfPrevious,
+                                               String dataOfNext,
                                                List<InlineKeyboardRow> keyboard,
                                                List<InlineKeyboardButton> buttons) {
 
@@ -388,17 +425,18 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
 
         List<Amenity> selectedAmenities = persistence.selectAllSelectedAmenities(chatId);
 
-        initSelectorPanel(chatId, selectedAmenities.size(), botConfig.getCountOfAmenitiesOnPage(), adminSettings,
-                PREVIOUS_PAGE_OF_AMENITIES, NEXT_PAGE_OF_AMENITIES, keyboard, buttons);
+        initSelectorPanel(chatId, selectedAmenities.size(), botConfig.getCountOfEntityOnPage(), adminSettings,
+                dataOfPrevious, dataOfNext, keyboard, buttons);
 
-        for (int i = 0; i < botConfig.getCountOfAmenitiesOnPage(); i++) {
+        for (int i = 0; i < botConfig.getCountOfEntityOnPage(); i++) {
 
             if (adminSettings.getSelectedPage() + i >= selectedAmenities.size())
                 break;
 
-            Amenity amenity = selectedAmenities.get(i);
+            Amenity amenity = selectedAmenities.get(adminSettings.getSelectedPage() + i);
 
-            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, amenity.getLink()),
+            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId,
+                            amenity.getLink()),
                     AMENITY + X + amenity.getIdAmenity()));
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();
@@ -411,16 +449,17 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
         AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
         List<Amenity> amenities = amenityPersistence.select();
 
-        initSelectorPanel(chatId, amenities.size(), botConfig.getCountOfAmenitiesOnPage(), adminSettings,
-                PREVIOUS_PAGE_OF_AMENITIES, NEXT_PAGE_OF_AMENITIES, keyboard, buttons);
+        initSelectorPanel(chatId, amenities.size(), botConfig.getCountOfEntityOnPage(), adminSettings,
+                PREVIOUS_PAGE_OF_LS_AM, NEXT_PAGE_OF_LS_AM, keyboard, buttons);
 
-        for (int i = 0; i < botConfig.getCountOfAmenitiesOnPage(); i++) {
+        for (int i = 0; i < botConfig.getCountOfEntityOnPage(); i++) {
 
             if (adminSettings.getSelectedPage() + i >= amenities.size())
                 break;
 
-            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, amenities.get(i).getLink()),
-                    ED_AMENITY + X + amenities.get(i).getIdAmenity()));
+            buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId,
+                            amenities.get(adminSettings.getSelectedPage() + i).getLink()),
+                    ED_AMENITY + X + amenities.get(adminSettings.getSelectedPage() + i).getIdAmenity()));
             keyboard.add(msgBuilder.buildIKRow(buttons));
             buttons.clear();
         }
@@ -498,7 +537,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     public void nextPage(long chatId) {
         AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
 
-        int selectedPage = adminSettings.getSelectedPage() + botConfig.getCountOfAppsOnPage();
+        int selectedPage = adminSettings.getSelectedPage() + botConfig.getCountOfEntityOnPage();
 
         updateSelectedPageAdminSettings(chatId, selectedPage);
     }
@@ -506,7 +545,7 @@ public abstract class AdminMessage extends BotMessage implements AdminCommand, A
     public void previousPage(long chatId) {
         AdminSettings adminSettings = persistence.selectAdminSettings(chatId);
 
-        int selectedPage = adminSettings.getSelectedPage() - botConfig.getCountOfAppsOnPage();
+        int selectedPage = adminSettings.getSelectedPage() - botConfig.getCountOfEntityOnPage();
 
         updateSelectedPageAdminSettings(chatId, selectedPage);
     }

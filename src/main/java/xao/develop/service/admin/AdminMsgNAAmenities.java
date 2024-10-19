@@ -18,7 +18,7 @@ public class AdminMsgNAAmenities extends AdminMessage {
 
         initBtPreview(chatId, keyboard, buttons);
 
-        initSelectorAmenities(chatId, keyboard, buttons);
+        initNASelectorAmenities(chatId, keyboard, buttons);
 
         buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_CANCEL), QUIT_TO_SETTINGS));
         keyboard.add(msgBuilder.buildIKRow(buttons));

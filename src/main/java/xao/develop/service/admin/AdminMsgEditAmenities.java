@@ -16,7 +16,7 @@ public class AdminMsgEditAmenities extends AdminMessage {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
-        initSelectorAmenities(chatId, keyboard, buttons);
+        initEditSelectorAmenities(chatId, keyboard, buttons);
 
         buttons.add(msgBuilder.buildIKButton(service.getLocaleMessage(chatId, ADMIN_BT_APPLY), EDIT_AMENITIES));
         keyboard.add(msgBuilder.buildIKRow(buttons));
