@@ -86,6 +86,23 @@ public class TempNewAmenityPersistence {
         }
     }
 
+    /** Update ukrainian name entity of TempNewAmenity **/
+    public void updateUk(long chatId, String uk) {
+        try {
+            TempNewAmenity amenity = tempNewAmenityRepository.findById(chatId).orElseThrow();
+
+            amenity.setUk(uk);
+
+            tempNewAmenityRepository.save(amenity);
+
+            log.debug("Ukrainian name of TempNewAmenity with ChatId {} updated successfully! New ukrainian name {}", chatId, uk);
+        } catch (NoSuchElementException ex) {
+            log.error("""
+                    Can't find entity of TempNewAmenity with ChatId {} from method updateUk(long, String).
+                    Exception: {}""", chatId, ex.getMessage());
+        }
+    }
+
     /** Update russian name entity of TempNewAmenity **/
     public void updateRu(long chatId, String ru) {
         try {

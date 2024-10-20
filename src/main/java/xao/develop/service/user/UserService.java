@@ -194,7 +194,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
             case ABOUT_US -> openAboutUs(chatId, messages);
             case CONTACTS -> openContacts(chatId, messages);
             case CHANGE_LANGUAGE -> openChangeLanguage(chatId, messages);
-            case EN, TR, RU -> changeLanguage(chatId, messages, data);
+            case EN, TR, UK, RU -> changeLanguage(chatId, messages, data);
             case BACK_TO_START -> start(chatId, messages);
             case DELETE -> deleteMessage(chatId, msgId);
             default -> log.info("Unknown callback query data: {}", data);

@@ -75,6 +75,7 @@ public interface AdminCommand {
     String SET_LINK = "/set_link";
     String SET_NAME_EN = "/set_name_en";
     String SET_NAME_TR = "/set_name_tr";
+    String SET_NAME_UK = "/set_name_uk";
     String SET_NAME_RU = "/set_name_ru";
     String SET_IMPORTANCE = "/set_importance";
 
@@ -88,6 +89,7 @@ public interface AdminCommand {
 
     String EDIT_NAME_EN = "/edit_name_en";
     String EDIT_NAME_TR = "/edit_name_tr";
+    String EDIT_NAME_UK = "/edit_name_uk";
     String EDIT_NAME_RU = "/edit_name_ru";
     String EDIT_IMPORTANCE = "/edit_importance";
 

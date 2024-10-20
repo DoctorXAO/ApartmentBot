@@ -4,6 +4,7 @@ public enum AmenityStage {
     LINK,
     EN,
     TR,
+    UK,
     RU,
     IMPORTANCE
 }

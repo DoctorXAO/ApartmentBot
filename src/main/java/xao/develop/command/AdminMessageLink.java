@@ -79,6 +79,7 @@ public interface AdminMessageLink {
     String ADMIN_MSG_SET_LINK = "admin.msg.set-link";
     String ADMIN_MSG_SET_NAME_EN = "admin.msg.set-name-en";
     String ADMIN_MSG_SET_NAME_TR = "admin.msg.set-name-tr";
+    String ADMIN_MSG_SET_NAME_UK = "admin.msg.set-name-uk";
     String ADMIN_MSG_SET_NAME_RU = "admin.msg.set-name-ru";
     String ADMIN_MSG_SET_IMPORTANCE = "admin.msg.set-importance";
 

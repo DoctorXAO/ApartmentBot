@@ -18,6 +18,8 @@ public class UserMsgChangeLanguage extends UserMessage {
                 .keyboardRow(new InlineKeyboardRow(
                         msgBuilder.buildIKButton("\uD83C\uDDEC\uD83C\uDDE7 English", EN)))
                 .keyboardRow(new InlineKeyboardRow(
+                        msgBuilder.buildIKButton("\uD83C\uDDFA\uD83C\uDDE6 Українська", UK)))
+                .keyboardRow(new InlineKeyboardRow(
                         msgBuilder.buildIKButton("\uD83C\uDDF7\uD83C\uDDFA Русский", RU)))
                 .build();
     }

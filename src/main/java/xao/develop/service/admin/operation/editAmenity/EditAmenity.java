@@ -64,6 +64,7 @@ public class EditAmenity implements AdminMessageLink, AdminCommand {
             switch (stage) {
                 case EN -> editEn(link, data[1]);
                 case TR -> editTr(link, data[1]);
+                case UK -> editUk(link, data[1]);
                 case RU -> editRu(link, data[1]);
             }
 
@@ -81,6 +82,10 @@ public class EditAmenity implements AdminMessageLink, AdminCommand {
 
     private void editTr(String link, String data) {
         PropertiesManager.addOrUpdateProperty("./config/languages/amenity_tr.properties", link, data);
+    }
+
+    private void editUk(String link, String data) {
+        PropertiesManager.addOrUpdateProperty("./config/languages/amenity_uk.properties", link, data);
     }
 
     private void editRu(String link, String data) {

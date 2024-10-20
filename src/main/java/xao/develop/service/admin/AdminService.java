@@ -209,6 +209,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
             case SET_LINK -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.LINK, false);
             case SET_NAME_EN -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.EN, false);
             case SET_NAME_TR -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.TR, false);
+            case SET_NAME_UK -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.UK, false);
             case SET_NAME_RU -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.RU, false);
             case SET_IMPORTANCE -> createAmenity.openNewAmenity(chatId, messages, data, AmenityStage.IMPORTANCE, false);
 
@@ -216,6 +217,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
             case EDIT_NAME_EN -> editAmenity.editParameters(chatId, data, messages, AmenityStage.EN);
             case EDIT_NAME_TR -> editAmenity.editParameters(chatId, data, messages, AmenityStage.TR);
+            case EDIT_NAME_UK -> editAmenity.editParameters(chatId, data, messages, AmenityStage.UK);
             case EDIT_NAME_RU -> editAmenity.editParameters(chatId, data, messages, AmenityStage.RU);
             case EDIT_IMPORTANCE -> editAmenity.editParameters(chatId, data, messages, AmenityStage.IMPORTANCE);
 
@@ -308,7 +310,7 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
 
             // Others
 
-            case TR, EN, RU -> changeLanguage(chatId, user, messages, data[0]);
+            case TR, EN, UK, RU -> changeLanguage(chatId, user, messages, data[0]);
 
             case BACK_TO_START -> start(chatId, user, messages, false, true);
 

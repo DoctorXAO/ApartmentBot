@@ -39,6 +39,10 @@ public class TempNewAmenityService {
         tempNewAmenityPersistence.updateTr(chatId, tr);
     }
 
+    public void updateUk(long chatId, String uk) {
+        tempNewAmenityPersistence.updateUk(chatId, uk);
+    }
+
     public void updateRu(long chatId, String ru) {
         tempNewAmenityPersistence.updateRu(chatId, ru);
     }
@@ -58,6 +62,7 @@ public class TempNewAmenityService {
                 tempNewAmenity.getLink(),
                 tempNewAmenity.getEn(),
                 tempNewAmenity.getTr(),
+                tempNewAmenity.getUk(),
                 tempNewAmenity.getRu(),
                 tempNewAmenity.getImportance()
         };
@@ -76,6 +81,8 @@ public class TempNewAmenityService {
                 tempNewAmenity.getLink(), tempNewAmenity.getEn());
         PropertiesManager.addOrUpdateProperty("./config/languages/amenity_tr.properties",
                 tempNewAmenity.getLink(), tempNewAmenity.getTr());
+        PropertiesManager.addOrUpdateProperty("./config/languages/amenity_uk.properties",
+                tempNewAmenity.getLink(), tempNewAmenity.getUk());
         PropertiesManager.addOrUpdateProperty("./config/languages/amenity_ru.properties",
                 tempNewAmenity.getLink(), tempNewAmenity.getRu());
 

@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import xao.develop.model.Amenity;
 import xao.develop.model.AmenityRepository;
-import xao.develop.model.TempNewAmenity;
 import xao.develop.toolbox.PropertiesManager;
 
 import java.util.List;
@@ -96,6 +95,7 @@ public class AmenityPersistence {
                 amenity.getLink(),
                 PropertiesManager.getPropertyValue("./config/languages/amenity.properties", amenity.getLink()),
                 PropertiesManager.getPropertyValue("./config/languages/amenity_tr.properties", amenity.getLink()),
+                PropertiesManager.getPropertyValue("./config/languages/amenity_uk.properties", amenity.getLink()),
                 PropertiesManager.getPropertyValue("./config/languages/amenity_ru.properties", amenity.getLink()),
                 amenity.getImportance()
         };

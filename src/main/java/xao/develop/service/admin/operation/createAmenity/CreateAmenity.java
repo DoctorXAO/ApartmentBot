@@ -45,6 +45,7 @@ public class CreateAmenity implements AdminMessageLink, AdminCommand {
                 case LINK -> setLink(chatId, messages, data[1]);
                 case EN -> setEn(chatId, messages, data[1]);
                 case TR -> setTr(chatId, messages, data[1]);
+                case UK -> setUk(chatId, messages, data[1]);
                 case RU -> setRu(chatId, messages, data[1]);
                 case IMPORTANCE -> setImportance(chatId, messages, data[1]);
             }
@@ -55,6 +56,7 @@ public class CreateAmenity implements AdminMessageLink, AdminCommand {
                 case LINK -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_LINK, parameters));
                 case EN -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_EN, tempNewAmenityService.getParameters(chatId)));
                 case TR -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_TR, tempNewAmenityService.getParameters(chatId)));
+                case UK -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_UK, tempNewAmenityService.getParameters(chatId)));
                 case RU -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_RU, tempNewAmenityService.getParameters(chatId)));
                 case IMPORTANCE -> messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_IMPORTANCE, parameters));
             }
@@ -83,6 +85,12 @@ public class CreateAmenity implements AdminMessageLink, AdminCommand {
 
     private void setTr(long chatId, List<Integer> messages, String tr) throws TelegramApiException {
         tempNewAmenityService.updateTr(chatId, tr);
+        messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_UK,
+                tempNewAmenityService.getParameters(chatId)));
+    }
+
+    private void setUk(long chatId, List<Integer> messages, String uk) throws TelegramApiException {
+        tempNewAmenityService.updateUk(chatId, uk);
         messages.add(adminMsgNewAmenity.editMessage(chatId, ADMIN_MSG_SET_NAME_RU,
                 tempNewAmenityService.getParameters(chatId)));
     }

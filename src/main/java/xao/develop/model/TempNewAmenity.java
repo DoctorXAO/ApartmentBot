@@ -17,6 +17,7 @@ public class TempNewAmenity {
 
     private String en;
     private String tr;
+    private String uk;
     private String ru;
 
     private int importance;

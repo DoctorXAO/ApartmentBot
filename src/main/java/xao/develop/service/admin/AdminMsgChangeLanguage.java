@@ -28,6 +28,10 @@ public class AdminMsgChangeLanguage extends AdminMessage {
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
 
+        buttons.add(msgBuilder.buildIKButton("\uD83C\uDDFA\uD83C\uDDE6 Українська", UK));
+        keyboard.add(msgBuilder.buildIKRow(buttons));
+        buttons.clear();
+
         buttons.add(msgBuilder.buildIKButton("\uD83C\uDDF7\uD83C\uDDFA Русский", RU));
         keyboard.add(msgBuilder.buildIKRow(buttons));
         buttons.clear();
