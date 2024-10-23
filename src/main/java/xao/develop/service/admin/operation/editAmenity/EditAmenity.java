@@ -107,7 +107,7 @@ public class EditAmenity implements AdminMessageLink, AdminCommand {
             messages.add(adminMsgEditAmenity.editMessage(chatId, ADMIN_MSG_EDIT_AMENITY,
                     amenityPersistence.getParameters(adminMsgEditAmenity.getSelectedAmenity(chatId))));
         } else
-            service.sendMessageInfo(chatId, ADMIN_ERR_SET_IMPORTANCE, adminMsgEditAmenity.getIKMarkupOkToDelete(chatId));
+            service.sendMessageInfo(chatId, ADMIN_ERR_EDIT_IMPORTANCE, adminMsgEditAmenity.getIKMarkupOkToDelete(chatId));
     }
 
     @Transactional
@@ -123,6 +123,7 @@ public class EditAmenity implements AdminMessageLink, AdminCommand {
 
         PropertiesManager.removeProperty("./config/languages/amenity.properties", amenity.getLink());
         PropertiesManager.removeProperty("./config/languages/amenity_tr.properties", amenity.getLink());
+        PropertiesManager.removeProperty("./config/languages/amenity_uk.properties", amenity.getLink());
         PropertiesManager.removeProperty("./config/languages/amenity_ru.properties", amenity.getLink());
 
         messages.add(adminMsgListOfAmenities.editMessage(chatId, ADMIN_MSG_LIST_OF_AMENITIES,

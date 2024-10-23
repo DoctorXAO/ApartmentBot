@@ -368,13 +368,15 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
                         else if (parameter.matches("[0-9]+")) {
                             adminMsgStart.updateNumberTempNewApartment(chatId, Integer.parseInt(parameter));
                             openNewApartment(chatId, messages, ADMIN_MSG_SET_PICTURES, false, false);
-                        }
+                        } else
+                            service.sendMessageInfo(chatId, ADMIN_ERR_NUMBER, adminMsgStart.getIKMarkupOkToDelete(chatId));
                     }
                     case AREA -> {
-                        if (parameter.matches("[0-9.]+")) {
+                        if (parameter.matches("[0-9.]+") && Character.isDigit(parameter.charAt(0))) {
                             adminMsgStart.updateAreaTempNewApartment(chatId, Double.parseDouble(parameter));
                             openSelectAmenities(chatId, messages);
-                        }
+                        } else
+                            service.sendMessageInfo(chatId, ADMIN_ERR_AREA, adminMsgStart.getIKMarkupOkToDelete(chatId));
                     }
                 }
             } else {
@@ -689,35 +691,39 @@ public class AdminService implements GeneralCommand, GeneralMessageLink, AdminCo
     }
 
     private void editNumber(long chatId, List<Integer> messages, String[] data) throws TelegramApiException {
-        if (adminMsgStart.isEditingApartments(chatId) && data.length < 2)
-            service.sendMessageInfo(chatId, ADMIN_ERR_SET_AREA, adminMsgStart.getIKMarkupOkToDelete(chatId));
-        if (service.getApartmentPath() != null) {
-            if (new File(service.getApartmentPath() + data[1]).exists() && adminMsgStart.isEditingApartments(chatId))
-                service.sendMessageInfo(chatId, ADMIN_ERR_APARTMENT_EXISTS, adminMsgStart.getIKMarkupOkToDelete(chatId));
-            else if (adminMsgStart.isEditingApartments(chatId)) {
-                FileManager.moveFiles(
-                        Paths.get(service.getApartmentPath() + adminMsgStart.getSelectedApartment(chatId) + "/"),
-                        Paths.get(service.getApartmentPath() + data[1] + "/"));
+        if (adminMsgStart.isEditingApartments(chatId)) {
+            if (data.length > 1 && data[1].matches("[0-9]+")) {
+                if (service.getApartmentPath() != null) {
+                    if (new File(service.getApartmentPath() + data[1]).exists())
+                        service.sendMessageInfo(chatId, ADMIN_ERR_APARTMENT_EXISTS, adminMsgStart.getIKMarkupOkToDelete(chatId));
+                    else {
+                        FileManager.moveFiles(
+                                Paths.get(service.getApartmentPath() + adminMsgStart.getSelectedApartment(chatId) + "/"),
+                                Paths.get(service.getApartmentPath() + data[1] + "/"));
 
-                FileManager.deleteAllFilesFromDirectory(
-                        Paths.get(service.getApartmentPath() + adminMsgStart.getSelectedApartment(chatId)));
+                        FileManager.deleteAllFilesFromDirectory(
+                                Paths.get(service.getApartmentPath() + adminMsgStart.getSelectedApartment(chatId)));
 
-                adminMsgStart.updateNumberApartment(adminMsgStart.getSelectedApartment(chatId), Integer.parseInt(data[1]));
-                adminMsgStart.updateSelectedApartment(chatId, Integer.parseInt(data[1]));
+                        adminMsgStart.updateNumberApartment(adminMsgStart.getSelectedApartment(chatId), Integer.parseInt(data[1]));
+                        adminMsgStart.updateSelectedApartment(chatId, Integer.parseInt(data[1]));
 
-                editApartment(chatId, messages, String.valueOf(adminMsgStart.getSelectedApartment(chatId)));
-            }
-        } else
-            service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
+                        editApartment(chatId, messages, String.valueOf(adminMsgStart.getSelectedApartment(chatId)));
+                    }
+                } else
+                    service.sendMessageInfo(chatId, ADMIN_ERR_DOWNLOAD_RESOURCE, adminMsgStart.getIKMarkupOkToDelete(chatId));
+            } else
+                service.sendMessageInfo(chatId, ADMIN_ERR_SET_NUMBER, adminMsgStart.getIKMarkupOkToDelete(chatId));
+        }
     }
 
     private void editArea(long chatId, List<Integer> messages, String[] data) throws TelegramApiException {
-        if (adminMsgStart.isEditingApartments(chatId) && data.length < 2)
-            service.sendMessageInfo(chatId, ADMIN_ERR_SET_AREA, adminMsgStart.getIKMarkupOkToDelete(chatId));
-        else if (adminMsgStart.isEditingApartments(chatId)) {
-            adminMsgStart.updateAreaApartment(adminMsgStart.getSelectedApartment(chatId), Double.parseDouble(data[1]));
+        if (adminMsgStart.isEditingApartments(chatId)) {
+            if (data.length > 1 && data[1].matches("[0-9.]+") && Character.isDigit(data[1].charAt(0))) {
+                adminMsgStart.updateAreaApartment(adminMsgStart.getSelectedApartment(chatId), Double.parseDouble(data[1]));
 
-            editApartment(chatId, messages, String.valueOf(adminMsgStart.getSelectedApartment(chatId)));
+                editApartment(chatId, messages, String.valueOf(adminMsgStart.getSelectedApartment(chatId)));
+            } else
+                service.sendMessageInfo(chatId, ADMIN_ERR_SET_AREA, adminMsgStart.getIKMarkupOkToDelete(chatId));
         }
     }
 
