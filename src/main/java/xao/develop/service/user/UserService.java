@@ -107,14 +107,35 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
     private void enterPersonalData(long chatId, int msgId, List<Integer> messages, String data) throws TelegramApiException {
         UserStep step = UserStep.valueOf(userMsgStart.getUserStep(chatId).toUpperCase());
 
-        switch (step) {
-            case SET_NAME -> cardDataProcessing(chatId, msgId, messages, data, Card.NAME);
-            case SET_SURNAME -> cardDataProcessing(chatId, msgId, messages, data, Card.SURNAME);
-            case SET_GENDER -> cardDataProcessing(chatId, msgId, messages, data, Card.GENDER);
-            case SET_AGE -> cardDataProcessing(chatId, msgId, messages, data, Card.AGE);
-            case SET_COUNT -> cardDataProcessing(chatId, msgId, messages, data, Card.COUNT);
-            case SET_CONTACTS -> cardDataProcessing(chatId, msgId, messages, data, Card.CONTACTS);
+        switch (data) {
+            case CARD_NAME -> preInitMsgBooking(chatId, msgId, messages, UserStep.SET_NAME, USER_MSG_SET_NAME);
+            case CARD_SURNAME -> preInitMsgBooking(chatId, msgId, messages, UserStep.SET_SURNAME, USER_MSG_SET_SURNAME);
+            case CARD_GENDER -> preInitMsgBooking(chatId, msgId, messages, UserStep.SET_GENDER, USER_MSG_SET_GENDER);
+            case CARD_AGE -> preInitMsgBooking(chatId, msgId, messages, UserStep.SET_AGE, USER_MSG_SET_AGE);
+            case CARD_COUNT -> preInitMsgBooking(chatId, msgId, messages, UserStep.SET_COUNT, USER_MSG_SET_COUNT);
+            case CARD_CONTACTS -> preInitMsgBooking(chatId, msgId, messages, UserStep.SET_CONTACTS, USER_MSG_SET_CONTACTS);
+            default -> {
+                switch (step) {
+                    case SET_NAME -> cardDataProcessing(chatId, msgId, messages, data, Card.NAME);
+                    case SET_SURNAME -> cardDataProcessing(chatId, msgId, messages, data, Card.SURNAME);
+                    case SET_GENDER -> cardDataProcessing(chatId, msgId, messages, data, Card.GENDER);
+                    case SET_AGE -> cardDataProcessing(chatId, msgId, messages, data, Card.AGE);
+                    case SET_COUNT -> cardDataProcessing(chatId, msgId, messages, data, Card.COUNT);
+                    case SET_CONTACTS -> cardDataProcessing(chatId, msgId, messages, data, Card.CONTACTS);
+                    case COMPLETE -> deleteMessage(chatId, msgId);
+                }
+            }
         }
+    }
+
+    private void preInitMsgBooking(long chatId,
+                                   int msgId,
+                                   List<Integer> messages,
+                                   UserStep step,
+                                   String link) throws TelegramApiException {
+        userMsgStart.setUserStep(chatId, step);
+        deleteMessage(chatId, msgId);
+        initMsgBooking(chatId, messages, link);
     }
 
     private void processingCallbackQueryRAA(long chatId,
@@ -158,9 +179,15 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                     userMsgChooseAnApartment.addTempApartmentSelector(chatId);
                     openMsgApartments(chatId, messages);
                 }
-                case RAA_SHOW_PREVIEW -> messages.add(userMsgPreviewCard.editMessage(chatId, USER_MSG_SHOW_PREVIEW,
-                        userMsgPreviewCard.getPackParameters(chatId)));
-                case RAA_QUIT_FROM_PREVIEW_CARD -> initMsgBooking(chatId, messages, USER_MSG_BOOK);
+                case RAA_SHOW_PREVIEW -> {
+                    userMsgStart.setUserStep(chatId, UserStep.EMPTY);
+                    messages.add(userMsgPreviewCard.editMessage(
+                            chatId, USER_MSG_SHOW_PREVIEW, userMsgPreviewCard.getPackParameters(chatId)));
+                }
+                case RAA_QUIT_FROM_PREVIEW_CARD -> {
+                    userMsgStart.setUserStep(chatId, UserStep.COMPLETE);
+                    initMsgBooking(chatId, messages, USER_MSG_BOOK);
+                }
                 case RAA_SEND_BOOKING_TO_ADMIN -> {
                     userMsgPreviewCard.insertCardToBookingCard(chatId, user);
                     messages.add(userMsgStart.editMessage(chatId, USER_MSG_START));
@@ -342,7 +369,7 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
             }
             case CONTACTS -> {
                 userMsgBooking.setContacts(chatId, data);
-                userMsgStart.setUserStep(chatId, UserStep.EMPTY);
+                userMsgStart.setUserStep(chatId, UserStep.COMPLETE);
                 initMsgBooking(chatId, messages, USER_MSG_BOOK);
             }
         }
