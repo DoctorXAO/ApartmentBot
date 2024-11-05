@@ -10,10 +10,7 @@ import xao.develop.command.GeneralCommand;
 import xao.develop.command.GeneralMessageLink;
 import xao.develop.command.UserCommand;
 import xao.develop.command.UserMessageLink;
-import xao.develop.enums.Card;
-import xao.develop.enums.CheckDate;
-import xao.develop.enums.Month;
-import xao.develop.enums.Selector;
+import xao.develop.enums.*;
 import xao.develop.service.BotService;
 
 import java.util.ArrayList;
@@ -60,10 +57,9 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
     public void execute(Update update) {
         log.trace("Method execute(Update, String) started");
 
-        String[] data = service.getData(update).split(X, 2);
+        String data = service.getData(update);
 
-        for (String d : data)
-            log.debug("data: {}", d);
+        log.debug("Data: {}", data);
 
         List<Integer> messages = new ArrayList<>();
 
@@ -74,12 +70,12 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         try {
             if (update.hasMessage())
                 processingMessage(chatId, msgId, user, messages, data);
-            else if (update.hasCallbackQuery() && data[0].startsWith(RAA))
-                processingCallbackQueryRAA(chatId, user, messages, data[0]);
+            else if (update.hasCallbackQuery() && data.startsWith(RAA))
+                processingCallbackQueryRAA(chatId, user, messages, data);
             else if (update.hasCallbackQuery())
-                processingCallbackQuery(chatId, msgId, user, messages, data[0]);
+                processingCallbackQuery(chatId, msgId, user, messages, data);
             else
-                log.info("Unknown data: {}", data[0]);
+                log.info("Unknown data: {}", data);
 
             log.debug("Is the list of messages empty? {}", messages.isEmpty());
 
@@ -96,21 +92,29 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                                    int msgId,
                                    User user,
                                    List<Integer> messages,
-                                   String[] data) throws TelegramApiException {
+                                   String data) throws TelegramApiException {
 
-            switch (data[0]) {
-                case START -> start(chatId, user, messages);
-                case CARD_NAME -> cardDataProcessing(chatId, msgId, messages, data, Card.NAME);
-                case CARD_SURNAME -> cardDataProcessing(chatId, msgId, messages, data, Card.SURNAME);
-                case CARD_GENDER -> cardDataProcessing(chatId, msgId, messages, data, Card.GENDER);
-                case CARD_AGE -> cardDataProcessing(chatId, msgId, messages, data, Card.AGE);
-                case CARD_COUNT -> cardDataProcessing(chatId, msgId, messages, data, Card.COUNT);
-                case CARD_CONTACTS -> cardDataProcessing(chatId, msgId, messages, data, Card.CONTACTS);
-                default -> {
-                    deleteMessage(chatId, msgId);
-                    log.info("Unknown message data: {}", data[0]);
-                }
-            }
+        if (data.equals(START)) {
+            start(chatId, user, messages);
+        } else if (!userMsgStart.getUserStep(chatId).equals(UserStep.EMPTY.getStep())) {
+            enterPersonalData(chatId, msgId, messages, data);
+        } else {
+            deleteMessage(chatId, msgId);
+            log.info("Unknown message data: {}", data);
+        }
+    }
+
+    private void enterPersonalData(long chatId, int msgId, List<Integer> messages, String data) throws TelegramApiException {
+        UserStep step = UserStep.valueOf(userMsgStart.getUserStep(chatId).toUpperCase());
+
+        switch (step) {
+            case SET_NAME -> cardDataProcessing(chatId, msgId, messages, data, Card.NAME);
+            case SET_SURNAME -> cardDataProcessing(chatId, msgId, messages, data, Card.SURNAME);
+            case SET_GENDER -> cardDataProcessing(chatId, msgId, messages, data, Card.GENDER);
+            case SET_AGE -> cardDataProcessing(chatId, msgId, messages, data, Card.AGE);
+            case SET_COUNT -> cardDataProcessing(chatId, msgId, messages, data, Card.COUNT);
+            case SET_CONTACTS -> cardDataProcessing(chatId, msgId, messages, data, Card.CONTACTS);
+        }
     }
 
     private void processingCallbackQueryRAA(long chatId,
@@ -132,11 +136,13 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
                 case RAA_QUIT_FROM_CHOOSER_AN_APARTMENT -> {
                     userMsgChooseAnApartment.deleteTempApartmentSelector(chatId);
                     userMsgChooseCheckDate.deleteCheckOut(chatId);
+                    userMsgStart.setUserStep(chatId, UserStep.EMPTY);
                     messages.add(userMsgChooseCheckDate.editMessage(chatId, USER_MSG_CHOOSE_CHECK_OUT_DATE));
                 }
                 case RAA_BOOK -> {
                     if (!userMsgChooseAnApartment.isBookingApartment(chatId)) {
                         userMsgChooseAnApartment.setIsBookingApartment(chatId, true);
+                        userMsgStart.setUserStep(chatId, UserStep.SET_NAME);
                         initMsgBooking(chatId, messages, USER_MSG_SET_NAME);
                     } else
                         messages.add(userMsgCanNotBook.editMessage(chatId, USER_MSG_CAN_NOT_BOOK));
@@ -256,50 +262,45 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
     private void cardDataProcessing(long chatId,
                                     int msgId,
                                     List<Integer> messages,
-                                    String[] data,
+                                    String data,
                                     Card type) throws TelegramApiException {
         if (chatId == userMsgStart.getBookingUserIdApartment(chatId))
             switch (type) {
                 case NAME -> {
-                    if (data.length > 1 && data[1].matches("[a-zA-Z]+"))
-                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    if (data.matches("[a-zA-Z]+"))
+                        correctInputCard(chatId, msgId, messages, data, type);
                     else
                         initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_NAME);
                 }
                 case SURNAME -> {
-                    if (data.length > 1 && data[1].matches("[a-zA-Z]+"))
-                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    if (data.matches("[a-zA-Z]+"))
+                        correctInputCard(chatId, msgId, messages, data, type);
                     else
                         initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_SURNAME);
                 }
                 case GENDER -> {
-                    if (data.length > 1 && data[1].matches("[MW]"))
-                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    if (data.matches("[MWmw]"))
+                        correctInputCard(chatId, msgId, messages, data.toUpperCase(), type);
                     else
                         initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_GENDER);
                 }
                 case AGE -> {
-                    if (data.length > 1 && data[1].matches("[0-9]+") &&
-                            Integer.parseInt(data[1]) >= 18 &&
-                            Integer.parseInt(data[1]) <= 95)
-                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    if (data.matches("[0-9]+") &&
+                            Integer.parseInt(data) >= 18 &&
+                            Integer.parseInt(data) <= 95)
+                        correctInputCard(chatId, msgId, messages, data, type);
                     else
                         initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_AGE);
                 }
                 case COUNT -> {
-                    if (data.length > 1 && data[1].matches("[0-9]+") &&
-                            Integer.parseInt(data[1]) >= 1 &&
-                            Integer.parseInt(data[1]) <= 5)
-                        correctInputCard(chatId, msgId, messages, data[1], type);
+                    if (data.matches("[0-9]+") &&
+                            Integer.parseInt(data) >= 1 &&
+                            Integer.parseInt(data) <= 5)
+                        correctInputCard(chatId, msgId, messages, data, type);
                     else
                         initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_COUNT);
                 }
-                case CONTACTS -> {
-                    if (data.length > 1)
-                        correctInputCard(chatId, msgId, messages, data[1], type);
-                    else
-                        initIncorrectEnterCard(chatId, msgId, USER_MSG_SIMPLE_INCORRECT_CONTACTS);
-                }
+                case CONTACTS -> correctInputCard(chatId, msgId, messages, data, type);
             }
         else
             deleteMessage(chatId, msgId);
@@ -316,26 +317,32 @@ public class UserService implements GeneralMessageLink, GeneralCommand, UserComm
         switch (type) {
             case NAME -> {
                 userMsgBooking.setName(chatId, data);
+                userMsgStart.setUserStep(chatId, UserStep.SET_SURNAME);
                 initMsgBooking(chatId, messages, USER_MSG_SET_SURNAME);
             }
             case SURNAME -> {
                 userMsgBooking.setSurname(chatId, data);
+                userMsgStart.setUserStep(chatId, UserStep.SET_GENDER);
                 initMsgBooking(chatId, messages, USER_MSG_SET_GENDER);
             }
             case GENDER -> {
                 userMsgBooking.setGender(chatId, data);
+                userMsgStart.setUserStep(chatId, UserStep.SET_AGE);
                 initMsgBooking(chatId, messages, USER_MSG_SET_AGE);
             }
             case AGE -> {
                 userMsgBooking.setAge(chatId, data);
+                userMsgStart.setUserStep(chatId, UserStep.SET_COUNT);
                 initMsgBooking(chatId, messages, USER_MSG_SET_COUNT);
             }
             case COUNT -> {
                 userMsgBooking.setCount(chatId, data);
+                userMsgStart.setUserStep(chatId, UserStep.SET_CONTACTS);
                 initMsgBooking(chatId, messages, USER_MSG_SET_CONTACTS);
             }
             case CONTACTS -> {
                 userMsgBooking.setContacts(chatId, data);
+                userMsgStart.setUserStep(chatId, UserStep.EMPTY);
                 initMsgBooking(chatId, messages, USER_MSG_BOOK);
             }
         }

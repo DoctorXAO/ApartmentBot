@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import xao.develop.enums.UserStep;
 import xao.develop.model.*;
 import xao.develop.enums.AppStatus;
 
@@ -342,6 +343,18 @@ public class Persistence {
         tempBookingDataRepository.save(tempBookingData);
 
         log.trace("Method updateNumberOfApartmentTempBookingData(long, int) finished");
+    }
+
+    public void updateStepTempBookingData(long chatId, UserStep step) {
+        log.trace("Method updateStepTempBookingData(long, UserStep) started");
+
+        TempBookingData tempBookingData = tempBookingDataRepository.findById(chatId).orElseThrow();
+
+        tempBookingData.setStep(step.getStep());
+
+        tempBookingDataRepository.save(tempBookingData);
+
+        log.trace("Method updateStepTempBookingData(long, UserStep) finished");
     }
 
     public void updateFirstNameTempBookingData(long chatId, String firstName) {

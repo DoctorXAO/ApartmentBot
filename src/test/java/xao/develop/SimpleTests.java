@@ -2,13 +2,14 @@ package xao.develop;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import xao.develop.enums.UserStep;
 
 @Slf4j
 public class SimpleTests {
 
     @Test
     void checkTest() {
-        int x = (int) Math.ceil((double) 10/22);
-        System.out.println(x);
+        UserStep step = UserStep.valueOf("empty".toUpperCase());
+        System.out.println(step);
     }
 }

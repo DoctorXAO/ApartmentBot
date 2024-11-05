@@ -6,6 +6,7 @@ import xao.develop.command.UserCommand;
 import xao.develop.command.UserMessageLink;
 import xao.develop.enums.Selector;
 import xao.develop.enums.AppStatus;
+import xao.develop.enums.UserStep;
 import xao.develop.model.*;
 import xao.develop.service.BotMessage;
 
@@ -27,6 +28,10 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
 
         persistence.updateIsBookingApartment(numberOfApartment, isBooking, chatId);
         persistence.updateNumberOfApartmentTempBookingData(chatId, numberOfApartment);
+    }
+
+    public void setUserStep(long chatId, UserStep step) {
+        persistence.updateStepTempBookingData(chatId, step);
     }
 
     // getters
@@ -131,6 +136,15 @@ public abstract class UserMessage extends BotMessage implements UserCommand, Use
                         tempBookingData.getCheckOut(),
                         tempBookingData.getCountOfPeople())
         };
+    }
+
+    public String getUserStep(long chatId) {
+        TempBookingData tempBookingData = persistence.selectTempBookingData(chatId);
+
+        if (tempBookingData != null)
+            return tempBookingData.getStep();
+        else
+            return UserStep.EMPTY.getStep();
     }
 
     private int getSelectedApartment(long chatId) {

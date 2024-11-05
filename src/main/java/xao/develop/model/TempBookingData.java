@@ -1,5 +1,6 @@
 package xao.develop.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Getter;
@@ -18,6 +19,9 @@ public class TempBookingData {
     private Long checkOut;
 
     private Integer numberOfApartment;
+
+    @Column(nullable = false)
+    private String step = "empty";
 
     private String login;
 
